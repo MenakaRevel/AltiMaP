@@ -1,5 +1,0 @@
-/opt/local/bin/python
-Traceback (most recent call last):
-  File "src/along_river.py", line 9, in <module>
-    from mpl_toolkits.basemap import Basemap
-ImportError: No module named basemap

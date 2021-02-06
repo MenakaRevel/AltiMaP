@@ -1,8 +1,0 @@
-./src/altimetry_rivermap /cluster/data6/menaka/CaMa-Flood_v396a_20200514 glb_01min 3sec ./out
- /cluster/data6/menaka/CaMa-Flood_v396a_20200514/map/glb_01min                  
-                                                  
- read GRRATS data
-
-real	0m10.934s
-user	0m0.033s
-sys	0m2.733s
