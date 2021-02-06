@@ -18,9 +18,9 @@
 *.pyc
 
 # PBS
-*/Alti_VS.o*
-*/Comm_VS.o*
-*/Alng_Riv.o*
+Alti_VS.o*
+Comm_VS.o*
+Alng_Riv.o*
 
 # VScode
 *.vscode
