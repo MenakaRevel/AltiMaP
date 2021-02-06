@@ -1,0 +1,229 @@
+./src/allocate_VS -80 -60 HydroWeb
+./src/allocate_VS -80 -60 CGLS
+./src/allocate_VS -80 -60 HydroSat
+./src/allocate_VS -70 -60 HydroWeb
+./src/allocate_VS -70 -60 CGLS
+./src/allocate_VS -80 -50 HydroWeb
+./src/allocate_VS -80 -50 CGLS
+./src/allocate_VS -80 -50 HydroSat
+./src/allocate_VS -70 -50 HydroWeb
+./src/allocate_VS -70 -50 CGLS
+./src/allocate_VS -70 -50 HydroSat
+./src/allocate_VS -80 -40 HydroWeb
+./src/allocate_VS -80 -40 CGLS
+./src/allocate_VS -70 -40 HydroWeb
+./src/allocate_VS -70 -40 CGLS
+./src/allocate_VS -70 -40 HydroSat
+./src/allocate_VS -70 -40 GRRATS
+./src/allocate_VS -60 -40 HydroWeb
+./src/allocate_VS -60 -40 CGLS
+./src/allocate_VS -60 -40 HydroSat
+./src/allocate_VS -60 -40 GRRATS
+./src/allocate_VS -70 -30 HydroWeb
+./src/allocate_VS -70 -30 CGLS
+./src/allocate_VS -70 -30 HydroSat
+./src/allocate_VS -60 -30 HydroWeb
+./src/allocate_VS -60 -30 CGLS
+./src/allocate_VS -60 -30 HydroSat
+./src/allocate_VS -60 -30 GRRATS
+./src/allocate_VS -50 -30 HydroWeb
+./src/allocate_VS -50 -30 CGLS
+./src/allocate_VS -50 -30 HydroSat
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+./src/allocate_VS -80 -20 HydroWeb
+./src/allocate_VS -80 -20 CGLS
+./src/allocate_VS -80 -20 HydroSat
+./src/allocate_VS -70 -20 HydroWeb
+./src/allocate_VS -70 -20 CGLS
+./src/allocate_VS -70 -20 HydroSat
+forrtl: severe (37): inconsistent record length, unit 11, file /cluster/data6/menaka/Altimetry/fort.11
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042423E  Unknown               Unknown  Unknown
+allocate_VS        0000000000405FD0  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+./src/allocate_VS -60 -20 HydroWeb
+./src/allocate_VS -60 -20 CGLS
+./src/allocate_VS -60 -20 HydroSat
+./src/allocate_VS -50 -20 HydroWeb
+./src/allocate_VS -50 -20 CGLS
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+./src/allocate_VS -50 -20 HydroSat
+./src/allocate_VS -40 -20 HydroWeb
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+./src/allocate_VS -40 -20 CGLS
+./src/allocate_VS -40 -20 HydroSat
+./src/allocate_VS -40 -20 GRRATS
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+./src/allocate_VS -90 -10 HydroWeb
+./src/allocate_VS -90 -10 CGLS
+./src/allocate_VS -80 -10 HydroWeb
+./src/allocate_VS -80 -10 CGLS
+./src/allocate_VS -80 -10 HydroSat
+./src/allocate_VS -80 -10 GRRATS
+./src/allocate_VS -70 -10 HydroWeb
+./src/allocate_VS -70 -10 CGLS
+./src/allocate_VS -70 -10 HydroSat
+./src/allocate_VS -70 -10 GRRATS
+./src/allocate_VS -60 -10 HydroWeb
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+./src/allocate_VS -60 -10 CGLS
+./src/allocate_VS -60 -10 HydroSat
+./src/allocate_VS -60 -10 GRRATS
+./src/allocate_VS -50 -10 HydroWeb
+./src/allocate_VS -50 -10 CGLS
+./src/allocate_VS -50 -10 HydroSat
+./src/allocate_VS -50 -10 GRRATS
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+./src/allocate_VS -40 -10 HydroWeb
+./src/allocate_VS -40 -10 CGLS
+./src/allocate_VS -40 -10 HydroSat
+./src/allocate_VS -40 -10 GRRATS
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 70: 26556 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 70: 26649 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 70: 27579 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 70: 27625 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 70: 27799 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 70: 31391 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 94: 31439 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+/var/spool/pbs/mom_priv/jobs/9999.mool.SC: line 94: 31978 Killed                  ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown
+forrtl: severe (59): list-directed I/O syntax error, unit 11, file /cluster/data6/menaka/Altimetry/./inp/HydroWebStation_list.txt
+Image              PC                Routine            Line        Source             
+allocate_VS        000000000040C12B  Unknown               Unknown  Unknown
+allocate_VS        000000000042E60B  Unknown               Unknown  Unknown
+allocate_VS        0000000000407777  Unknown               Unknown  Unknown
+allocate_VS        0000000000403BA2  Unknown               Unknown  Unknown
+libc-2.17.so       00002AAAAB6043D5  __libc_start_main     Unknown  Unknown
+allocate_VS        0000000000403AA9  Unknown               Unknown  Unknown

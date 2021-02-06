@@ -1,0 +1,26 @@
+# bin txt files
+*.bin
+*.txt
+
+# figures
+*.png
+*.jpg
+*.pdf
+
+# fortran excutables
+*/allocate_VS
+*/altimetry_rivermap
+*/altimetry_rivermap.f90
+*/set_name
+
+# .so .pyc
+*.so
+*.pyc
+
+# PBS
+*/Alti_VS.o*
+*/Comm_VS.o*
+*/Alng_Riv.o*
+
+# VScode
+*.vscode
