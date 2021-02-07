@@ -177,9 +177,9 @@ mapname="glb_01min"
 fname="./out/altimetry_"+mapname+".txt"
 with open(fname, "r") as f:
     lines=f.readlines()
-    for line in lines[1:12694]:
+    for line in lines[1::]:
         line = filter(None,re.split(" ", line))
-        #rint line
+        print line
         Id   = line[0].strip()
         name = line[1].strip()
         dname= line[2].strip()
