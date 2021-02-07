@@ -129,7 +129,8 @@ def HydroWeb_WSE(station,syear=2002,eyear=2020,smon=1,emon=12,sday=1,eday=31,egm
     #station="R_con_con_env_0429_01"
     #satellite=station.split("_")[2]
     #fname="/home/yamadai/data/Altimetry/HydroWeb_LEGOS/River/R_"+station
-    fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
+    # fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
+    fname="/cluster/data6/menaka/HydroWeb/data_V2021/hydroprd_"+station+".txt"
     f=open(fname,"r")
     lines=f.readlines()
     f.close()
@@ -164,7 +165,8 @@ def HydroWeb_continous_WSE(station,syear=2002,smon=10,sday=1,eyear=2020,emon=12,
     #station="R_con_con_env_0429_01"
     #satellite=station.split("_")[2]
     #fname="/home/yamadai/data/Altimetry/HydroWeb_LEGOS/River/R_"+station
-    fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
+    # fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
+    fname="/cluster/data6/menaka/HydroWeb/data_V2021/hydroprd_"+station+".txt"
     f=open(fname,"r")
     lines=f.readlines()
     f.close()
@@ -194,6 +196,7 @@ def altimetry(name,mapname="glb_15min"):
     # directory
     hydroweb="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_"+mapname+".txt"
     #--
+    alti = 0.0
     f=open(hydroweb,"r")
     lines=f.readlines()
     for line in lines[1::]:
