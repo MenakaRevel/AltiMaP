@@ -85,7 +85,7 @@ def upgrids(ix,iy,nums,nextxy,uparea,elevtn,nxtdst,rivseq,thr=50.0):
         upYY.append(iYY-1)
     return list(reversed(upXX)), list(reversed(upYY))
 #=============================
-def dngrids(ix,iy,nums,nextxy,elevtn,thr=50.0):
+def dngrids(ix,iy,nums,nextxy,elevtn,thr=100.0):
     # thr [m] threshold
     dnXX=[]
     dnYY=[]
@@ -98,7 +98,7 @@ def dngrids(ix,iy,nums,nextxy,elevtn,thr=50.0):
         iYY=nextxy[1,iiy,iix] - 1
         ele1=elevtn[iiy,iix]
         ele0=elevtn[iYY,iXX]
-        if ele1-ele0 > 50.0:
+        if ele1-ele0 > thr:
             break
         if iXX<0 or iYY<0:
             break
@@ -412,6 +412,8 @@ with PdfPages(pdfname) as pdf:
         # print oxx, oyy, exx, eyy
         # print dists, elevs
         ax1.plot(dists,elevs,color="k")
+        ax1.plot(dists,np.array(elevs)+15.0,color="k",linestyle="--")
+        ax1.plot(dists,np.array(elevs)-10.0,color="k",linestyle="--")
         for i in np.arange(pnum):
             TAG=dnam[i] #dataname[ixiy][i]
             lon=lons[i]
