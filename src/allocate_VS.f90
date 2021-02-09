@@ -362,6 +362,7 @@ program SET_MAP
 
     goto 1000
 1090 continue
+    close(11)
     !---
     deallocate(uparea,basin,elevtn,nxtdst,nextXX,nextYY)
     deallocate(upa1m,catmXX,catmYY,catmZZ,dwx1m,dwy1m,flddif,hand,ele1m,riv1m,visual)

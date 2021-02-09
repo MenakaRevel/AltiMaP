@@ -76,7 +76,7 @@ lonlist={}
 latlist={}
 #=============================
 mapname="glb_01min"
-fname="./out/altimetry_"+mapname+".txt"
+fname="./out/altimetry_"+mapname+"_new.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:

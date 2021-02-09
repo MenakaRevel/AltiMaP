@@ -58,7 +58,7 @@ do
                 do
                     sleep 1
                     NUM=`ps aux -U $USER | grep /src/allocate_VS | wc -l | awk '{print $1}'`
-                    echo $USER $NUM
+                    # echo $USER $NUM
                 done
             fi
         done
@@ -70,4 +70,4 @@ done
 
 
 wait 
-mv tmp.txt ./out/altimetry_${map}.txt
+mv tmp.txt ./out/altimetry_${map}_new.txt
