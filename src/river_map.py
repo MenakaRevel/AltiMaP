@@ -59,6 +59,39 @@ def round_half_down(n, decimals=0):
     multiplier = 10 ** decimals
     return math.ceil(n*multiplier - 0.5) / multiplier
 #=============================
+def vec_par(LEVEL,ax=None):
+    sup=2
+    w=0.02
+    width=0.5
+    ax=ax or plt.gca()
+    txt="tmp_%02d.txt"%(LEVEL)
+    os.system("./src/print_rivvec tmp_00.txt 1 "+str(LEVEL)+" > "+txt)
+    width=(float(LEVEL)**sup)*w
+    with open(txt,"r") as f:
+        lines = f.readlines()
+    #---
+    for line in lines:
+        line    = filter(None, re.split(" ",line))
+        lon1 = float(line[0])
+        lat1 = float(line[1])
+        lon2 = float(line[3])
+        lat2 = float(line[4])
+
+        if lon1-lon2 > 180.0:
+            print lon1, lon2
+            lon2=180.0
+        elif lon2-lon1> 180.0:
+            print lon1,lon2
+            lon2=-180.0
+
+        colorVal="xkcd:azure"
+        # print lon1,lon2,lat1,lat2
+        plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=ax00)
+#=============================
+def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None,alpha=1):
+    ax=ax or plt.gca()
+    return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,zorder=105,alpha=alpha) #transform=ccrs.PlateCarree(),
+#=============================
 syear=1992
 eyear=2020
 start=datetime.date(syear,1,1)
@@ -75,9 +108,11 @@ satlist={}
 lonlist={}
 latlist={}
 #=============================
+# mapname="glb_01min"
+# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+# print sys.argv
 mapname=sys.argv[1]
 CaMa_dir=sys.argv[2]
-# mapname="glb_01min"
 fname="./out/altimetry_"+mapname+"_new.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
@@ -132,22 +167,22 @@ maps = ['ESRI_Imagery_World_2D',    # 0
         ]
 #=============================
 mkdir("./fig")
-pdfname="./fig/WSE_observation_comparison.pdf"
+pdfname="./fig/WSE_observation_river_network.pdf"
 #=============================
 with PdfPages(pdfname) as pdf:
     for ixiy in pnames.keys():
         unilist=np.unique(np.array(dataname[ixiy]))
         pnum=np.shape(np.unique(np.array(dataname[ixiy])))[0]
-        if pnum<2:
-            continue
+        # if pnum<2:
+        #     continue
         hgt=11.69
         wdt=8.27
         fig=plt.figure(figsize=(wdt, hgt))
         #plt.title(pname[point][0],fontsize=12)
         G   = gridspec.GridSpec(3,2)
-        ax00 = fig.add_subplot(G[0,0])
-        ax01 = fig.add_subplot(G[0,1])
-        ax1 = fig.add_subplot(G[1,:])
+        ax00 = fig.add_subplot(G[0:2,0::])
+        #ax01 = fig.add_subplot(G[0,1])
+        ax11 = fig.add_subplot(G[2,:])
         # get the dimesion of the map
         dec=2
         val=0.25
@@ -174,116 +209,33 @@ with PdfPages(pdfname) as pdf:
             M.drawrivers(color='blue')
         M.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=10,linewidth=0,zorder=102)
         M.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0,zorder=102)
-        obss=[]
-        tags=[]
-        lines=[]
-        labels=[]
-        j=0
-        #print pnum
-        z=0
+        #####
+        box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
+        # print box
+        os.system("./src/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > tmp_00.txt") 
+        map(vec_par,np.arange(1,10+1,1))
+        os.system("rm -r tmp*.txt")
         for i in np.arange(pnum):
-            TAG=unilist[i] #dataname[ixiy][i]
-            #print np.where(np.array(dataname[ixiy])==TAG)[0] #.index(TAG)
+            TAG=unilist[i] 
             repeatlist=np.where(np.array(dataname[ixiy])==TAG)[0]
-            #print i, TAG, repeatlist
-            obs_frg=[]
-            k=0
-            rflag=-9
             for j in repeatlist:
                 pname=pnames[ixiy][j]
                 lon=lonlist[ixiy][j]
                 lat=latlist[ixiy][j]
-                M.scatter(lon,lat,c=colors[TAG],s=20,marker=markers[TAG])
-                #ax0.annotate(pname,xy=(lon,lat),fontsize=8,textcoords="offset points",xytext=(lon,lat),arrowprops=dict(arrowstyle="-"),zorder=111) #ha=ha,va=va,xycoords=transform,
-                ax01.text(-0.1,1.0-0.1*z,pnames[ixiy][j],va="center",ha="left",transform=ax01.transAxes,fontsize=10)
-                z=z+1
-                #ax01.text(0.0,1.0-0.1*z,satlist[ixiy][j],va="center",ha="center",transform=ax0.transAxes,fontsize=14)
-                #z=z+1
-                #Observation
-                #print TAG, markers[TAG], colors[TAG]
-                locs,org = get_data(pname,TAG)
-                # try:
-                #     rflag=1
-                #     locs,org = get_data(pname,TAG)
-                # except:
-                #     rflag=0
-                #     continue
-                if k==0:
-                    lines.append(ax1.plot(locs,org,color=colors[TAG],label=TAG,linestyle='-',linewidth=0.5,marker=markers[TAG],fillstyle="none",markersize=5)[0])
-                else:
-                    ax1.plot(locs,org,color=colors[TAG],label=TAG,linestyle='-',linewidth=0.5,marker=markers[TAG],fillstyle="none",markersize=5)[0]
-                k=k+1
-            obss.append(org)
-            tags.append(TAG)
-            labels.append(TAG)
-            print labels
-            # if rflag==1:
-            #     obss.append(org)
-            #     tags.append(TAG)
-            #     labels.append(TAG)
-            #     print labels
-            # else:
-            #     continue
-        # ax00
-        ax00.set_axis_off()
-        ax00.spines['top'].set_visible(False)
-        ax00.spines['right'].set_visible(False)
-        ax00.spines['left'].set_visible(False)
-        ax00.spines['bottom'].set_visible(False)
-        #ax01
-        ax01.set_axis_off()
-        ax01.spines['top'].set_visible(False)
-        ax01.spines['right'].set_visible(False)
-        ax01.spines['left'].set_visible(False)
-        ax01.spines['bottom'].set_visible(False)
-        #ax1
-        ax1.set_xlim(xmin=0,xmax=days+1)
-        xxlab=np.arange(syear,eyear+1,5)
-        dt=int(math.ceil(((eyear-syear)+2)/5.0))
-        xxlist=np.linspace(0,days,dt,endpoint=True)
-        ax1.set_xticks(xxlist)
-        ax1.set_xticklabels(xxlab,fontsize=8)
-        plt.legend(lines,labels,ncol=pnum+1,loc='upper right',bbox_to_anchor=(1.0, 1.13))  
-        ######################################
-		#boxplot
-        ax2 = fig.add_subplot(G[2,0])
-        flierprops = dict(marker='o', markerfacecolor='none', markersize=12,linestyle='none', markeredgecolor='k')
-        boxprops = dict(color='grey')#facecolor='none'
-        whiskerprops = dict(color='grey',linestyle="--")
-        capprops = dict(color='grey')
-        medianprops = dict(color='r')
-        box=ax2.boxplot(obss,labels=labels,boxprops=boxprops,showfliers=False, \
-                        whiskerprops=whiskerprops,capprops=capprops,medianprops=medianprops, \
-                        notch=False, sym=None, vert=True, whis=1.5,positions=None, widths=None, \
-                        patch_artist=True,bootstrap=None, usermedians=None, conf_intervals=None)#flierprops=flierprops,
-        for patch, tag in zip(box['boxes'], labels):
-            #patch.set_facecolor(colors[tag],alpha=0.5)
-            patch.set(facecolor=colors[tag],alpha=0.5)
-        ax2.set_ylabel('WSE $(m)$', color='k',fontsize=10)
-        ax2.tick_params('y',labelsize=8, colors='k')
-        ax2.tick_params('x',labelsize=8, colors='k')#,labelrotation=45)
-        ax2.set_xticklabels(labels,rotation=0)
-        ######################################
-        #pdf
-        ax3 = fig.add_subplot(G[2,1])
-        #sns.distplot(obss[0], ax=ax3, hist=True, color="xkcd:cornflower", label="CaMa-Flood") #ax=ax3,
-        for k,tag in enumerate(tags,start=0):
-            sns.distplot(obss[k], ax=ax3, hist=True, color=colors[tag], label=tag) #ax=ax3,
-        ax3.set_ylabel('density', color='k',fontsize=10)
-        ax3.tick_params('y',labelsize=6, colors='k')
-        ax3.set_xlabel('WSE $(m)$', color='k',fontsize=10)
-        ax3.tick_params('x',labelsize=6, colors='k')
-        #ax3.set_title("Histogram of Bias",fontsize=8)
-        #ax3.set_xlim(xmin=-20.0,xmax=20.0)
-        #ax3.text(0.01,0.95,"b",transform=ax3.transAxes,fontsize=8)
-        ax3.legend(ncol=5, bbox_to_anchor=(0.0, -0.3), loc='lower center') #
+                M.scatter(lon,lat,c=colors[TAG],s=20,marker=markers[TAG],zorder=110)
+                ax11.text(-0.1,1.1-0.1*j,pnames[ixiy][j],va="center",ha="left",transform=ax11.transAxes,fontsize=10)
+        ax11.set_axis_off()
+        ax11.spines['top'].set_visible(False)
+        ax11.spines['right'].set_visible(False)
+        ax11.spines['left'].set_visible(False)
+        ax11.spines['bottom'].set_visible(False)
         ######################################
         pdf.savefig()  # saves the current figure into a pdf page
         plt.close()
         print "============================"
     # set the file's metadata via the PdfPages object:
     d = pdf.infodict()
-    d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat altimetry data'
+    d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat along the river'
     d['Author'] = 'Menaka Revel'
     d['Subject'] = 'Comparison of altimetry observations'
     d['Keywords'] = 'HydroWeb, CGLS, HydroSat, ICESat, GRRATS'

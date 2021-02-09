@@ -8,7 +8,7 @@
 #PBS -m ea
 #PBS -M menaka@rainbow.iis.u-tokyo.ac.jp
 #PBS -V
-#PBS -N Alng_Riv
+#PBS -N Comm_VS
 
 # import virtual environment
 source ~/.bashrc
@@ -38,7 +38,7 @@ figdir="./fig"
 
 mkdir -p $figdir
 
-python src/along_river.py & #> /dev/null 2>&1 & 
+python src/common_VS.py $map $CaMa_dir #& #> /dev/null 2>&1 & 
 
 wait
 

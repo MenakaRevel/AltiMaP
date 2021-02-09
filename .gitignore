@@ -12,12 +12,17 @@
 */altimetry_rivermap
 */altimetry_rivermap.f90
 */set_name
+*/print_rivvec
+*/print_rivvec.o
+*/txt_vector
+*/txt_vector.o
 
 # .so .pyc
 *.so
 *.pyc
 
 # PBS
+Riv_Map.o*
 Alti_VS.o*
 Comm_VS.o*
 Alng_Riv.o*

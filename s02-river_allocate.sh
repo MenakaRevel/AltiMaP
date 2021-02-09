@@ -2,13 +2,15 @@
 
 ### SET "mool PBS" @ IIS U-Tokyo
 #PBS -q F20
-#PBS -l select=1:ncpus=20:mem=20gb
+#PBS -l select=1:ncpus=20:mem=100gb
 #PBS -l place=scatter
 #PBS -j oe
 #PBS -m ea
 #PBS -M menaka@rainbow.iis.u-tokyo.ac.jp
 #PBS -V
-#PBS -N Comm_VS
+#PBS -N Riv_Map
+
+#source ~/.bashrc
 
 # import virtual environment
 source ~/.bashrc
@@ -30,15 +32,17 @@ CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 # map name
 map="glb_01min"
 
-# input data
-indir="./out"
+# Higher resolution data
+TAG="3sec"
 
-# out put figure directory
-figdir="./fig"
+# out put directory
+outdir="./out"
 
-mkdir -p $figdir
+mkdir -p $outdir
 
-python src/common_VS.py & #> /dev/null 2>&1 & 
+# USER=`whoami`
+
+python src/river_map.py $map $CaMa_dir & #> /dev/null 2>&1 & 
 
 wait
 

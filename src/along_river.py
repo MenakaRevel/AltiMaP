@@ -173,7 +173,9 @@ e08list={}
 e96list={}
 ediflist={}
 #=============================
-mapname="glb_01min"
+mapname=sys.argv[1]
+CaMa_dir=sys.argv[2]
+# mapname="glb_01min"
 fname="./out/altimetry_"+mapname+".txt"
 with open(fname, "r") as f:
     lines=f.readlines()
@@ -456,9 +458,9 @@ with PdfPages(pdfname) as pdf:
         print "============================"
     # set the file's metadata via the PdfPages object:
     d = pdf.infodict()
-    d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat and VIC BC comparison'
+    d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat along the river'
     d['Author'] = 'Menaka Revel'
-    d['Subject'] = 'Comparison of observations and VIC BC comparison metadata'
-    d['Keywords'] = 'HydroWeb, CGLS, HydroSat, ICESat, VIC BC'
+    d['Subject'] = 'Comparison of altimetry observations'
+    d['Keywords'] = 'HydroWeb, CGLS, HydroSat, ICESat, GRRATS'
     d['CreationDate'] = datetime.datetime(2021, 1, 25)
     d['ModDate'] = datetime.datetime.today()

@@ -70,4 +70,4 @@ done
 
 
 wait 
-mv tmp.txt ./out/altimetry_${map}_new.txt
+mv tmp.txt ./out/altimetry_${map}.txt
