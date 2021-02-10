@@ -430,11 +430,11 @@ with PdfPages(pdfname) as pdf:
             if TAG == "ICESat":
                 print TAG, nams[i], np.mean(np.array(org)), "reach :", dist
                 ax1.plot(dist,np.mean(np.array(org)),color=linecolors[i],marker=markers[TAG],markersize=5) #,fillstyle="none"
-                ax1.plot(dist,np.mean(np.array(org))-ledf[i],color=linecolors[i],marker=markers[TAG],fillstyle="none",markersize=5)
+                ax1.plot(dist,np.mean(np.array(org))+ledf[i],color=linecolors[i],marker=markers[TAG],fillstyle="none",markersize=5)
             else:
                 print TAG, nams[i], np.mean(np.array(org))+le08[i]-le96[i], "reach :", dist
                 ax1.plot(dist,np.mean(np.array(org))+le08[i]-le96[i],color=linecolors[i],marker=markers[TAG],markersize=5) #,fillstyle="none"
-                ax1.plot(dist,np.mean(np.array(org))+le08[i]-le96[i]-ledf[i],color=linecolors[i],marker=markers[TAG],fillstyle="none",markersize=5)
+                ax1.plot(dist,np.mean(np.array(org))+le08[i]-le96[i]+ledf[i],color=linecolors[i],marker=markers[TAG],fillstyle="none",markersize=5)
             lines.append(ax3.plot(locs,org,color=linecolors[i],label=nams[i],linestyle='-',linewidth=0.5)[0])
             labels.append(nams[i])
             #print locs,org
@@ -451,7 +451,7 @@ with PdfPages(pdfname) as pdf:
         xxlist=np.linspace(0,days,dt,endpoint=True)
         ax3.set_xticks(xxlist)
         ax3.set_xticklabels(xxlab,fontsize=8)
-        ax3.legend(lines,labels,ncol=1,loc='upper right',bbox_to_anchor=(1.0, 2.0))  
+        ax3.legend(lines,labels,ncol=1,loc='upper right',bbox_to_anchor=(1.1, 2.2))  
         #######################################
         pdf.savefig()  # saves the current figure into a pdf page
         plt.close()
