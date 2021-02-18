@@ -20,6 +20,9 @@ import re
 import os
 import sys
 import errno
+from multiprocessing import Pool
+from multiprocessing import Process
+from multiprocessing import sharedctypes
 
 import read_hydroweb as hweb
 import read_cgls as cgls
@@ -59,13 +62,16 @@ def round_half_down(n, decimals=0):
     multiplier = 10 ** decimals
     return math.ceil(n*multiplier - 0.5) / multiplier
 #=============================
-def vec_par(LEVEL,ax=None):
+def vec_par(inlist):
+    LEVEL = inlist[0]
+    ixiy  = inlist[1]
+    ax=None
     sup=2
     w=0.02
     width=0.5
     ax=ax or plt.gca()
-    txt="tmp_%02d.txt"%(LEVEL)
-    os.system("./src/print_rivvec tmp_00.txt 1 "+str(LEVEL)+" > "+txt)
+    txt="%s_%s.txt"%(ixiy,LEVEL)
+    os.system("./src/print_rivvec "+ixiy+".txt 1 "+str(LEVEL)+" > "+txt)
     width=(float(LEVEL)**sup)*w
     with open(txt,"r") as f:
         lines = f.readlines()
@@ -86,7 +92,7 @@ def vec_par(LEVEL,ax=None):
 
         colorVal="xkcd:azure"
         # print lon1,lon2,lat1,lat2
-        plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=ax00)
+        plot_ax(lon1,lon2,lat1,lat2,width,colorVal)
 #=============================
 def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None,alpha=1):
     ax=ax or plt.gca()
@@ -113,7 +119,8 @@ latlist={}
 # print sys.argv
 mapname=sys.argv[1]
 CaMa_dir=sys.argv[2]
-fname="./out/altimetry_"+mapname+"_new.txt"
+ncpus=int(sys.argv[3])
+fname="./out/altimetry_"+mapname+".txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -167,77 +174,141 @@ maps = ['ESRI_Imagery_World_2D',    # 0
         ]
 #=============================
 mkdir("./fig")
-pdfname="./fig/WSE_observation_river_network.pdf"
-#=============================
-with PdfPages(pdfname) as pdf:
-    for ixiy in pnames.keys():
-        unilist=np.unique(np.array(dataname[ixiy]))
-        pnum=np.shape(np.unique(np.array(dataname[ixiy])))[0]
-        # if pnum<2:
-        #     continue
-        hgt=11.69
-        wdt=8.27
-        fig=plt.figure(figsize=(wdt, hgt))
-        #plt.title(pname[point][0],fontsize=12)
-        G   = gridspec.GridSpec(3,2)
-        ax00 = fig.add_subplot(G[0:2,0::])
-        #ax01 = fig.add_subplot(G[0,1])
-        ax11 = fig.add_subplot(G[2,:])
-        # get the dimesion of the map
-        dec=2
-        val=0.25
-        lllat = round_half_down(min(latlist[ixiy])-val,dec)
-        urlat = round_half_up(max(latlist[ixiy])+val,dec)
-        lllon = round_half_down(min(lonlist[ixiy])-val,dec)
-        urlon = round_half_up(max(lonlist[ixiy])+val,dec)
-        if abs(lllat-urlat) < val:
-            urlat=round_half_up(urlat+val,dec)
-            lllat=round_half_down(lllat-val,dec)
-        if abs(lllon-urlon) < val:
-            urlon=round_half_up(urlon+val,dec)
-            lllon=round_half_down(lllon-val,dec)
-        print lllat, lllon, urlat, urlon
-        M = Basemap(resolution='h', projection='cyl',llcrnrlon=lllon, llcrnrlat=lllat, \
-            urcrnrlon=urlon, urcrnrlat=urlat, ax=ax00)
-        try:
-            M.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
-        except:
-            # Draw some map elements on the map
-            M.drawcoastlines()
-            M.drawstates()
-            M.drawcountries()
-            M.drawrivers(color='blue')
-        M.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=10,linewidth=0,zorder=102)
-        M.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0,zorder=102)
-        #####
-        box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
-        # print box
-        os.system("./src/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > tmp_00.txt") 
-        map(vec_par,np.arange(1,10+1,1))
-        os.system("rm -r tmp*.txt")
-        for i in np.arange(pnum):
-            TAG=unilist[i] 
-            repeatlist=np.where(np.array(dataname[ixiy])==TAG)[0]
-            for j in repeatlist:
-                pname=pnames[ixiy][j]
-                lon=lonlist[ixiy][j]
-                lat=latlist[ixiy][j]
-                M.scatter(lon,lat,c=colors[TAG],s=20,marker=markers[TAG],zorder=110)
-                ax11.text(-0.1,1.1-0.1*j,pnames[ixiy][j],va="center",ha="left",transform=ax11.transAxes,fontsize=10)
-        ax11.set_axis_off()
-        ax11.spines['top'].set_visible(False)
-        ax11.spines['right'].set_visible(False)
-        ax11.spines['left'].set_visible(False)
-        ax11.spines['bottom'].set_visible(False)
-        ######################################
-        pdf.savefig()  # saves the current figure into a pdf page
-        plt.close()
-        print "============================"
-    # set the file's metadata via the PdfPages object:
-    d = pdf.infodict()
-    d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat along the river'
-    d['Author'] = 'Menaka Revel'
-    d['Subject'] = 'Comparison of altimetry observations'
-    d['Keywords'] = 'HydroWeb, CGLS, HydroSat, ICESat, GRRATS'
-    d['CreationDate'] = datetime.datetime(2021, 1, 25)
-    d['ModDate'] = datetime.datetime.today()
+#================================
+#=== function for writing pdf ===
+#================================
+def write_pdf(inputlist):
+    num   = inputlist[0]
+    start = int(inputlist[1])
+    last  = int(inputlist[2])
+    pdfname="./fig/WSE_observation_river_network_"+num+".pdf"
+    with PdfPages(pdfname) as pdf:
+        for ixiy in pnames.keys():
+            unilist=np.unique(np.array(dataname[ixiy]))
+            pnum=np.shape(np.unique(np.array(dataname[ixiy])))[0]
+            # if pnum<2:
+            #     continue
+            alpha=1
+            sup=2
+            w=0.02
+            width=0.5
+            hgt=11.69
+            wdt=8.27
+            fig=plt.figure(figsize=(wdt, hgt))
+            #plt.title(pname[point][0],fontsize=12)
+            G    = gridspec.GridSpec(3,2)
+            ax00 = fig.add_subplot(G[0:2,0::])
+            #ax01 = fig.add_subplot(G[0,1])
+            ax11 = fig.add_subplot(G[2,:])
+            # get the dimesion of the map
+            dec=2
+            val=0.10
+            lllat = round_half_down(min(latlist[ixiy])-val,dec)
+            urlat = round_half_up(max(latlist[ixiy])+val,dec)
+            lllon = round_half_down(min(lonlist[ixiy])-val,dec)
+            urlon = round_half_up(max(lonlist[ixiy])+val,dec)
+            if abs(lllat-urlat) < val:
+                urlat=round_half_up(urlat+val,dec)
+                lllat=round_half_down(lllat-val,dec)
+            if abs(lllon-urlon) < val:
+                urlon=round_half_up(urlon+val,dec)
+                lllon=round_half_down(lllon-val,dec)
+            print lllat, lllon, urlat, urlon
+            M = Basemap(resolution='h', projection='cyl',llcrnrlon=lllon, llcrnrlat=lllat, \
+                urcrnrlon=urlon, urcrnrlat=urlat, ax=ax00)
+            try:
+                M.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
+            except:
+                # Draw some map elements on the map
+                M.drawcoastlines()
+                M.drawstates()
+                M.drawcountries()
+                M.drawrivers(color='blue')
+            M.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=10,linewidth=0,zorder=102)
+            M.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0,zorder=102)
+            #####
+            box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
+            # print box
+            os.system("./src/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > "+ixiy+".txt") 
+            inlist=[]
+            for LEVEL in np.arange(1,10+1,1):
+                txt="%s_%02d.txt"%(ixiy,LEVEL)
+                os.system("./src/print_rivvec "+ixiy+".txt 1 "+str(LEVEL)+" > "+txt)
+                width=(float(LEVEL)**sup)*w
+                with open(txt,"r") as f:
+                    lines = f.readlines()
+                #---
+                for line in lines:
+                    line    = filter(None, re.split(" ",line))
+                    lon1 = float(line[0])
+                    lat1 = float(line[1])
+                    lon2 = float(line[3])
+                    lat2 = float(line[4])
+
+                    if lon1-lon2 > 180.0:
+                        print lon1, lon2
+                        lon2=180.0
+                    elif lon2-lon1> 180.0:
+                        print lon1,lon2
+                        lon2=-180.0
+
+                    colorVal="xkcd:azure"
+                    # print lon1,lon2,lat1,lat2
+                    ax00.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,zorder=105,alpha=alpha)
+            # map(vec_par,inlist)
+            for i in np.arange(pnum):
+                TAG=unilist[i] 
+                repeatlist=np.where(np.array(dataname[ixiy])==TAG)[0]
+                for j in repeatlist:
+                    pname=pnames[ixiy][j]
+                    lon=lonlist[ixiy][j]
+                    lat=latlist[ixiy][j]
+                    M.scatter(lon,lat,c=colors[TAG],s=20,marker=markers[TAG],zorder=110)
+                    ax11.text(-0.1,1.1-0.1*j,pnames[ixiy][j],va="center",ha="left",transform=ax11.transAxes,fontsize=10)
+            ax11.set_axis_off()
+            ax11.spines['top'].set_visible(False)
+            ax11.spines['right'].set_visible(False)
+            ax11.spines['left'].set_visible(False)
+            ax11.spines['bottom'].set_visible(False)
+            ######################################
+            pdf.savefig()  # saves the current figure into a pdf page
+            plt.close()
+            print "============================"
+        # set the file's metadata via the PdfPages object:
+        d = pdf.infodict()
+        d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat along the river'
+        d['Author'] = 'Menaka Revel'
+        d['Subject'] = 'Comparison of altimetry observations'
+        d['Keywords'] = 'HydroWeb, CGLS, HydroSat, ICESat, GRRATS'
+        d['CreationDate'] = datetime.datetime(2021, 1, 25)
+        d['ModDate'] = datetime.datetime.today()
+    return 0
+#==============================================
+pages=100.0
+nums = int(len(pnames.keys())/pages) + 1
+lastitem = len(pnames.keys())
+inputlist=[]
+for num in np.arange(0,nums):
+    start = num*pages
+    last  = (num + 1)*pages
+    if last >= len(pnames.keys()):
+        last = lastitem
+    numch   = "%03d"%(num)
+    startch = "%d"%(start)
+    lastch  = "%d"%(last)
+    inputlist.append([numch, startch, lastch])
+
+#==========================
+#== parallel writing pdf ==
+#==========================
+para_flag=1
+# para_flag=0
+#--
+if para_flag==1:
+    p=Pool(ncpus)
+    p.map(write_pdf,inputlist)
+    p.terminate()
+else:
+    map(write_pdf,inputlist)
+
+os.system("rm -r tmp*.txt")

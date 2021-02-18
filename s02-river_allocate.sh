@@ -42,7 +42,7 @@ mkdir -p $outdir
 
 # USER=`whoami`
 
-python src/river_map.py $map $CaMa_dir & #> /dev/null 2>&1 & 
+python src/river_map.py $map $CaMa_dir $NCPUS & #> /dev/null 2>&1 & 
 
 wait
 

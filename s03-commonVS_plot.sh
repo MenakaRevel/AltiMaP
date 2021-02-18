@@ -38,7 +38,7 @@ figdir="./fig"
 
 mkdir -p $figdir
 
-python src/common_VS.py $map $CaMa_dir #& #> /dev/null 2>&1 & 
+python src/common_VS.py $map $CaMa_dir $NCPUS #& #> /dev/null 2>&1 & 
 
 wait
 
