@@ -349,6 +349,9 @@ program SET_MAP
     !===========
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
+    !============
+    ! find maximum uparea perpendicular to river
+
     if (iXX > 0 .or. iYY > 0) then
         print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)', trim(adjustl(id)),&
         &trim(station), trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
@@ -500,4 +503,149 @@ program SET_MAP
     end if
     return
     end subroutine westsouth
+    !*****************************************************************
+    subroutine loc_pepnd(ix,iy,nx,ny,nextX,nextY,uparea,oxx,oyy)
+    ! river location perpendicular to the flowing direction
+    implicit none
+    integer                      :: ix, iy, nx, ny
+    integer,dimension(nx,ny)     :: nextX, nextY
+    real,dimension(nx,ny)        :: uparea
+    integer                      :: oxx, oyy
+    integer,dimension(2)         :: xlist, ylist
+    integer                      :: k
+
+    integer                      :: iix, iiy, dx, dy, jx, jy, i
+    real                         :: tval 
+    integer                      :: dval, D8 ! d8 numbering
+    real                         :: upa, upn
+    !==============================================
+    jx=nextX(ix,iy)
+    jy=nextY(ix,iy)
+    !--------------
+    dx=jx-ix 
+    dy=jy-iy
+    dval=D8(dx,dy)
+    if (dval==1 .or. dval==5) then
+        k=2
+        !-------------------------
+        iix=ix
+        iiy=iy-1
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+        !-------------------------
+        iix=ix
+        iiy=iy+1
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+    elseif (dval==3 .or. dval==7) then
+        k=2
+        !-------------------------
+        iix=ix-1
+        iiy=iy
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+        !-------------------------
+        iix=ix+1
+        iiy=iy
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+    elseif (dval==4 .or. dval==8) then
+        k=2
+        !-------------------------
+        iix=ix+1
+        iiy=iy-1
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+        !-------------------------
+        iix=ix-1
+        iiy=iy+1
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+    elseif (dval==2 .or. dval==6) then
+        k=2
+        !-------------------------
+        iix=ix-1
+        iiy=iy-1
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+        !-------------------------
+        iix=ix+1
+        iiy=iy+1
+        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        xlist(1)=iix 
+        ylist(1)=iiy
+    end if
+    !-----------------------------
+    upa=uparea(ix,iy)
+    oxx=ix
+    oyy=iy
+    do i=1,k 
+        iix=xlist(i)
+        iiy=ylist(i)
+        upn=uparea(iix,iiy)
+        if (upa < upn) then
+            oxx=iix 
+            oyy=iiy 
+            upa=upn 
+        end if
+    end do 
+    return
+    end subroutine loc_pepnd
+    !*****************************************************************
+    function D8(dx,dy)
+    implicit none
+    integer                         :: dx, dy
+    integer                         :: D8, dval
+    real                            :: tval
+    !-------------------------------
+    ! Angle (degree) |  tan value |
+    !-------------------------------
+    !      22.5      |  0.4142135 |
+    !      67.5      |  2.4142135 |
+    !-------------------------------
+    ! D 8 graph
+    !-----------|
+    ! 4 | 3 | 2 |
+    !----------|
+    ! 5 | 0 | 1 |
+    !-----------|
+    ! 6 | 7 | 8 |
+    !-----------|
+    if (dx == 0)  then
+        if (dy > 0) dval=3
+        if (dy < 0) dval=7
+    elseif (dy == 0)  then
+        if (dx > 0) dval=1
+        if (dx < 0) dval=5
+    elseif (dx > 0 .and. dy > 0) then
+        tval=abs(real(dy)/real(dx))
+        if (tval > 0 .and. tval <= 0.4142135) dval=1 
+        if (tval > 0.4142135 .and. tval <= 2.4142135) dval=2
+        if (tval < 2.4142135) dval=3
+    elseif (dx > 0 .and. dy < 0) then
+        tval=abs(real(dy)/real(dx))
+        if (tval > 0 .and. tval <= 0.4142135) dval=1 
+        if (tval > 0.4142135 .and. tval <= 2.4142135) dval=8
+        if (tval < 2.4142135) dval=7
+    elseif (dx < 0 .and. dy < 0) then
+        tval=abs(real(dy)/real(dx))
+        if (tval > 0 .and. tval <= 0.4142135) dval=5 
+        if (tval > 0.4142135 .and. tval <= 2.4142135) dval=6
+        if (tval < 2.4142135) dval=7
+    elseif (dx < 0 .and. dy < 0) then
+        tval=abs(real(dy)/real(dx))
+        if (tval > 0 .and. tval <= 0.4142135) dval=5 
+        if (tval > 0.4142135 .and. tval <= 2.4142135) dval=4
+        if (tval < 2.4142135) dval=3
+    end if
+    D8=dval
+    return
+    end function D8
     !*****************************************************************

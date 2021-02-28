@@ -22,7 +22,7 @@ cd $PBS_O_WORKDIR
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 
 # map name
-map="glb_01min"
+map="glb_06min"
 
 # Higher resolution data
 TAG="3sec"
@@ -34,7 +34,8 @@ mkdir -p $outdir
 
 USER=`whoami`
 
-echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
+# echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
+printf '%30s%62s%12s%12s%10s%10s%8s%12s%10s%10s%17s' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite > tmp.txt
 SOUTH=-60
 while [ $SOUTH -lt 90 ];
 do
