@@ -45,7 +45,7 @@ do
     CNAME=`./src/set_name $WEST $SOUTH`
     #echo $CNAME ${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
     if [ -f ${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin ]; then
-        for data in "HydroWeb" "CGLS" "HydroSat" "GRRATS"; # "ICESat";
+        for data in "HydroWeb"; # "CGLS" "HydroSat" "GRRATS"; # "ICESat";
         do
             flag=`python ./src/avalability_data.py $data $WEST $SOUTH`
             # echo $flag
@@ -71,4 +71,4 @@ done
 
 
 wait 
-mv tmp.txt ./out/altimetry_${map}.txt
+mv tmp.txt ./out/altimetry_${map}_HydroWeb.txt

@@ -31,7 +31,7 @@ program SET_MAP
     
     ! input
     real,allocatable              ::  uparea(:,:),elevtn(:,:),nxtdst(:,:) !! drainage area (GRID base),elevation
-    integer,allocatable           ::  basin(:,:)                          !! next grid X
+    integer,allocatable           ::  basin(:,:), biftag(:,:)             !! next grid X
     integer,allocatable           ::  nextXX(:,:), nextYY(:,:)
     ! integer,allocatable           ::  upstXX(:,:,:), upstYY(:,:,:)
     ! real,allocatable              ::  glon(:), glat(:)
@@ -127,7 +127,7 @@ program SET_MAP
     
     ! print *, regmap
     allocate(uparea(nXX,nYY),basin(nXX,nYY),elevtn(nXX,nYY),nxtdst(nXX,nYY))
-    allocate(nextXX(nXX,nYY),nextYY(nXX,nYY))
+    allocate(nextXX(nXX,nYY),nextYY(nXX,nYY),biftag(nXX,nYY))
 
     !================
     ! high resolution
@@ -165,6 +165,12 @@ program SET_MAP
     read(11,rec=1) nxtdst
     close(11)
     
+    rfile1=trim(regmap)//'/biftag.bin'
+    open(11, file=rfile1, form='unformatted', access='direct' , action='READ', recl=4*nXX*nYY,status='old',iostat=ios)
+    read(11,rec=1) biftag
+    close(11)
+
+    !====================
     ! ! write to file
     ! ! need to change station character length a40 -> a50 [CGLS] 2021.1.27 {not yet changed}
     ! wfile1=trim(outdir)//"/altimetry_GRRATS_"//trim(map)//".txt"
@@ -351,6 +357,13 @@ program SET_MAP
     iyy=catmYY(kx,ky)
     !============
     ! find maximum uparea perpendicular to river
+    ! in case of braided river
+    ! considering the bifurcation tag
+    if (biftag(iXX,iYY) == 1) then
+        ix=iXX
+        iy=iYY
+        call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
+    end if
 
     if (iXX > 0 .or. iYY > 0) then
         print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)', trim(adjustl(id)),&
