@@ -8,14 +8,15 @@
 *.pdf
 
 # fortran excutables
-*/allocate_VS
-*/altimetry_rivermap
-*/altimetry_rivermap.f90
-*/set_name
-*/print_rivvec
-*/print_rivvec.o
-*/txt_vector
-*/txt_vector.o
+src/allocate_VS
+src/altimetry_rivermap
+src/altimetry_rivermap.f90
+src/set_name
+src/print_rivvec
+src/print_rivvec.o
+src/txt_vector
+src/txt_vector.o
+src/regional_biftag
 
 # .so .pyc
 *.so

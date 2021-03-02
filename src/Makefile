@@ -7,6 +7,7 @@ LIB = -L/opt/intel/lib -L/opt/intel/mkl/lib -L/opt/local/lib
 #=========
 TARGETS=\
 allocate_VS\
+regional_biftag\
 txt_vector\
 print_rivvec
 

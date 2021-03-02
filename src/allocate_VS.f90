@@ -56,6 +56,7 @@ program SET_MAP
     character*128                 ::  sat,sday,eday,stime,etime,status
     real                          ::  lat0, lon0, ele0 !, lat, lon,area
     real                          ::  egm08,egm96
+    integer                       ::  flag
     
     ! file
     character*128                 ::  hiresmap,regmap, finp
@@ -278,6 +279,8 @@ program SET_MAP
     !-----------
     ix=int( (lon0 - west1 )*dble(hres) )+1
     iy=int( (north1 - lat0)*dble(hres) )+1
+    !-----------
+    flag=1
     ! print*, trim(station), "ix:", ix, "iy:",iy
     ! get the nearest west and south 
     ! call westsouth(lon0,lat0,mwin,west1,south1)
@@ -292,6 +295,7 @@ program SET_MAP
     if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
         kx=ix
         ky=iy
+        flag=0
     else
         nn=5
         lag=1.0e20
@@ -321,11 +325,12 @@ program SET_MAP
             end if
             end do
         end do
+        flag=1
     end if
     !===========
-    !! correction for ocean grids
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
+    !! correction for ocean grids
     if (iXX<=0 .or. iYY<=0) then
         nn=5
         lag=1.0e20
@@ -351,6 +356,7 @@ program SET_MAP
                 end if
             end do
         end do
+        flag=2
     end if
     !===========
     iXX=catmXX(kx,ky)
@@ -363,12 +369,13 @@ program SET_MAP
         ix=iXX
         iy=iYY
         call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
+        flag=3
     end if
 
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)', trim(adjustl(id)),&
-        &trim(station), trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
-        &egm08, egm96, trim(sat)
+        print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,a2)', trim(adjustl(id)),&
+        &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
+        &egm08, egm96, trim(sat), flag
     ! else
     !     print*, "no data"
     end if
@@ -538,6 +545,7 @@ program SET_MAP
     dx=jx-ix 
     dy=jy-iy
     dval=D8(dx,dy)
+    k=0
     if (dval==1 .or. dval==5) then
         k=2
         !-------------------------
@@ -550,8 +558,8 @@ program SET_MAP
         iix=ix
         iiy=iy+1
         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
+        xlist(2)=iix 
+        ylist(2)=iiy
     elseif (dval==3 .or. dval==7) then
         k=2
         !-------------------------
@@ -564,8 +572,8 @@ program SET_MAP
         iix=ix+1
         iiy=iy
         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
+        xlist(2)=iix 
+        ylist(2)=iiy
     elseif (dval==4 .or. dval==8) then
         k=2
         !-------------------------
@@ -578,8 +586,8 @@ program SET_MAP
         iix=ix-1
         iiy=iy+1
         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
+        xlist(2)=iix 
+        ylist(2)=iiy
     elseif (dval==2 .or. dval==6) then
         k=2
         !-------------------------
@@ -592,11 +600,12 @@ program SET_MAP
         iix=ix+1
         iiy=iy+1
         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
+        xlist(2)=iix 
+        ylist(2)=iiy
     end if
     !-----------------------------
     upa=uparea(ix,iy)
+    upn=uparea(ix,iy)
     oxx=ix
     oyy=iy
     do i=1,k 

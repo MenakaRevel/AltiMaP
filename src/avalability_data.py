@@ -1,10 +1,6 @@
 #!/opt/local/bin/python
 # -*- coding: utf-8 -*-
 
-import datetime
-import numpy as np
-from numpy import ma
-import matplotlib
 import sys
 import re
 
@@ -30,4 +26,4 @@ with open(fname) as f:
             flag=1
 
 #----
-print flag
+print (flag)

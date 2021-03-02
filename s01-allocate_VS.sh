@@ -34,8 +34,14 @@ mkdir -p $outdir
 
 USER=`whoami`
 
+fbiftag="${CaMa_dir}/map/${map}/biftag.bin"
+if [ ! -f ${fbiftag} ]; then
+  glb_map="glb_06min"  # need to change according to map
+  ./src/regional_biftag $map $glb_map $CaMa_dir
+fi
+
 # echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
-printf '%30s%62s%12s%12s%10s%10s%8s%12s%10s%10s%17s' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite > tmp.txt
+printf '%30s%62s%12s%12s%10s%10s%8s%12s%10s%10s%17s%4s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite flag > tmp.txt
 SOUTH=-60
 while [ $SOUTH -lt 90 ];
 do
@@ -45,7 +51,7 @@ do
     CNAME=`./src/set_name $WEST $SOUTH`
     #echo $CNAME ${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
     if [ -f ${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin ]; then
-        for data in "HydroWeb"; # "CGLS" "HydroSat" "GRRATS"; # "ICESat";
+        for data in "HydroWeb" "CGLS" "HydroSat" "GRRATS"; # "ICESat";
         do
             flag=`python ./src/avalability_data.py $data $WEST $SOUTH`
             # echo $flag
@@ -71,4 +77,4 @@ done
 
 
 wait 
-mv tmp.txt ./out/altimetry_${map}_HydroWeb.txt
+mv tmp.txt ${outdir}/altimetry_${map}.txt
