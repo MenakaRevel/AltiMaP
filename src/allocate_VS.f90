@@ -280,13 +280,18 @@ program SET_MAP
     ix=int( (lon0 - west1 )*dble(hres) )+1
     iy=int( (north1 - lat0)*dble(hres) )+1
     !-----------
-    flag=1
+    ! flag identity
+    ! 1 = location was directly found
+    ! 2 = found the nearest permenat water
+    ! 3 = correction for ocean grids
+    ! 4 = bifurication location
+    flag=-9
     ! print*, trim(station), "ix:", ix, "iy:",iy
     ! get the nearest west and south 
     ! call westsouth(lon0,lat0,mwin,west1,south1)
     !================
-    iXX=catmXX(ix,iy)
-    iYY=catmYY(ix,iy)
+    ! iXX=catmXX(ix,iy)
+    ! iYY=catmYY(ix,iy)
     ! print*, iXX, iYY
     !================
     !! permanat water
@@ -295,7 +300,7 @@ program SET_MAP
     if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
         kx=ix
         ky=iy
-        flag=0
+        flag=1
     else
         nn=5
         lag=1.0e20
@@ -325,7 +330,7 @@ program SET_MAP
             end if
             end do
         end do
-        flag=1
+        flag=2
     end if
     !===========
     iXX=catmXX(kx,ky)
@@ -356,7 +361,7 @@ program SET_MAP
                 end if
             end do
         end do
-        flag=2
+        flag=3
     end if
     !===========
     iXX=catmXX(kx,ky)
@@ -369,11 +374,11 @@ program SET_MAP
         ix=iXX
         iy=iYY
         call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
-        flag=3
+        flag=4
     end if
-
+    ! print*, flag
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,a2)', trim(adjustl(id)),&
+        print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,i4.0)', trim(adjustl(id)),&
         &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
         &egm08, egm96, trim(sat), flag
     ! else
