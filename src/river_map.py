@@ -84,10 +84,10 @@ def vec_par(inlist):
         lat2 = float(line[4])
 
         if lon1-lon2 > 180.0:
-            print lon1, lon2
+            print (lon1, lon2)
             lon2=180.0
         elif lon2-lon1> 180.0:
-            print lon1,lon2
+            print (lon1,lon2)
             lon2=-180.0
 
         colorVal="xkcd:azure"
@@ -155,6 +155,36 @@ with open(fname, "r") as f:
             lonlist[ixiy]=[lon]
             latlist[ixiy]=[lat]
             satlist[ixiy]=[sat.upper()]
+#=============================
+# Read the CMF variables
+if mapname == 'glb_15min':
+    nx      = 1440
+    ny      = 720
+elif mapname == 'glb_06min':
+    nx      = 3600
+    ny      = 1800
+elif mapname == 'glb_01min':
+    nx      = 21600
+    ny      = 10800
+#=============================
+nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
+rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
+rivhgt = CaMa_dir+"/map/"+mapname+"/rivhgt.bin"
+rivlen = CaMa_dir+"/map/"+mapname+"/rivlen.bin"
+elevtn = CaMa_dir+"/map/"+mapname+"/elevtn.bin"
+lonlat = CaMa_dir+"/map/"+mapname+"/lonlat.bin"
+uparea = CaMa_dir+"/map/"+mapname+"/uparea.bin"
+nxtdst = CaMa_dir+"/map/"+mapname+"/nxtdst.bin"
+rivseq = CaMa_dir+"/map/"+mapname+"/rivseq.bin"
+nextxy = np.fromfile(nextxy,np.int32).reshape(2,ny,nx)
+# rivwth = np.fromfile(rivwth,np.float32).reshape(ny,nx)
+# rivhgt = np.fromfile(rivhgt,np.float32).reshape(ny,nx)
+# rivlen = np.fromfile(rivlen,np.float32).reshape(ny,nx)
+elevtn = np.fromfile(elevtn,np.float32).reshape(ny,nx)
+lonlat = np.fromfile(lonlat,np.float32).reshape(2,ny,nx)
+uparea = np.fromfile(uparea,np.float32).reshape(ny,nx)
+nxtdst = np.fromfile(nxtdst,np.float32).reshape(ny,nx)
+rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 #=====================================
 markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
 colors={"HydroWeb":"xkcd:reddy brown","CGLS":"xkcd:dark pink","ICESat":"xkcd:pinkish","HydroSat":"xkcd:light urple","GRRATS":"xkcd:tangerine"} 
@@ -173,7 +203,8 @@ maps = ['ESRI_Imagery_World_2D',    # 0
         'World_Topo_Map'            # 11
         ]
 #=============================
-mkdir("./fig")
+# mkdir("./fig")
+# mkdir("./fig/river_network")
 #================================
 #=== function for writing pdf ===
 #================================
@@ -181,9 +212,9 @@ def write_pdf(inputlist):
     num   = inputlist[0]
     start = int(inputlist[1])
     last  = int(inputlist[2])
-    pdfname="./fig/WSE_observation_river_network_"+num+".pdf"
+    pdfname="./fig/river_network/WSE_observation_river_network_"+num+".pdf"
     with PdfPages(pdfname) as pdf:
-        for ixiy in pnames.keys():
+        for ixiy in pnames.keys()[start:last]:
             unilist=np.unique(np.array(dataname[ixiy]))
             pnum=np.shape(np.unique(np.array(dataname[ixiy])))[0]
             # if pnum<2:
@@ -213,7 +244,7 @@ def write_pdf(inputlist):
             if abs(lllon-urlon) < val:
                 urlon=round_half_up(urlon+val,dec)
                 lllon=round_half_down(lllon-val,dec)
-            print lllat, lllon, urlat, urlon
+            print (lllat, lllon, urlat, urlon)
             M = Basemap(resolution='h', projection='cyl',llcrnrlon=lllon, llcrnrlat=lllat, \
                 urcrnrlon=urlon, urcrnrlat=urlat, ax=ax00)
             try:
@@ -229,11 +260,11 @@ def write_pdf(inputlist):
             #####
             box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
             # print box
-            os.system("./src/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > "+ixiy+".txt") 
+            os.system("./src/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > ./tmp/"+ixiy+".txt") 
             inlist=[]
             for LEVEL in np.arange(1,10+1,1):
-                txt="%s_%02d.txt"%(ixiy,LEVEL)
-                os.system("./src/print_rivvec "+ixiy+".txt 1 "+str(LEVEL)+" > "+txt)
+                txt="./tmp/%s_%02d.txt"%(ixiy,LEVEL)
+                os.system("./src/print_rivvec ./tmp/"+ixiy+".txt 1 "+str(LEVEL)+" > "+txt)
                 width=(float(LEVEL)**sup)*w
                 with open(txt,"r") as f:
                     lines = f.readlines()
@@ -246,24 +277,31 @@ def write_pdf(inputlist):
                     lat2 = float(line[4])
 
                     if lon1-lon2 > 180.0:
-                        print lon1, lon2
+                        print (lon1, lon2)
                         lon2=180.0
                     elif lon2-lon1> 180.0:
-                        print lon1,lon2
+                        print (lon1,lon2)
                         lon2=-180.0
 
                     colorVal="xkcd:azure"
                     # print lon1,lon2,lat1,lat2
                     ax00.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,zorder=105,alpha=alpha)
             # map(vec_par,inlist)
+            os.system("rm -r ./tmp/"+ixiy+"*.txt")
             for i in np.arange(pnum):
                 TAG=unilist[i] 
                 repeatlist=np.where(np.array(dataname[ixiy])==TAG)[0]
                 for j in repeatlist:
                     pname=pnames[ixiy][j]
-                    lon=lonlist[ixiy][j]
-                    lat=latlist[ixiy][j]
-                    M.scatter(lon,lat,c=colors[TAG],s=20,marker=markers[TAG],zorder=110)
+                    lon0=lonlist[ixiy][j]
+                    lat0=latlist[ixiy][j]
+                    ix=int(ixiy[0:5])
+                    iy=int(ixiy[5::])
+                    lon=lonlat[0,iy,ix]
+                    lat=lonlat[1,iy,ix]
+                    # M.scatter(lon,lat,c=colors[TAG],s=20,marker=markers[TAG],zorder=110)
+                    ax11.plot(lon0,lat0,color=colors[TAG],marker=markers[TAG],markersize=5)
+                    ax11.plot(lon ,lat ,color=colors[TAG],marker=markers[TAG],fillstyle="none",markersize=5)
                     ax11.text(-0.1,1.1-0.1*j,pnames[ixiy][j],va="center",ha="left",transform=ax11.transAxes,fontsize=10)
             ax11.set_axis_off()
             ax11.spines['top'].set_visible(False)
@@ -273,7 +311,7 @@ def write_pdf(inputlist):
             ######################################
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
-            print "============================"
+            print ("============================")
         # set the file's metadata via the PdfPages object:
         d = pdf.infodict()
         d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat along the river'
@@ -293,7 +331,7 @@ for num in np.arange(0,nums):
     last  = (num + 1)*pages
     if last >= len(pnames.keys()):
         last = lastitem
-    numch   = "%03d"%(num)
+    numch   = "%03d"%(num+1)
     startch = "%d"%(start)
     lastch  = "%d"%(last)
     inputlist.append([numch, startch, lastch])
@@ -306,9 +344,7 @@ para_flag=1
 #--
 if para_flag==1:
     p=Pool(ncpus)
-    p.map(write_pdf,inputlist)
+    list(p.map(write_pdf,inputlist))
     p.terminate()
 else:
-    map(write_pdf,inputlist)
-
-os.system("rm -r tmp*.txt")
+    list(map(write_pdf,inputlist))

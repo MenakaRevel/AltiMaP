@@ -360,7 +360,7 @@ with PdfPages(pdfname) as pdf:
         if abs(lllon-urlon) < val:
             urlon=round_half_up(urlon+val,dec)
             lllon=round_half_down(lllon-val,dec)
-        print lllat, lllon, urlat, urlon
+        print (lllat, lllon, urlat, urlon)
 
         # if lllat==urlat:
         #     urlat=round_half_up(latlist[ixiy][0]+val,dec)
