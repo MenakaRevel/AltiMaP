@@ -297,8 +297,8 @@ def write_pdf(inputlist):
                     lat0=latlist[ixiy][j]
                     ix=int(ixiy[0:5])
                     iy=int(ixiy[5::])
-                    lon=lonlat[0,iy,ix]
-                    lat=lonlat[1,iy,ix]
+                    lon=lonlat[0,iy-1,ix-1]
+                    lat=lonlat[1,iy-1,ix-1]
                     # M.scatter(lon,lat,c=colors[TAG],s=20,marker=markers[TAG],zorder=110)
                     ax11.plot(lon0,lat0,color=colors[TAG],marker=markers[TAG],markersize=5)
                     ax11.plot(lon ,lat ,color=colors[TAG],marker=markers[TAG],fillstyle="none",markersize=5)
