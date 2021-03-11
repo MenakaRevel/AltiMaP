@@ -7,7 +7,7 @@ from numpy import ma
 import matplotlib
 matplotlib.use('Agg')
 from mpl_toolkits.basemap import Basemap
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
