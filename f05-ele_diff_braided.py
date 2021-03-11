@@ -143,7 +143,7 @@ with open(fname, "r") as f:
         ix   = ix0 - 1
         iy   = iy0 - 1
         #---------------------------
-        if flag == 1:
+        if flag == 4:
             lnames.append(name)
             leledf.append(eled)
         else:
@@ -175,4 +175,4 @@ ax.tick_params('x',labelsize=5, colors='k')
 #ax.set_title("Histogram of Bias",fontsize=8)
 ax.set_xlim(xmin=xmin,xmax=xmax)
 # ax.text(0.01,0.90,"b",transform=ax.transAxes,fontsize=8)
-plt.savefig("./fig/criteria/elevation_diff_normal_hist.png",dpi=500)
+plt.savefig("./fig/criteria/elevation_diff_braided_hist.png",dpi=500)

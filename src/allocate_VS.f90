@@ -374,7 +374,9 @@ program SET_MAP
         ix=iXX
         iy=iYY
         call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
-        flag=4
+        if (ix==iXX .and. iy==iYY) then
+            flag=4
+        end if
     end if
     ! print*, flag
     if (iXX > 0 .or. iYY > 0) then
@@ -539,7 +541,7 @@ program SET_MAP
     integer,dimension(2)         :: xlist, ylist
     integer                      :: k
 
-    integer                      :: iix, iiy, dx, dy, jx, jy, i
+    integer                      :: iix, iiy, dx, dy, jx, jy, i, j
     real                         :: tval 
     integer                      :: dval, D8 ! d8 numbering
     real                         :: upa, upn
@@ -550,63 +552,99 @@ program SET_MAP
     dx=jx-ix 
     dy=jy-iy
     dval=D8(dx,dy)
-    k=0
+    k=5
     if (dval==1 .or. dval==5) then
-        k=2
-        !-------------------------
-        iix=ix
-        iiy=iy-1
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
-        !-------------------------
-        iix=ix
-        iiy=iy+1
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(2)=iix 
-        ylist(2)=iiy
+        j=1
+        do i=-k,k
+            iix=ix 
+            iiy=iy+i
+            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+        ! k=2
+        ! !-------------------------
+        ! iix=ix
+        ! iiy=iy-1
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(1)=iix 
+        ! ylist(1)=iiy
+        ! !-------------------------
+        ! iix=ix
+        ! iiy=iy+1
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(2)=iix 
+        ! ylist(2)=iiy
     elseif (dval==3 .or. dval==7) then
-        k=2
-        !-------------------------
-        iix=ix-1
-        iiy=iy
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
-        !-------------------------
-        iix=ix+1
-        iiy=iy
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(2)=iix 
-        ylist(2)=iiy
+        j=1
+        do i=-k,k
+            iix=ix+i 
+            iiy=iy
+            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+        ! k=2
+        ! !-------------------------
+        ! iix=ix-1
+        ! iiy=iy
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(1)=iix 
+        ! ylist(1)=iiy
+        ! !-------------------------
+        ! iix=ix+1
+        ! iiy=iy
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(2)=iix 
+        ! ylist(2)=iiy
     elseif (dval==4 .or. dval==8) then
-        k=2
-        !-------------------------
-        iix=ix+1
-        iiy=iy-1
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
-        !-------------------------
-        iix=ix-1
-        iiy=iy+1
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(2)=iix 
-        ylist(2)=iiy
+        j=1
+        do i=-k,k
+            iix=ix+i 
+            iiy=iy-i
+            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+        ! k=2
+        ! !-------------------------
+        ! iix=ix+1
+        ! iiy=iy-1
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(1)=iix 
+        ! ylist(1)=iiy
+        ! !-------------------------
+        ! iix=ix-1
+        ! iiy=iy+1
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(2)=iix 
+        ! ylist(2)=iiy
     elseif (dval==2 .or. dval==6) then
-        k=2
-        !-------------------------
-        iix=ix-1
-        iiy=iy-1
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(1)=iix 
-        ylist(1)=iiy
-        !-------------------------
-        iix=ix+1
-        iiy=iy+1
-        call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        xlist(2)=iix 
-        ylist(2)=iiy
+        j=1
+        do i=-k,k
+            iix=ix+i 
+            iiy=iy+i
+            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+        ! k=2
+        ! !-------------------------
+        ! iix=ix-1
+        ! iiy=iy-1
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(1)=iix 
+        ! ylist(1)=iiy
+        ! !-------------------------
+        ! iix=ix+1
+        ! iiy=iy+1
+        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+        ! xlist(2)=iix 
+        ! ylist(2)=iiy
     end if
     !-----------------------------
     upa=uparea(ix,iy)
