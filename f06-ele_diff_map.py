@@ -20,9 +20,15 @@ import re
 import os
 import sys
 import errno
+from matplotlib.colors import LogNorm,Normalize,ListedColormap
+import matplotlib.cm as cm
 from multiprocessing import Pool
 from multiprocessing import Process
 from multiprocessing import sharedctypes
+import cartopy.crs as ccrs
+import cartopy
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+import cartopy.feature as cfeature
 
 sys.path.append("./src")
 # import read_hydroweb as hweb
@@ -121,6 +127,8 @@ days=(end-start).days + 1
 #=============================
 lnames=[]
 leledf=[]
+l_lons=[]
+l_lats=[]
 #=============================
 fname="./out/altimetry_"+mapname+".txt"
 with open(fname, "r") as f:
@@ -143,36 +151,84 @@ with open(fname, "r") as f:
         ix   = ix0 - 1
         iy   = iy0 - 1
         #---------------------------
-        if flag == 4:
+        if flag == 1:
             lnames.append(name)
             leledf.append(eled)
+            l_lons.append(lon)
+            l_lats.append(lat)
         else:
             continue
 #=============================      
 lnames=np.array(lnames)
 leledf=np.array(leledf)
+l_lons=np.array(l_lons)
+l_lats=np.array(l_lats)
 N=float(len(lnames))
 #=============================
 mkdir("./fig")
 mkdir("./fig/criteria")
 #=============================
+# river width
+sup=2
+w=0.02
+alpha=1
+width=0.5
+
+land="#C0C0C0"
+water="#FFFFFF"
+
+west=-180.0
+east=180.0
+north=90.0
+south=-58.0
+
+lllat = -58.
+urlat = 90.
+lllon = -180.
+urlon = 180.
+
+londiff=(east-west)*4
+latdiff=(north-south)*4
+
+npix=(90-north)*4
+spix=(90-south)*4
+wpix=(180+west)*4
+epix=(180+east)*4
+
+#cmap=make_colormap(colors_list)
+#cmap=mbar.colormap("H02")
+cmap=cm.seismic
+#cmap.set_under("w",alpha=0)
+cmapL=cmap #cm.get_cmap("rainbow_r")
+vmin=-20.0
+vmax=20.0
+norm=Normalize(vmin=vmin,vmax=vmax)
+
 hgt=11.69*(1.0/3.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
 G  = gridspec.GridSpec(1,1)
-ax = fig.add_subplot(G[0,0])
+ax=fig.add_subplot(G[0,0],projection=ccrs.Robinson())
 #-----------------------------  
-# pdf graph
-bins=100
-xmin=0.0
-xmax=10.0
-ax = fig.add_subplot(G[0,0])
-sns.distplot(np.abs(leledf), bins=bins, hist=True, color="r")
-#ax.set_ylabel('density', color='k',fontsize=8)
-ax.tick_params('y',labelsize=5, colors='k')
-ax.set_xlabel('Elevation Differnce', color='k',fontsize=8)
-ax.tick_params('x',labelsize=5, colors='k')
-#ax.set_title("Histogram of Bias",fontsize=8)
-ax.set_xlim(xmin=xmin,xmax=xmax)
-# ax.text(0.01,0.90,"b",transform=ax.transAxes,fontsize=8)
-plt.savefig("./fig/criteria/elevation_diff_braided_hist.png",dpi=500)
+ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
+#
+pnum=len(lnames)
+for point in np.arange(pnum):
+    eled=leledf[point]
+    lon =l_lons[point]
+    lat =l_lats[point]
+    c=cmapL(norm(eled))
+    #print lon,lat,pname[point][0],mean_bias
+    ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree())
+#--
+im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norm)#
+im.set_visible(False)
+#cbar=M.colorbar(im,"right",size="2%")
+ax.outline_patch.set_linewidth(0.0)
+#colorbar
+cax=fig.add_axes([0.40,0.10,0.4,.01])
+cbar=plt.colorbar(im,orientation="horizontal",extend='both',ticks=np.arange(vmin,vmax+0.1,5.0),cax=cax) #,extend='both',ticks=np.arange(0.0,1.0+0.001,0.1)
+cbar.ax.tick_params(labelsize=6)
+cbar.set_label("Elevation Difference $(m)$",fontsize=8)
+plt.savefig("./fig/criteria/elevation_diff_map.png",dpi=500)
