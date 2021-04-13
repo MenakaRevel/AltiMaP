@@ -39,7 +39,7 @@ program SET_MAP
     ! higher resoultion data
     integer*2,allocatable         ::  dwx1m(:,:), dwy1m(:,:)
     integer*2,allocatable         ::  catmXX(:,:), catmYY(:,:)
-    integer*1,allocatable         ::  catmZZ(:,:), visual(:,:)
+    integer*1,allocatable         ::  catmZZ(:,:), visual(:,:), flwdir(:,:)
     real,allocatable              ::  upa1m(:,:), ele1m(:,:)
     real,allocatable              ::  riv1m(:,:), flddif(:,:), hand(:,:)
     ! real,allocatable              ::  lon1m(:), lat1m(:)
@@ -47,6 +47,7 @@ program SET_MAP
     ! calculation
     integer                       ::  nn
     real                          ::  lag, lag_now!, upa
+    real                          ::  down_dist, flow_dist
     ! real                          ::  err1, slope, threshold
     
     ! Station list
@@ -55,7 +56,7 @@ program SET_MAP
     character*128                 ::  id, station,river,bsn,country
     character*128                 ::  sat,sday,eday,stime,etime,status
     real                          ::  lat0, lon0, ele0 !, lat, lon,area
-    real                          ::  egm08,egm96
+    real                          ::  egm08,egm96, diffdist
     integer                       ::  flag
     
     ! file
@@ -135,7 +136,7 @@ program SET_MAP
     nx=int( mwin*cnum )
     ny=int( mwin*cnum )
     allocate(upa1m(nx,ny),catmXX(nx,ny),catmYY(nx,ny),catmZZ(nx,ny),dwx1m(nx,ny),dwy1m(nx,ny))
-    allocate(flddif(nx,ny),hand(nx,ny),ele1m(nx,ny),riv1m(nx,ny),visual(nx,ny))
+    allocate(flddif(nx,ny),hand(nx,ny),ele1m(nx,ny),riv1m(nx,ny),visual(nx,ny),flwdir(nx,ny))
     
     rfile1=trim(regmap)//'/uparea.bin'
     !print *, "uparea", rfile1
@@ -259,6 +260,13 @@ program SET_MAP
     read(21,rec=1) visual
     close(21)
     endif
+
+    rfile1=trim(hiresmap)//trim(cname)//'.flwdir.bin'
+    open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
+    if( ios==0 )then
+    read(21,rec=1) flwdir
+    close(21)
+    endif
     ! ===============================================
     ! read data 
     ! ===============================================
@@ -276,15 +284,16 @@ program SET_MAP
         goto 1000
     end if
     !print*, trim(id), " ", trim(station), " ", trim(river), lon0, lat0
-    !-----------
+    !-------------------------------------
     ix=int( (lon0 - west1 )*dble(hres) )+1
     iy=int( (north1 - lat0)*dble(hres) )+1
     !-----------
     ! flag identity
     ! 1 = location was directly found
-    ! 2 = found the nearest permenat water
-    ! 3 = correction for ocean grids
-    ! 4 = bifurication location
+    ! 2 = location was on the unit-catchment outlet
+    ! 3 = found the nearest permenat water
+    ! 4 = correction for ocean grids
+    ! 5 = bifurication location
     flag=-9
     ! print*, trim(station), "ix:", ix, "iy:",iy
     ! get the nearest west and south 
@@ -297,72 +306,112 @@ program SET_MAP
     !! permanat water
     kx=ix
     ky=iy
-    if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
+    ! print*, "==========================================================="
+    ! print*, "Initial allocation: ",kx, ky, visual(kx,ky)
+    ! if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
+    if (visual(kx,ky) == 10) then  !! river channel
+        ! print*, "flag: 1  ","river channel"
         kx=ix
         ky=iy
         flag=1
-    else
-        nn=5
-        lag=1.0e20
-        do dy=-nn,nn
-            do dx=-nn,nn
-            jx=ix+dx
-            jy=iy+dy
-            !! for regional maps
-            if ((east-west)==360.0) then
-                if( jx<=0 ) jx=jx+nx
-                if( jx>nx ) jx=jx-nx
-            else
-                if( jx<=0 ) jx=1
-                if( jx>nx ) jx=nx
-            end if
-            !-----
-            if ((catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0)) cycle
-            lag_now=sqrt((real(dx)**2)+(real(dy)**2))
-            if (lag_now<lag) then
-                if( riv1m(jx,iy)/=-9999 .and. riv1m(jx,iy)/=0 )then
-                ! iXX=catmXX(jx,jy)
-                ! iyy=catmYY(jx,jy)
-                kx=jx
-                ky=jy
-                lag=lag_now
-                end if
-            end if
-            end do
-        end do
+    else if (visual(kx,ky) == 20) then  !! unit-catchment mouth
+        ! print*, "flag: 2  ","unit-catchment mouth"
+        kx=ix
+        ky=iy
         flag=2
-    end if
-    !===========
-    iXX=catmXX(kx,ky)
-    iyy=catmYY(kx,ky)
-    !! correction for ocean grids
-    if (iXX<=0 .or. iYY<=0) then
-        nn=5
+    else if (visual(kx,ky) == 2 .or. visual(kx,ky) == 3 .or. visual(kx,ky) == 5 .or. visual(kx,ky) == 7) then   !! correction for land to channel
+        ! print*, "flag: 3  ","correction for land to channel"
+        nn=10
         lag=1.0e20
         do dy=-nn,nn
             do dx=-nn,nn
                 jx=kx+dx
                 jy=ky+dy
-                !! for regional maps
-                if ((east-west)==360.0) then
-                if( jx<=0 ) jx=kx+nx
-                if( jx>nx ) jx=kx-nx
-                else
-                if( jx<=0 ) jx=1
-                if( jx>nx ) jx=nx
-                end if
+                if ( jx<=0 ) jx=1
+                if ( jx>nx ) jx=nx
+                if ( jy<=0 ) jy=1
+                if ( jy>nx ) jy=ny
+                ! ! !! for regional maps
+                ! ! if ( (east-west)==360.0 ) then
+                ! !     if ( jx<=0 ) jx=jx+nx
+                ! !     if ( jx>nx ) jx=jx-nx
+                ! ! else
+                ! !     if ( jx<=0 ) jx=1
+                ! !     if ( jx>nx ) jx=nx
+                ! ! end if
                 !-----
-                if ((catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0)) cycle
-                lag_now=sqrt((real(dx)**2)+(real(dy)**2))
-                if (lag_now<lag) then
-                kx=jx
-                ky=jy
-                lag=lag_now
+                if ( kx == jx .and. ky == jy) cycle
+                if ( (catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0) ) cycle
+                if ( visual(jx,jy) /= 10 ) cycle
+                ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
+                ! print*, "===",kx,ky,jx,jy,"==="
+                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny)
+                if ( lag_now == -9999.0 ) cycle
+                ! print*, lag, lag_now
+                if ( lag_now < lag ) then
+                    ! if( riv1m(jx,jy)/=-9999 .and. riv1m(jx,jy)/=0 )then
+                    if ( visual(jx,jy) == 10 ) then
+                    ! iXX=catmXX(jx,jy)
+                    ! iyy=catmYY(jx,jy)
+                        kx=jx
+                        ky=jy
+                        lag=lag_now
+                        ! print*, "Found new location: ",flag, kx,ky,lag
+                    end if
                 end if
             end do
         end do
-        flag=3
+        if ( kx /= ix .or. ky /= iy ) then
+            flag=3
+        end if
+    else if ( visual(kx,ky)==0 .or. visual(kx,ky)==1 .or. visual(kx,ky)==25 ) then !! correction for ocean grids
+        ! print*, "flag: 4  ","correction for ocean grids"
+        nn=10
+        lag=1.0e20
+        do dy=-nn,nn
+            do dx=-nn,nn
+                jx=kx+dx
+                jy=ky+dy
+                if ( jx<=0 ) jx=1
+                if ( jx>nx ) jx=nx
+                if ( jy<=0 ) jy=1
+                if ( jy>nx ) jy=ny
+                ! ! !! for regional maps
+                ! ! if ( (east-west)==360.0 ) then
+                ! !     if( jx<=0 ) jx=kx+nx
+                ! !     if( jx>nx ) jx=kx-nx
+                ! ! else
+                ! !     if( jx<=0 ) jx=1
+                ! !     if( jx>nx ) jx=nx
+                ! ! end if
+                !-----
+                if ( kx == jx .and. ky == jy) cycle
+                if ((catmXX(jx,jy) <= 0) .or. (catmYY(jx,jy) <= 0)) cycle
+                if ( visual(jx,jy) /= 10) cycle
+                ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
+                ! print*, "===",kx,ky,jx,jy,"==="
+                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny)
+                if ( lag_now == -9999.0 ) cycle
+                ! print*, lag, lag_now
+                if ( lag_now < lag ) then
+                    if ( visual(jx,jy) == 10 ) then
+                        kx=jx
+                        ky=jy
+                        lag=lag_now
+                        ! print*, "Found new location: ",flag, kx,ky,lag
+                    end if
+                end if
+            end do
+        end do
+        if ( kx /= ix .or. ky /= iy ) then
+            flag=4
+        end if
+    else
+        flag=9
+        print*, "flag: 9 ->", kx, ky, visual(kx,ky)
     end if
+    !
+    ! print*, kx, ky
     !===========
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
@@ -370,19 +419,26 @@ program SET_MAP
     ! find maximum uparea perpendicular to river
     ! in case of braided river
     ! considering the bifurcation tag
-    if (biftag(iXX,iYY) == 1) then
-        ix=iXX
-        iy=iYY
-        call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
-        if (ix==iXX .and. iy==iYY) then
-            flag=4
-        end if
-    end if
+    ! if (biftag(iXX,iYY) == 1) then
+    !     ix=iXX
+    !     iy=iYY
+    !     call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
+    !     if (ix/=iXX .and. iy/=iYY) then
+    !         flag=5
+    !     end if
+    ! end if
     ! print*, flag
+    ! print*, "After allocation:   ",kx, ky, visual(kx,ky), flag
+    if (visual(kx,ky)==10) then
+        diffdist=down_dist(kx,ky,west1,south1,csize,flwdir,visual,nx,ny)
+    else
+        diffdist=0.0
+    end if
+
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,i4.0)', trim(adjustl(id)),&
+        print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
         &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
-        &egm08, egm96, trim(sat), flag
+        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
     ! else
     !     print*, "no data"
     end if
@@ -395,7 +451,7 @@ program SET_MAP
     close(11)
     !---
     deallocate(uparea,basin,elevtn,nxtdst,nextXX,nextYY)
-    deallocate(upa1m,catmXX,catmYY,catmZZ,dwx1m,dwy1m,flddif,hand,ele1m,riv1m,visual)
+    deallocate(upa1m,catmXX,catmYY,catmZZ,dwx1m,dwy1m,flddif,hand,ele1m,riv1m,visual,flwdir)
     !=================
     end program SET_MAP
     !***************************************************
@@ -713,4 +769,259 @@ program SET_MAP
     D8=dval
     return
     end function D8
+    !*****************************************************************
+    function down_dist(ix,iy,west,south,csize,flwdir,visual,nx,ny)
+    implicit none
+    ! calculate the distance from the exact VS location to unit catchment mouth
+    real                            :: down_dist
+    real                            :: west, south, csize
+    integer                         :: nx, ny
+    integer*1,dimension(nx,ny)      :: flwdir, visual
+    integer                         :: ix, iy, dval, dx,dy
+
+    integer                         :: iix, iiy
+    real                            :: west0, south0, north0, tval
+    real                            :: lon1, lat1, lon2, lat2
+    real                            :: hubeny_real
+    !--------------------
+    ! visual
+    ! 0  - sea
+    ! 1  - land(undefied)
+    ! 2  - land(defined in CaMa)
+    ! 3  - grid box
+    ! 5  - catchment boundry
+    ! 10 - channel
+    ! 20 - outlet pixel
+    ! 25 - river mouth
+    !--------------------
+    west0=west+csize/2.0
+    south0=south+csize/2.0
+    north0=south+10.0+csize/2.0
+    down_dist = 0.0
+    iix = ix 
+    iiy = iy
+    lon1=west0+real(ix)*csize
+    lat1=north0-real(iy)*csize
+    do while (visual(iix,iiy) == 10)
+        ! river mouth
+        if (flwdir(iix,iiy) == -9 ) then
+            ! print*, "River mouth", visual(iix,iiy)
+            exit
+        end if
+        ! land
+        if (visual(iix,iiy) == 2 ) then
+            ! print*, "Not in the river channel", visual(iix,iiy)
+            exit
+        end if
+        ! outlet pixel
+        if (visual(iix,iiy) == 20 ) then
+            ! print*, "Outlet pixel", visual(iix,iiy)
+            exit
+        end if
+        dval=flwdir(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy
+        if ( iix > nx .or. iiy > ny ) then
+            exit
+        end if
+        lon2=lon1+real(dx)*csize 
+        lat2=lat1+real(dy)*csize
+        down_dist=down_dist+hubeny_real(lat1, lon1, lat2, lon2)
+        ! print*, iix, iiy, lon1, lat1, down_dist ,visual(iix,iiy), dval
+        lon1=lon2
+        lat1=lat2
+    end do 
+    return
+    end function down_dist
+    !*****************************************************************
+    subroutine next_D8(dval,dx,dy)
+    implicit none
+    integer                         :: dval
+    integer                         :: dx, dy
+    real                            :: tval
+    ! -----------|
+    !  D 8 graph
+    !|-----------|
+    !| 8 | 1 | 2 |
+    !|-----------|
+    !| 7 | 0 | 3 |
+    !|-----------|
+    !| 6 | 5 | 4 |
+    !|-----------|
+    if (dval == 1) then
+        dx = 0
+        dy = -1
+    end if
+    if (dval == 2) then
+        dx = 1
+        dy = -1
+    end if
+    if (dval == 3) then
+        dx = 1
+        dy = 0
+    end if
+    if (dval == 4) then
+        dx = 1
+        dy = 1
+    end if
+    if (dval == 5) then
+        dx = 0
+        dy = 1
+    end if
+    if (dval == 6) then
+        dx = -1
+        dy = 1
+    end if
+    if (dval == 7) then
+        dx = -1
+        dy = 0
+    end if
+    if (dval == 8) then
+        dx = -1
+        dy = -1
+    end if
+    return
+    end subroutine next_D8
+    !*****************************************************************
+    function hubeny_real(lat1, lon1, lat2, lon2)
+    implicit none
+    !-- for input -----------
+    real                                  lat1, lon1, lat2, lon2
+    !-- for output-----------
+    real                                  hubeny_real  ! (m)
+
+    !-- for calc ------------
+    real,parameter                     :: pi = atan(1.0)*4.0
+    real,parameter                     :: a  = 6378137
+    real,parameter                     :: b  = 6356752.314140
+    real,parameter                     :: e2 = 0.00669438002301188
+    real,parameter                     :: a_1_e2 = 6335439.32708317
+    real                                  M, N, W
+    real                                  latrad1, latrad2, lonrad1, lonrad2
+    real                                  latave, dlat, dlon
+    real                                  dlondeg
+    !------------------------
+    latrad1   = lat1 * pi / 180.0
+    latrad2   = lat2 * pi / 180.0
+    lonrad1   = lon1 * pi / 180.0
+    lonrad2   = lon2 * pi / 180.0
+    !
+    latave    = (latrad1 + latrad2)/2.0
+    dlat      = latrad2 - latrad1
+    dlon      = lonrad2 - lonrad1
+    !
+    dlondeg   = lon2 - lon1
+    if ( abs(dlondeg) .gt. 180.0) then
+        dlondeg = 180.0 - mod(abs(dlondeg), 180.0)
+        dlon    = dlondeg * pi / 180.0
+    end if
+    !-------
+    W  = sqrt(1.0 - e2 * sin(latave)**2.0 )
+    M  =  a_1_e2 / (W**3.0)
+    N  =  a / W
+    hubeny_real  = sqrt( (dlat * M)**2.0 + (dlon * N * cos(latave))**2.0 )
+    return
+    end functioN hubeny_real
+    !*****************************************************************
+    function flow_dist(ix,iy,jx,jy,west,south,csize,flwdir,visual,nx,ny)
+    implicit none
+    ! calculate the along river distance 
+    real                            :: flow_dist
+    real                            :: west, south, csize
+    integer                         :: nx, ny
+    integer*1,dimension(nx,ny)      :: flwdir, visual
+    integer                         :: ix, iy, jx, jy, dval, dx, dy
+    !------------
+    integer                         :: iix, iiy, ixx, iyy, flag
+    real                            :: west0, south0, north0, tval
+    real                            :: lon1, lat1, lon2, lat2
+    real                            :: hubeny_real
+    !--------------------
+    west0=west+csize/2.0
+    south0=south+csize/2.0
+    north0=south+10.0+csize/2.0
+    !-----------
+    flag= 1
+    !-----------
+    flow_dist = 0.0
+    iix = ix 
+    iiy = iy
+    ixx = jx
+    iyy = jy
+    lon1=west0+real(ix)*csize
+    lat1=north0-real(iy)*csize
+    do while ( iix /= ixx .or. iiy /= iyy )
+        if ( iix > nx .or. iiy > ny ) then
+            flag=-1
+            exit
+        end if
+        if (flwdir(iix,iiy) == -9 ) then
+            ! print*, "River mouth", visual(iix,iiy)
+            flag=-1
+            exit
+        end if
+        if ( visual(iix,iiy) == 20 .or. visual(iix,iiy) == 25) then
+            flag=-1
+            exit
+        endif
+        ! if ( visual(iix,iiy) /= 10 ) then
+        !     print*, "not river channel", visual(iix,iiy), flwdir(iix,iiy)
+        !     flag=-1
+        !     exit
+        ! endif
+        dval=flwdir(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy
+        lon2=lon1+real(dx)*csize 
+        lat2=lat1+real(dy)*csize
+        flow_dist=flow_dist+hubeny_real(lat1, lon1, lat2, lon2)
+        ! print*, flag, lon1, lat1, flow_dist ,visual(iix,iiy), dval
+        lon1=lon2
+        lat1=lat2
+    end do
+    !-------------------
+    if (flag == -1) then
+        flow_dist = 0.0
+        iix = jx 
+        iiy = jy
+        ixx = ix
+        iyy = iy
+        lon1=west0+real(ix)*csize
+        lat1=north0-real(iy)*csize
+        do while ( iix /= jy .or. iiy /= jy )
+            if ( iix > nx .or. iiy > ny ) then
+                flag=-9
+                exit
+            end if
+            if (flwdir(iix,iiy) == -9 ) then
+                ! print*, "River mouth", visual(iix,iiy)
+                flag=-9
+                exit
+            end if
+            if ( visual(iix,iiy) == 20 .or. visual(iix,iiy) == 25) then
+                flag=-9
+                exit
+            endif
+            ! if ( visual(iix,iiy) /= 10 ) then
+            !     print*, "not river channel", visual(iix,iiy)
+            !     flag=-9
+            !     exit
+            ! endif
+            dval=flwdir(iix,iiy)
+            call next_D8(dval,dx,dy)
+            iix = iix + dx 
+            iiy = iiy + dy
+            lon2=lon1+real(dx)*csize 
+            lat2=lat1+real(dy)*csize
+            flow_dist=flow_dist+hubeny_real(lat1, lon1, lat2, lon2)
+            ! print*, flag, lon1, lat1, flow_dist ,visual(iix,iiy), dval
+            lon1=lon2
+            lat1=lat2
+        end do
+    end if
+    if ( flag == -9 ) flow_dist=-9999.0
+    return
+    end function flow_dist
     !*****************************************************************
