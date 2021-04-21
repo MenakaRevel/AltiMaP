@@ -1,8 +1,8 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q F20
-#PBS -l select=1:ncpus=20:mem=100gb
+#PBS -q F40
+#PBS -l select=1:ncpus=40:mem=100gb
 #PBS -l place=scatter
 #PBS -j oe
 #PBS -m ea
@@ -12,12 +12,12 @@
 
 #source ~/.bashrc
 
-NCPUS=20
+NCPUS=40
 export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
 # cd $PBS_O_WORKDIR
-# cd "/cluster/data6/menaka/Altimetry"
+cd "/cluster/data6/menaka/Altimetry"
 
 #CaMA-Flood directory
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
@@ -46,12 +46,12 @@ fi
 
 echo "strating calculations........"
 # echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
-printf '%30s%62s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite dist_to_mouth flag kx ky #> tmp.txt
-SOUTH=0 #-60
-while [ $SOUTH -lt 20 ];
+printf '%30s%62s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite dist_to_mouth flag kx ky > tmp.txt
+SOUTH=-60
+while [ $SOUTH -lt 90 ];
 do
-  WEST=-80 #-180
-  while [ $WEST -lt -40 ];
+  WEST=-180
+  while [ $WEST -lt 180 ];
   do
     CNAME=`./src/set_name $WEST $SOUTH`
     # #echo $CNAME ${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
@@ -65,12 +65,12 @@ do
                 ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt &
                 ## for parallel computation using multiple CPUs 
                 NUM=`ps aux -U $USER | grep /src/allocate_VS | wc -l | awk '{print $1}'`
-                echo $USER $NUM
+                # echo $USER $NUM
                 while [ $NUM -gt $NCPUS ];
                 do
                     sleep 1
                     NUM=`ps aux -U $USER | grep /src/allocate_VS | wc -l | awk '{print $1}'`
-                    # echo $USER $NUM
+                    echo $USER $NUM
                 done
             fi
         done
@@ -82,4 +82,4 @@ done
 
 
 wait 
-# mv tmp.txt ${outdir}/altimetry_${map}_test.txt
+mv tmp.txt ${outdir}/altimetry_${map}_test.txt

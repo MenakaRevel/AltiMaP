@@ -47,35 +47,6 @@ def get_cgls_locs(mapname="glb_15min"):
         egm96.append(EGM96)
     return nums,river,pname,lons,lats,xlist,ylist,egm08,egm96
 ################################
-def CGLS_WSE(station,syear=2002,eyear=2020,smon=1,sday=1,emon=12,eday=31,egm08=0.0,egm96=0.0):
-    #
-    start=datetime.date(syear,smon,sday)
-    end=datetime.date(eyear,emon,eday)
-    #---
-    time=[] # time in days
-    data=[] # WSE in [m] 
-    # read CGLS
-    fname="/cluster/data6/menaka/CGLS/data/river/"+station+".json"
-    with open(fname) as f:
-        alldata    = json.load(f)
-        cgls_data  = alldata["data"]
-    #----------------------------
-    for line in range(len(cgls_data)):
-        date    = cgls_data[line]["datetime"]
-        date    = re.split(" ",date)[0]
-        date    = re.split("/",date)
-        yyyy    = int(date[0])
-        mm      = int(date[1])
-        dd      = int(date[2])
-        now     = datetime.date(yyyy,mm,dd)
-        wse     = cgls_data[line]["water_surface_height_above_reference_datum"]
-        if now < start and now > end:
-            continue
-        data.append(wse)
-        lag  = int((now-start).days)
-        time.append(lag)
-    return time, data
-################################
 def cgls_continous_WSE(station,syear=2002,smon=10,sday=1,eyear=2020,emon=12,eday=31,egm08=0.0,egm96=0.0):
     #
     start=datetime.date(syear,smon,sday)

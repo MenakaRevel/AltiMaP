@@ -20,6 +20,7 @@ program SET_MAP
 
     ! index higer resoultion [1min, 15sec, 3sec]
     integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
+    integer                       ::  ibx, iby ! bifurication locations
     integer                       ::  nx, ny
     integer                       ::  hres
     real                          ::  west1, south1, north1, east1
@@ -319,7 +320,7 @@ program SET_MAP
         kx=ix
         ky=iy
         flag=2
-    else if (visual(kx,ky) == 2 .or. visual(kx,ky) == 3 .or. visual(kx,ky) == 5 .or. visual(kx,ky) == 7) then   !! correction for land to channel
+    else if (visual(kx,ky) == 2 .or. visual(kx,ky) == 3 .or. visual(kx,ky) == 5 .or. visual(kx,ky) == 7) then   !! correction for land/grid box, boundry to channel
         ! print*, "flag: 3  ","correction for land to channel"
         nn=10
         lag=1.0e20
@@ -345,7 +346,7 @@ program SET_MAP
                 if ( visual(jx,jy) /= 10 ) cycle
                 ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
                 ! print*, "===",kx,ky,jx,jy,"==="
-                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny)
+                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
                 if ( lag_now == -9999.0 ) cycle
                 ! print*, lag, lag_now
                 if ( lag_now < lag ) then
@@ -363,6 +364,8 @@ program SET_MAP
         end do
         if ( kx /= ix .or. ky /= iy ) then
             flag=3
+        else
+            flag=1
         end if
     else if ( visual(kx,ky)==0 .or. visual(kx,ky)==1 .or. visual(kx,ky)==25 ) then !! correction for ocean grids
         ! print*, "flag: 4  ","correction for ocean grids"
@@ -390,7 +393,7 @@ program SET_MAP
                 if ( visual(jx,jy) /= 10) cycle
                 ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
                 ! print*, "===",kx,ky,jx,jy,"==="
-                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny)
+                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
                 if ( lag_now == -9999.0 ) cycle
                 ! print*, lag, lag_now
                 if ( lag_now < lag ) then
@@ -405,36 +408,58 @@ program SET_MAP
         end do
         if ( kx /= ix .or. ky /= iy ) then
             flag=4
+        else
+            flag=1
         end if
     else
         flag=9
-        print*, "flag: 9 ->", kx, ky, visual(kx,ky)
+        ! print*, "flag: 9 ->", kx, ky, visual(kx,ky)
     end if
     !
+    !---
+    if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
+        goto 1000
+    end if
     ! print*, kx, ky
     !===========
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
+    !!============
+    if ( iXX < 1 .or. iYY < 1 .or. iXX > nXX .or. iYY > nYY ) then 
+        goto 1000
+    end if
     !============
     ! find maximum uparea perpendicular to river
     ! in case of braided river
     ! considering the bifurcation tag
-    ! if (biftag(iXX,iYY) == 1) then
-    !     ix=iXX
-    !     iy=iYY
-    !     call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
-    !     if (ix/=iXX .and. iy/=iYY) then
-    !         flag=5
-    !     end if
-    ! end if
+    if (biftag(iXX,iYY) == 1) then
+        ! call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
+        call loc_pepndD8(kx,ky,nx,ny,flwdir,visual,uparea,west1,south1,hiresmap,ibx,iby)
+        if ( ibx/=-9 .and. iby/=-9 ) then
+            ! print*, "burification location", ibx, iby
+            flag=5
+            kx=ibx
+            ky=iby
+        end if
+    end if
     ! print*, flag
     ! print*, "After allocation:   ",kx, ky, visual(kx,ky), flag
+    !---
+    ! print*, kx, ky
+    if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
+        goto 1000
+    end if
+    !--
     if (visual(kx,ky)==10) then
-        diffdist=down_dist(kx,ky,west1,south1,csize,flwdir,visual,nx,ny)
+        diffdist=down_dist(kx,ky,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
     else
         diffdist=0.0
     end if
-
+    !===========
+    iXX=catmXX(kx,ky)
+    iyy=catmYY(kx,ky)
+    !============
+    ! print*, trim(station), flag, diffdist*1e-3
     if (iXX > 0 .or. iYY > 0) then
         print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
         &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
@@ -770,7 +795,7 @@ program SET_MAP
     return
     end function D8
     !*****************************************************************
-    function down_dist(ix,iy,west,south,csize,flwdir,visual,nx,ny)
+    function down_dist(ix,iy,west,south,csize,flwdir,visual,nx,ny,hiresmap)
     implicit none
     ! calculate the distance from the exact VS location to unit catchment mouth
     real                            :: down_dist
@@ -778,10 +803,12 @@ program SET_MAP
     integer                         :: nx, ny
     integer*1,dimension(nx,ny)      :: flwdir, visual
     integer                         :: ix, iy, dval, dx,dy
+    character*128                   :: hiresmap
 
     integer                         :: iix, iiy
     real                            :: west0, south0, north0, tval
     real                            :: lon1, lat1, lon2, lat2
+    integer*1,dimension(nx,ny)      :: flwdir0, visual0
     real                            :: hubeny_real
     !--------------------
     ! visual
@@ -794,6 +821,8 @@ program SET_MAP
     ! 20 - outlet pixel
     ! 25 - river mouth
     !--------------------
+    flwdir0=flwdir
+    visual0=visual
     west0=west+csize/2.0
     south0=south+csize/2.0
     north0=south+10.0+csize/2.0
@@ -802,27 +831,36 @@ program SET_MAP
     iiy = iy
     lon1=west0+real(ix)*csize
     lat1=north0-real(iy)*csize
-    do while (visual(iix,iiy) == 10)
+    do while (visual0(iix,iiy) == 10)
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+            ! west0=west+csize/2.0
+            ! south0=south+csize/2.0
+            ! north0=south+10.0+csize/2.0
+            ! print*, "go to next tile", west0,south0
+            ! flag=-9
+            exit
+        end if
         ! river mouth
-        if (flwdir(iix,iiy) == -9 ) then
+        if (flwdir0(iix,iiy) == -9 ) then
             ! print*, "River mouth", visual(iix,iiy)
             exit
         end if
         ! land
-        if (visual(iix,iiy) == 2 ) then
+        if (visual0(iix,iiy) == 2 ) then
             ! print*, "Not in the river channel", visual(iix,iiy)
             exit
         end if
         ! outlet pixel
-        if (visual(iix,iiy) == 20 ) then
+        if (visual0(iix,iiy) == 20 ) then
             ! print*, "Outlet pixel", visual(iix,iiy)
             exit
         end if
-        dval=flwdir(iix,iiy)
+        dval=flwdir0(iix,iiy)
         call next_D8(dval,dx,dy)
         iix = iix + dx 
         iiy = iiy + dy
-        if ( iix > nx .or. iiy > ny ) then
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             exit
         end if
         lon2=lon1+real(dx)*csize 
@@ -924,7 +962,7 @@ program SET_MAP
     return
     end functioN hubeny_real
     !*****************************************************************
-    function flow_dist(ix,iy,jx,jy,west,south,csize,flwdir,visual,nx,ny)
+    function flow_dist(ix,iy,jx,jy,west,south,csize,flwdir,visual,nx,ny,hiresmap)
     implicit none
     ! calculate the along river distance 
     real                            :: flow_dist
@@ -932,12 +970,16 @@ program SET_MAP
     integer                         :: nx, ny
     integer*1,dimension(nx,ny)      :: flwdir, visual
     integer                         :: ix, iy, jx, jy, dval, dx, dy
+    character*128                   :: hiresmap
     !------------
     integer                         :: iix, iiy, ixx, iyy, flag
     real                            :: west0, south0, north0, tval
     real                            :: lon1, lat1, lon2, lat2
+    integer*1,dimension(nx,ny)      :: flwdir0, visual0
     real                            :: hubeny_real
     !--------------------
+    flwdir0=flwdir
+    visual0=visual
     west0=west+csize/2.0
     south0=south+csize/2.0
     north0=south+10.0+csize/2.0
@@ -952,16 +994,21 @@ program SET_MAP
     lon1=west0+real(ix)*csize
     lat1=north0-real(iy)*csize
     do while ( iix /= ixx .or. iiy /= iyy )
-        if ( iix > nx .or. iiy > ny ) then
-            flag=-1
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+            ! west0=west+csize/2.0
+            ! south0=south+csize/2.0
+            ! north0=south+10.0+csize/2.0
+            ! print*, "go to next tile", west0,south0
+            flag=-9
             exit
         end if
-        if (flwdir(iix,iiy) == -9 ) then
+        if (flwdir0(iix,iiy) == -9 ) then
             ! print*, "River mouth", visual(iix,iiy)
             flag=-1
             exit
         end if
-        if ( visual(iix,iiy) == 20 .or. visual(iix,iiy) == 25) then
+        if ( visual0(iix,iiy) == 20 .or. visual0(iix,iiy) == 25) then
             flag=-1
             exit
         endif
@@ -970,7 +1017,7 @@ program SET_MAP
         !     flag=-1
         !     exit
         ! endif
-        dval=flwdir(iix,iiy)
+        dval=flwdir0(iix,iiy)
         call next_D8(dval,dx,dy)
         iix = iix + dx 
         iiy = iiy + dy
@@ -991,16 +1038,21 @@ program SET_MAP
         lon1=west0+real(ix)*csize
         lat1=north0-real(iy)*csize
         do while ( iix /= jy .or. iiy /= jy )
-            if ( iix > nx .or. iiy > ny ) then
+            if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+                ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+                ! west0=west+csize/2.0
+                ! south0=south+csize/2.0
+                ! north0=south+10.0+csize/2.0
+                ! print*, "go to next tile", west0,south0
                 flag=-9
                 exit
             end if
-            if (flwdir(iix,iiy) == -9 ) then
+            if (flwdir0(iix,iiy) == -9 ) then
                 ! print*, "River mouth", visual(iix,iiy)
                 flag=-9
                 exit
             end if
-            if ( visual(iix,iiy) == 20 .or. visual(iix,iiy) == 25) then
+            if ( visual0(iix,iiy) == 20 .or. visual0(iix,iiy) == 25) then
                 flag=-9
                 exit
             endif
@@ -1009,7 +1061,7 @@ program SET_MAP
             !     flag=-9
             !     exit
             ! endif
-            dval=flwdir(iix,iiy)
+            dval=flwdir0(iix,iiy)
             call next_D8(dval,dx,dy)
             iix = iix + dx 
             iiy = iiy + dy
@@ -1024,4 +1076,333 @@ program SET_MAP
     if ( flag == -9 ) flow_dist=-9999.0
     return
     end function flow_dist
+    !*****************************************************************
+    subroutine next_P2D8(dval,dx,dy)
+    implicit none
+    integer                         :: dval
+    integer                         :: dx, dy
+    real                            :: tval
+    !-------------------------------------------------------
+    ! determine the perpendicular direction to D8 directions
+    !-------------------------------------------------------
+    ! -----------|
+    !  D 8 graph
+    !|-----------|
+    !| 8 | 1 | 2 |
+    !|-----------|
+    !| 7 | 0 | 3 |
+    !|-----------|
+    !| 6 | 5 | 4 |
+    !|-----------|
+    if (dval == 1) then
+        dx = 0
+        dy = -1
+    end if
+    if (dval == 2) then
+        dx = 1
+        dy = -1
+    end if
+    if (dval == 3) then
+        dx = 1
+        dy = 0
+    end if
+    if (dval == 4) then
+        dx = 1
+        dy = 1
+    end if
+    if (dval == 5) then
+        dx = 0
+        dy = 1
+    end if
+    if (dval == 6) then
+        dx = -1
+        dy = 1
+    end if
+    if (dval == 7) then
+        dx = -1
+        dy = 0
+    end if
+    if (dval == 8) then
+        dx = -1
+        dy = -1
+    end if
+    return
+    end subroutine next_P2D8
+    !*****************************************************************
+    subroutine loc_pepndD8(ix,iy,nx,ny,flwdir,visual,uparea,west0,south0,hiresmap,oxx,oyy)
+    ! river location perpendicular to the flowing direction
+    implicit none
+    integer                      :: ix, iy, nx, ny
+    integer*1,dimension(nx,ny)   :: flwdir, visual
+    real,dimension(nx,ny)        :: uparea
+    integer                      :: oxx, oyy
+    integer,allocatable          :: xlist(:), ylist(:)
+    character*128                :: hiresmap
+    real                         :: west0, south0
+    integer                      :: k
+
+    integer                      :: iix, iiy, dx, dy, j0x, j0y, jx, jy, i, j
+    real                         :: tval 
+    integer                      :: dval, D8 ! d8 numbering
+    real                         :: upa, upn
+    !==============================================
+    ! -----------|
+    !  D 8 graph
+    !|-----------|
+    !| 8 | 1 | 2 |
+    !|-----------|
+    !| 7 | 0 | 3 |
+    !|-----------|
+    !| 6 | 5 | 4 |
+    !|-----------|
+    !-------------
+    dval=flwdir(ix,iy)
+    k=30*6
+    allocate (xlist(2*k+1),ylist(2*k+1))
+    xlist=-9
+    ylist=-9
+    if (dval==1 .or. dval==5) then
+        j=1
+        do i=-k,k
+            iix=ix+i  
+            iiy=iy
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    elseif (dval==3 .or. dval==7) then
+        j=1
+        do i=-k,k
+            iix=ix 
+            iiy=iy+i
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    elseif (dval==4 .or. dval==8) then
+        j=1
+        do i=-k,k
+            iix=ix+i 
+            iiy=iy-i
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    elseif (dval==2 .or. dval==6) then
+        j=1
+        do i=-k,k
+            iix=ix+i 
+            iiy=iy+i
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    end if
+    !-----------------------------
+    upa=uparea(ix,iy)
+    upn=uparea(ix,iy)
+    !---
+    oxx=-9
+    oyy=-9
+    call next_out(ix,iy,flwdir,visual,nx,ny,west0,south0,hiresmap,j0x,j0y)
+    if ( j0x/=-9 .or. j0y/=-9 ) then
+        do i=1,k 
+            iix=xlist(i)
+            iiy=ylist(i)
+            if (iix == -9 .or. iiy == -9 ) cycle
+            if (iix <= 0 .or. iiy <= 0 ) cycle
+            ! print*, "L1180", iix, iiy
+            call next_out(iix,iiy,flwdir,visual,nx,ny,west0,south0,hiresmap,jx,jy)
+            if (jx == -9 .or. jy == -9 ) cycle
+            if ( j0x==jx .and. j0y==jy ) then
+                upn=uparea(iix,iiy)
+                if (upa < upn) then
+                    oxx=iix 
+                    oyy=iiy 
+                    upa=upn 
+                end if
+            end if
+        end do 
+    end if
+    deallocate (xlist,ylist)
+    return
+    end subroutine loc_pepndD8
+    !*****************************************************************
+    subroutine next_out(ix,iy,flwdir,visual,nx,ny,west,south,hiresmap,jx,jy)
+    implicit none
+    ! calculate the along river distance 
+    ! real                            :: flow_dist
+    ! real                            :: west, south, csize
+    integer                         :: nx, ny
+    integer*1,dimension(nx,ny)      :: flwdir, visual
+    integer                         :: ix, iy, jx, jy, dval, dx, dy
+    character*128                   :: hiresmap
+    real                            :: west, south
+    !------------
+    integer                         :: iix, iiy, ixx, iyy, flag
+    integer*1,dimension(nx,ny)      :: flwdir0, visual0
+    real                            :: west0, south0
+    !
+    flwdir0=flwdir
+    visual0=visual
+    west0=west
+    south0=south
+    !
+    flag=0
+    iix=ix
+    iiy=iy
+    !
+    do while (flag<2)
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+            ! west0=west
+            ! south0=south
+            ! print*, "go to next tile", west0,south0
+            flag=-9
+            exit
+        end if
+        if (flwdir0(iix,iiy) == -9 ) then
+            ! print*, "River mouth", visual(iix,iiy)
+            flag=10
+            exit
+        end if
+        if ( visual0(iix,iiy) == 1 .or. visual0(iix,iiy) == 2 .or. visual0(iix,iiy) == 3) then
+            flag=9
+        endif
+        if ( visual0(iix,iiy) == 20 ) then
+            flag=flag+1
+        endif
+        if ( visual0(iix,iiy) == 25) then
+            flag=2
+        endif
+        dval=flwdir(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy
+        ! print*, "next out: ", flag, iix, iiy
+    end do
+    if (flag==2) then
+        jx=iix
+        jy=iiy 
+    else
+        jx=-9
+        jy=-9
+    end if
+    return
+    end subroutine next_out
+    !*****************************************************************
+    subroutine got_to_next_tile(ix0,iy0,nx,ny,west,south,hiresmap,flwdir,visual,ix,iy)
+    implicit none
+    integer                         :: nx, ny
+    integer*1,dimension(nx,ny)      :: flwdir, visual
+    integer                         :: ix0, iy0
+    real                            :: west, south
+    character*128                   :: hiresmap
+    integer                         :: ix, iy
+    !--
+    integer                         :: dval, ios
+    real                            :: dlon, dlat
+    character*128                   :: rfile, cname
+    !----------------------------------------
+    call find_next_tile(ix0,iy0,nx,ny,dval,ix,iy,dlon,dlat)
+    west=west+dlon 
+    south=south+dlat
+    call set_name(west,south,cname)
+
+    print*, "go to next tile", west, south, trim(cname)
+    ! open files
+    rfile=trim(hiresmap)//trim(cname)//'.visual.bin'
+    open(21,file=rfile,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
+    if( ios==0 )then
+    read(21,rec=1) visual
+    close(21)
+    endif
+
+    rfile=trim(hiresmap)//trim(cname)//'.flwdir.bin'
+    open(21,file=rfile,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
+    if( ios==0 )then
+    read(21,rec=1) flwdir
+    close(21)
+    endif
+    end subroutine got_to_next_tile
+    !*****************************************************************
+    subroutine find_next_tile(ix0,iy0,nx,ny,dval,ix,iy,dlon,dlat)
+    implicit none
+    integer                         :: nx, ny
+    integer                         :: ix0, iy0
+    integer                         :: dval
+    real                            :: dlon, dlat
+    integer                         :: ix, iy
+    real                            :: dlonlat
+    !---------------------------------------------
+    dlonlat=10.0
+    dlon=0.0
+    dlat=0.0
+    ! find the next tile according to ix,iy values
+    if ( ix0 > 1 .and. ix0 <= nx .and. iy0 < 1 ) then
+        dval=1
+        dlon=dlonlat*0
+        dlat=dlonlat*1
+        ix=ix0
+        iy=iy0+ny
+    else if ( ix0 > nx .and. iy0 < 1 ) then
+        dval=2
+        dlon=dlonlat*1
+        dlat=dlonlat*1
+        ix=ix0-nx
+        iy=iy0+ny
+    else if ( ix0 > nx .and. iy0 > 1 .and. iy0 <= ny ) then
+        dval=3
+        dlon=dlonlat*1
+        dlat=dlonlat*0
+        ix=ix0-nx
+        iy=iy0
+    else if ( ix0 > nx .and. iy0 > ny ) then
+        dval=4
+        dlon=dlonlat*1
+        dlat=dlonlat*(-1)
+        ix=ix0-nx
+        iy=iy0-ny
+    else if ( ix0 > 1 .and. ix0 <= nx .and. iy0 > ny ) then
+        dval=5
+        dlon=dlonlat*0
+        dlat=dlonlat*(-1)
+        ix=ix0
+        iy=iy0-ny
+    else if ( ix0 < 1 .and. iy0 > ny ) then
+        dval=6
+        dlon=dlonlat*(-1)
+        dlat=dlonlat*(-1)
+        ix=ix0+nx
+        iy=iy0-ny
+    else if ( ix0 < 1 .and. iy0 > 1 .and. iy0 <= ny ) then
+        dval=7
+        dlon=dlonlat*(-1)
+        dlat=dlonlat*0
+        ix=ix0+nx
+        iy=iy0
+    else if ( ix0 < 1 .and. iy0 < 1 ) then
+        dval=7
+        dlon=dlonlat*(-1)
+        dlat=dlonlat*1 
+        ix=ix0+nx
+        iy=iy0+ny   
+    end if
+    end subroutine find_next_tile  
     !*****************************************************************

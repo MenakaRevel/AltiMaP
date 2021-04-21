@@ -122,7 +122,7 @@ def get_hydrosat_locs(mapname="glb_15min"):
         egm96.append(EGM96)
     return nums,river,pname,lons,lats,xlist,ylist,egm08,egm96
 ################################
-def HydroSat_WSE(station,syear=2002,eyear=2020,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm96=0.0):
+def HydroSat_WSE(station,syear,eyear,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm96=0.0):
     #
     start=datetime.date(syear,smon,sday)
     end=datetime.date(eyear,emon,eday)
@@ -141,13 +141,13 @@ def HydroSat_WSE(station,syear=2002,eyear=2020,smon=1,emon=12,sday=1,eday=31,egm
     for line in lines[head::]:
         if line[0][0] == "#":
             continue
-        line = re.split(",",line)
-        yyyy = int(line[0])
-        mm   = int(line[1])
-        dd   = int(line[2])
-        if line[3].strip()=="NaN":
-            continue
-        wse  = float(line[3])+egm08-egm96
+        line = re.split(" ",line)
+        date = line[0]
+        date = re.split("-",date)
+        yyyy = int(date[0])
+        mm   = int(date[1])
+        dd   = int(date[2])
+        wse  = float(line[2])+egm08-egm96
         #print yyyy, mm, dd, wse
         now  = datetime.date(yyyy,mm,dd)
         if now < start and now > end:
