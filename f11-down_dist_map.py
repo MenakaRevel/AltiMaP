@@ -131,7 +131,7 @@ ldistd=[]
 l_lons=[]
 l_lats=[]
 #=============================
-fname="./out/altimetry_"+mapname+"_test2.txt"
+fname="./out/altimetry_"+mapname+"_test.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:

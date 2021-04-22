@@ -122,7 +122,7 @@ days=(end-start).days + 1
 lnames=[]
 lflags=[]
 #=============================
-fname="./out/altimetry_"+mapname+".txt"
+fname="./out/altimetry_"+mapname+"_test.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -139,7 +139,7 @@ with open(fname, "r") as f:
         egm08= float(line[8])
         egm96= float(line[9])
         sat  = line[10].strip()
-        flag = int(line[11])
+        flag = int(line[12])
         ix   = ix0 - 1
         iy   = iy0 - 1
         #---------------------------
@@ -149,7 +149,7 @@ with open(fname, "r") as f:
 lnames=np.array(lnames)
 lflags=np.array(lflags)
 N=float(len(lnames))
-flags=[1,2,3,4]
+flags=[1,2,3,4,5]
 flgamt=[]
 for flag in flags:
     flg_amt=(np.sum((lflags == flag)*1.0)/N)*100.0

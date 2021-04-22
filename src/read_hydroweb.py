@@ -84,7 +84,7 @@ def get_hydroweb_loc(rivername,mapname="glb_15min"):
 def get_hydroweb_locs(mapname="glb_15min"):
     # directory
     # fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_"+mapname+".txt"
-    fname="./output/altimetry_"+mapname+"_test.txt"
+    fname="./out/altimetry_"+mapname+"_test.txt"
     #--
     nums=[]
     river=[]
@@ -93,6 +93,7 @@ def get_hydroweb_locs(mapname="glb_15min"):
     lats =[]
     xlist=[]
     ylist=[]
+    leled=[]
     egm08=[]
     egm96=[]
     llsat=[]
@@ -107,10 +108,11 @@ def get_hydroweb_locs(mapname="glb_15min"):
         num     = line[0]
         station = line[1]
         riv     = re.split("_",station)[1]
-        lon     = float(line[2])
-        lat     = float(line[3])
-        ix      = int(line[4])-1
-        iy      = int(line[5])-1
+        lon     = float(line[3])
+        lat     = float(line[4])
+        ix      = int(line[5])-1
+        iy      = int(line[6])-1
+        eled    = float(line[7])
         EGM08   = float(line[8])
         EGM96   = float(line[9])
         sat     = line[10].strip()
@@ -124,12 +126,13 @@ def get_hydroweb_locs(mapname="glb_15min"):
         lats.append(lat)
         xlist.append(ix)
         ylist.append(iy)
+        leled.append(eled)
         egm08.append(EGM08)
         egm96.append(EGM96)
         llsat.append(sat)
         ldtom.append(dist)
         lflag.append(flag)
-    return nums,river,pname,lons,lats,xlist,ylist,egm08,egm96,llsat,ldtom,lflag
+    return nums,river,pname,lons,lats,xlist,ylist,egm08,egm96,llsat,leled,ldtom,lflag
 ################################
 def HydroWeb_WSE(station,syear,eyear,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm96=0.0):
     #
@@ -230,7 +233,10 @@ def metadata():
         sat     = line[10]
         startdt = line[11]
         enddt   = line[13]
-        status  = line[15].split("\n")[0]
+        try:
+            status  = line[15].split("\n")[0]
+        except:
+            status = "N/A"
         #----
         sta[station]=[river,basin,country,sat,startdt,enddt,status]
     #----

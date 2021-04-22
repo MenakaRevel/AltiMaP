@@ -292,9 +292,9 @@ program SET_MAP
     ! flag identity
     ! 1 = location was directly found
     ! 2 = location was on the unit-catchment outlet
-    ! 3 = found the nearest permenat water
+    ! 3 = found the nearest permeant water
     ! 4 = correction for ocean grids
-    ! 5 = bifurication location
+    ! 5 = bifurcation location
     flag=-9
     ! print*, trim(station), "ix:", ix, "iy:",iy
     ! get the nearest west and south 
@@ -461,7 +461,7 @@ program SET_MAP
     !============
     ! print*, trim(station), flag, diffdist*1e-3
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a60,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
+        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
         &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
         &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
     ! else

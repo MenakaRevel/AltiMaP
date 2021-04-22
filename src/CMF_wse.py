@@ -9,7 +9,7 @@ import datetime
 import string
 from numpy import ma
 #
-from read_discharge import read_discharge, read_discharge_multi
+# from read_discharge import read_discharge, read_discharge_multi
 from read_sfcelv import read_sfcelv, read_sfcelv_multi
 from read_patchMS import upstream
 import read_hydroweb as hweb
@@ -34,15 +34,16 @@ TAG='HydroWeb'
 runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC_USED/'
 
 TAG=sys.argv[1]
-syear=sys.argv[2]
-eyear=sys.argv[3]
+syear=int(sys.argv[2])
+eyear=int(sys.argv[3])
 runoff_folder=sys.argv[4]
 CaMa_dir=sys.argv[5]
 curr_pwd=sys.argv[6]
+out_pwd =sys.argv[7]
 
 csize = 0.1
 
-out_pwd = curr_pwd+'/results/'+ TAG +'/'
+# out_pwd = curr_pwd+'/results/'+ TAG +'/'
 
 # syear = 1979
 # eyear = 2013
@@ -53,7 +54,7 @@ peak_time_var=100
 
 slope_threshold=100000 #m
 
-os.system('mkdir -p '+out_pwd)
+# os.system('mkdir -p '+out_pwd)
 
 
 ssize=12
@@ -70,7 +71,7 @@ def read_wse_multi(ix, iy, syear, eyear, number, lat, lon):
         s_days = int( (datetime.date(year , 1,1) - datetime.date(syear, 1, 1)). days)
         e_days = int( (datetime.date(year+1, 1, 1) - datetime.date(syear, 1, 1)). days)
 
-        f = runoff_folder + 'sfcelv'+str(year)+'.bin'
+        f = runoff_folder + '/sfcelv'+str(year)+'.bin'
         #print f, len(ix), len(iy)
         tmp = read_sfcelv_multi( ix, iy, e_days-s_days, f, nx, ny)
 
@@ -236,19 +237,19 @@ rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 #-----
 if TAG=="HydroWeb":
     # read HydroWeb data
-    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,ldist,lflag=hweb.get_hydroweb_locs(mapname)
+    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,leled,ldist,lflag=hweb.get_hydroweb_locs(mapname)
     hwb_metadata=hweb.metadata()
 elif TAG=="CGLS":
     # read CGLS data
-    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,ldist,lflag=cgls.get_cgls_locs(mapname)
+    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,leled,ldist,lflag=cgls.get_cgls_locs(mapname)
     hwb_metadata=cgls.metadata()
 elif TAG=="ICESat":
     # read ICESat data
-    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,ldist,lflag=icesat.get_icesat_locs(mapname)
+    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,leled,ldist,lflag=icesat.get_icesat_locs(mapname)
     hwb_metadata=icesat.metadata()
 elif TAG=="HydroSat":
     # read HydroSat data
-    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,ldist,lflag=hsat.get_hydrosat_locs(mapname)
+    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,leled,ldist,lflag=hsat.get_hydrosat_locs(mapname)
     hwb_metadata=hsat.metadata()
 #print hwb_metadata.keys()
 #print hwb_metadata['R_AMAZONAS_AMAZONAS_KM0344'][3]
@@ -279,7 +280,7 @@ lon_global = np.arange( -180 + csize / 2. , 180, csize)
 uparea = CaMa_dir+"/map/"+mapname+"/uparea.bin"
 uparea = np.fromfile(uparea,np.float32).reshape(ny,nx)
 
-subbasin = "subbasin_"+mapname+"_1.bin"
+subbasin = "/cluster/data6/menaka/CaMa_subbasin/output/subbasin_"+mapname+".bin"
 subbasin = np.fromfile(subbasin,np.float32).reshape(ny,nx)
 # =============================
 # define the variables that will be writen to files
@@ -299,6 +300,9 @@ coll_subbasin = []
 coll_satellite = []
 coll_duration = []
 coll_status = []
+coll_elediff = []
+coll_disttomouth = []
+coll_flag = []
 
 nbdays = int( (datetime.date(eyear + 1, 1,1) - datetime.date(syear, 1, 1)). days)
 nbyears = eyear - syear + 1
@@ -323,6 +327,7 @@ wse_cmf, wse_cmf_max, wse_cmf_min, wse_cmf_max_loc, wse_cmf_min_loc = read_wse_m
 for i in range(len(numbers)):
     #print i
     num = numbers[i]
+    # print ("getting data : ",num ,pname[i])
     # try :
     # #if 1:
     #     a = np.where( number_cmf == number[i])[0][0]
@@ -352,20 +357,20 @@ for i in range(len(numbers)):
     # data availabiltiy
     ################
     if found==float(times):
-        print ("no data: ",pname[i])
+        # print ("no data: ",pname[i])
         continue
     ################
     # At least one year of data (365/35  at least around 10 observations)
     ################
     if observ<10:
-        print ("no data: ",pname[i], observ)
+        # print ("no data: ",pname[i], observ)
         continue
 
     ################
     # condtion for mainstream
     ################
     if uparea[ylist[i],xlist[i]] < area_min:
-        print ("smaller river: ",pname[i], uparea[ylist[i],xlist[i]])
+        # print ("smaller river: ",pname[i], uparea[ylist[i],xlist[i]])
         continue
     
     ################
@@ -373,10 +378,10 @@ for i in range(len(numbers)):
     ################
     slp=slope(xlist[i],ylist[i],nextxy,uparea,elevtn,nxtdst,rivseq)
     if slp > slope_threshold:
-        print ("high slope:", pname[i], slp)
+        # print ("high slope:", pname[i], slp)
         continue
 
-    print (hwb_metadata[pname[i]][0])
+    # print (hwb_metadata[pname[i]][0])
     
     
     # for year in range(syear, eyear+1):
@@ -439,10 +444,10 @@ for i in range(len(numbers)):
     # condition for high-low flow
     ###########
     if ( np.sum((np.array(lmaxhw)!=-9999.0)*1.0) == 0.0 or np.sum((np.array(lminhw)!=-9999.0)*1.0) == 0.0 ):
-        print ("no high-low flow")
+        # print ("no high-low flow")
         continue
 
-    print ("Included :" ,pname[i])
+    # print ("Included : ",num ,pname[i])
 
     ###########
     # append data
@@ -469,6 +474,9 @@ for i in range(len(numbers)):
     coll_satellite.append(hwb_metadata[pname[i]][3])
     coll_duration.append(hwb_metadata[pname[i]][4]+"-"+hwb_metadata[pname[i]][5])
     coll_status.append(hwb_metadata[pname[i]][6])
+    coll_elediff.append(leled[i])
+    coll_disttomouth.append(ldist[i])
+    coll_flag.append(lflag[i])
 
     ########################
     # observed high low flows
@@ -531,12 +539,12 @@ if TAG=="ICESat":
 if TAG=="HydroSat":
     fname='hydrosat_cmf_daily_wse_VIC_BC.nc'
 #-------
-print (fname, count)
-o = Dataset(out_pwd + fname, 'w')
+print (out_pwd+"/"+fname, count)
+o = Dataset(out_pwd+"/"+fname, 'w')
 #o = Dataset(out_pwd + 'cgls_cmf_daily_wse_VIC_BC.nc', 'w')
 o.history='Daily water surface elevation starts from '+str(syear)+'-01-01, The water surface elevations are in WGS84 EGM96\ncreated by Menaka Revel @IIS, U-Tokyo'
 #o.threshold='Larger than 10000km2 and with >15 years data in '+str(syear)+'-2014'
-o.threshold='data in '+str(syear)+'-2014'
+o.threshold='data in '+str(syear)+'-'+str(eyear)
 
 o.createDimension('lat', len(coll_lat))
 o.createDimension('lon', len(coll_lon))
@@ -636,6 +644,18 @@ v[:] = coll_number[:]
 v=o.createVariable('subbasin', 'f', ('stations',))
 v.longname='CMF sub basin ID'
 v[:] = coll_subbasin[:]
+
+v=o.createVariable('elediff', 'f', ('stations',))
+v.longname='elevation differnce between VS and unit-catchment outlet [m]'
+v[:] = coll_elediff[:]
+
+v=o.createVariable('disttomouth', 'f', ('stations',))
+v.longname='distance to unit-catchment outlet from VS [km]'
+v[:] = coll_disttomouth[:]
+
+v=o.createVariable('flag', 'i', ('stations',))
+v.longname='Flag for VS allocation | 1-river channel | 2-unit-catchment outlet | 3-correction form land grid | 4-correction from ocean grid | 5-braided rivers'
+v[:] = coll_flag[:]
 
 v=o.createVariable('sfcelv_hydroweb', 'f', ('nbdays', 'stations'))
 v.longname='water surface elevation at the Vrtual Stations'

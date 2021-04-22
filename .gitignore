@@ -7,6 +7,12 @@
 *.jpg
 *.pdf
 
+#folders
+fig/
+inp/
+out/
+results/
+
 # fortran excutables
 src/allocate_VS
 src/altimetry_rivermap

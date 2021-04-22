@@ -46,7 +46,7 @@ fi
 
 echo "strating calculations........"
 # echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
-printf '%30s%62s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite dist_to_mouth flag kx ky > tmp.txt
+printf '%30s%67s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite dist_to_mouth flag kx ky > tmp.txt
 SOUTH=-60
 while [ $SOUTH -lt 90 ];
 do

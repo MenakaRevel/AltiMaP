@@ -132,7 +132,7 @@ lflags=[]
 l_lons=[]
 l_lats=[]
 #=============================
-fname="./out/altimetry_"+mapname+".txt"
+fname="./out/altimetry_"+mapname+"_test.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -149,9 +149,11 @@ with open(fname, "r") as f:
         egm08= float(line[8])
         egm96= float(line[9])
         sat  = line[10].strip()
-        flag = int(line[11])
+        flag = int(line[12])
         ix   = ix0 - 1
         iy   = iy0 - 1
+        #---
+        print (name, flag)
         #---------------------------
         lnames.append(name)
         l_lons.append(lon)
@@ -204,15 +206,16 @@ epix=(180+east)*4
 # #cmap.set_under("w",alpha=0)
 # cmapL=cmap #cm.get_cmap("rainbow_r")
 vmin=1.0
-vmax=4.0
+vmax=6.0
 norm=Normalize(vmin=vmin,vmax=vmax)
 
-bounds=np.arange(0.5,5.0,1.0)
+bounds=np.arange(0.5,6.0,1.0)
 #cmap=colors.ListedColormap(['grey',"xkcd:ultramarine",'xkcd:clear blue','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:greeny blue","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 # cmap=colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
-cmapL = matplotlib.colors.ListedColormap(['green', 'blue', 'yellow', 'red'])
+cmapL = matplotlib.colors.ListedColormap(['green', 'blue','purple', 'yellow', 'red'])
+# cmapL=matplotlib.colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
 cmapL.set_under("none") #"#000000",alpha=0)
 cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
@@ -234,7 +237,7 @@ for point in np.arange(pnum):
     lat  = l_lats[point]
     flag = lflags[point]
     c=cmapL(norml(flag))
-    # print (lon,lat,flag)
+    print (lon,lat,flag)
     ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree()) #, 
 #--
 im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
