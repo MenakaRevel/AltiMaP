@@ -173,67 +173,23 @@ N=float(len(lnames))
 mkdir("./fig")
 mkdir("./fig/criteria")
 #=============================
-# river width
-sup=2
-w=0.02
-alpha=1
-width=0.5
-
-land="#C0C0C0"
-water="#FFFFFF"
-
-west=-180.0
-east=180.0
-north=90.0
-south=-58.0
-
-lllat = -58.
-urlat = 90.
-lllon = -180.
-urlon = 180.
-
-londiff=(east-west)*4
-latdiff=(north-south)*4
-
-npix=(90-north)*4
-spix=(90-south)*4
-wpix=(180+west)*4
-epix=(180+east)*4
-
-#cmap=make_colormap(colors_list)
-#cmap=mbar.colormap("H02")
-cmap=cm.gist_ncar_r
-#cmap.set_under("w",alpha=0)
-cmapL=cmap #cm.get_cmap("rainbow_r")
-vmin=0.0
-vmax=10.0
-norm=Normalize(vmin=vmin,vmax=vmax)
-
 hgt=11.69*(1.0/3.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
 G  = gridspec.GridSpec(1,1)
-ax=fig.add_subplot(G[0,0],projection=ccrs.Robinson())
+ax = fig.add_subplot(G[0,0])
 #-----------------------------  
-ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
-ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
-#
-pnum=len(lnames)
-for point in np.arange(pnum):
-    dist=ldistd[point]
-    lon =l_lons[point]
-    lat =l_lats[point]
-    c=cmapL(norm(dist))
-    #print lon,lat,pname[point][0],mean_bias
-    ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree())
-#--
-im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norm)#
-im.set_visible(False)
-#cbar=M.colorbar(im,"right",size="2%")
-ax.outline_patch.set_linewidth(0.0)
-#colorbar
-cax=fig.add_axes([0.40,0.10,0.4,.01])
-cbar=plt.colorbar(im,orientation="horizontal",extend='max',ticks=np.arange(vmin,vmax+0.1,1.0),cax=cax) #,extend='both',ticks=np.arange(0.0,1.0+0.001,0.1)
-cbar.ax.tick_params(labelsize=6)
-cbar.set_label("Distance to Mouth $(km)$",fontsize=8)
-plt.savefig("./fig/criteria/distance_to_mouth_map.png",dpi=500)
+# pdf graph
+bins=1000
+xmin=0.0
+xmax=50.0
+ax = fig.add_subplot(G[0,0])
+sns.distplot(np.abs(ldistd), bins=bins, hist=True, color="r")
+#ax.set_ylabel('density', color='k',fontsize=8)
+ax.tick_params('y',labelsize=5, colors='k')
+ax.set_xlabel('Distance to mouth $(km)$', color='k',fontsize=8)
+ax.tick_params('x',labelsize=5, colors='k')
+#ax.set_title("Histogram of Bias",fontsize=8)
+ax.set_xlim(xmin=xmin,xmax=xmax)
+# ax.text(0.01,0.90,"b",transform=ax.transAxes,fontsize=8)
+plt.savefig("./fig/criteria/dist_to_mouth_normal_hist.png",dpi=500)

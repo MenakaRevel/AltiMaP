@@ -33,6 +33,8 @@ Riv_Map.o*
 Alti_VS.o*
 Comm_VS.o*
 Alng_Riv.o*
+MK_netCDF_inter.o*
+MK_netCDF_elediff.o*
 
 # VScode
 *.vscode

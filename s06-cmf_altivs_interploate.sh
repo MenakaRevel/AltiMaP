@@ -8,7 +8,7 @@
 #PBS -m ea
 #PBS -M menaka@rainbow.iis.u-tokyo.ac.jp
 #PBS -V
-#PBS -N MK_netCDF
+#PBS -N MK_netCDF_inter
 
 #source ~/.bashrc
 # import virtual environment
@@ -46,7 +46,7 @@ out_pwd=${curr_pwd}"/results/"${TAG}
 
 mkdir -p ${out_pwd}
 
-python src/CMF_wse.py $TAG $syear $eyear $runoff_folder $CaMa_dir $curr_pwd $out_pwd &
+python src/CMF_wse_inter.py $TAG $syear $eyear $runoff_folder $CaMa_dir $curr_pwd $out_pwd &
 
 wait
 

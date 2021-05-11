@@ -328,10 +328,10 @@ program SET_MAP
             do dx=-nn,nn
                 jx=kx+dx
                 jy=ky+dy
-                if ( jx<=0 ) jx=1
-                if ( jx>nx ) jx=nx
-                if ( jy<=0 ) jy=1
-                if ( jy>nx ) jy=ny
+                if ( jx<=0 ) cycle !jx=1
+                if ( jx>nx ) cycle !jx=nx
+                if ( jy<=0 ) cycle !jy=1
+                if ( jy>nx ) cycle !jy=ny
                 ! ! !! for regional maps
                 ! ! if ( (east-west)==360.0 ) then
                 ! !     if ( jx<=0 ) jx=jx+nx
@@ -375,10 +375,10 @@ program SET_MAP
             do dx=-nn,nn
                 jx=kx+dx
                 jy=ky+dy
-                if ( jx<=0 ) jx=1
-                if ( jx>nx ) jx=nx
-                if ( jy<=0 ) jy=1
-                if ( jy>nx ) jy=ny
+                if ( jx<=0 ) cycle !jx=1
+                if ( jx>nx ) cycle !jx=nx
+                if ( jy<=0 ) cycle !jy=1
+                if ( jy>nx ) cycle !jy=ny
                 ! ! !! for regional maps
                 ! ! if ( (east-west)==360.0 ) then
                 ! !     if( jx<=0 ) jx=kx+nx
@@ -432,7 +432,7 @@ program SET_MAP
     ! find maximum uparea perpendicular to river
     ! in case of braided river
     ! considering the bifurcation tag
-    if (biftag(iXX,iYY) == 1) then
+    if ( biftag(iXX,iYY) == 1 ) then
         ! call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
         call loc_pepndD8(kx,ky,nx,ny,flwdir,visual,uparea,west1,south1,hiresmap,ibx,iby)
         if ( ibx/=-9 .and. iby/=-9 ) then
@@ -459,14 +459,14 @@ program SET_MAP
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
     !============
-    ! print*, trim(station), flag, diffdist*1e-3
-    if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
-        &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
-        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
-    ! else
-    !     print*, "no data"
-    end if
+    print*, trim(station), flag, diffdist*1e-3
+    ! ! if (iXX > 0 .or. iYY > 0) then
+    ! !     print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
+    ! !     &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
+    ! !     &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
+    ! ! ! else
+    ! ! !     print*, "no data"
+    ! ! end if
         ! write(27,'(a14,2x,a40,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)') trim(adjustl(id)),& 
         ! &trim(station),trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
         ! &egm08, egm96, trim(sat)
@@ -805,7 +805,7 @@ program SET_MAP
     integer                         :: ix, iy, dval, dx,dy
     character*128                   :: hiresmap
 
-    integer                         :: iix, iiy
+    integer                         :: iix, iiy, iix0, iiy0
     real                            :: west0, south0, north0, tval
     real                            :: lon1, lat1, lon2, lat2
     integer*1,dimension(nx,ny)      :: flwdir0, visual0
@@ -831,9 +831,9 @@ program SET_MAP
     iiy = iy
     lon1=west0+real(ix)*csize
     lat1=north0-real(iy)*csize
-    do while (visual0(iix,iiy) == 10)
+    do while (visual0(iix,iiy) /= 20)
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
             ! west0=west+csize/2.0
             ! south0=south+csize/2.0
             ! north0=south+10.0+csize/2.0
@@ -861,7 +861,16 @@ program SET_MAP
         iix = iix + dx 
         iiy = iiy + dy
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            exit
+            iix0 = iix
+            iiy0 = iiy 
+            call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            !replace west0, south0, flwdir0, visual0
+            west0=west0+csize/2.0
+            ! south0=south0+csize/2.0
+            north0=south0+10.0+csize/2.0
+            print*, west, south, "to ",west0, south0
+            print*, iix0, iiy0, "to ", iix, iiy
+            ! exit
         end if
         lon2=lon1+real(dx)*csize 
         lat2=lat1+real(dy)*csize
@@ -972,7 +981,7 @@ program SET_MAP
     integer                         :: ix, iy, jx, jy, dval, dx, dy
     character*128                   :: hiresmap
     !------------
-    integer                         :: iix, iiy, ixx, iyy, flag
+    integer                         :: iix, iiy, ixx, iyy, iix0, iiy0, flag
     real                            :: west0, south0, north0, tval
     real                            :: lon1, lat1, lon2, lat2
     integer*1,dimension(nx,ny)      :: flwdir0, visual0
@@ -995,7 +1004,7 @@ program SET_MAP
     lat1=north0-real(iy)*csize
     do while ( iix /= ixx .or. iiy /= iyy )
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
             ! west0=west+csize/2.0
             ! south0=south+csize/2.0
             ! north0=south+10.0+csize/2.0
@@ -1021,6 +1030,17 @@ program SET_MAP
         call next_D8(dval,dx,dy)
         iix = iix + dx 
         iiy = iiy + dy
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            iix0 = iix
+            iiy0 = iiy
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! west0=west+csize/2.0
+            ! south0=south+csize/2.0
+            ! north0=south+10.0+csize/2.0
+            ! print*, "go to next tile", west0,south0
+            flag=-9
+            exit
+        end if
         lon2=lon1+real(dx)*csize 
         lat2=lat1+real(dy)*csize
         flow_dist=flow_dist+hubeny_real(lat1, lon1, lat2, lon2)
@@ -1039,7 +1059,7 @@ program SET_MAP
         lat1=north0-real(iy)*csize
         do while ( iix /= jy .or. iiy /= jy )
             if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-                ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+                ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
                 ! west0=west+csize/2.0
                 ! south0=south+csize/2.0
                 ! north0=south+10.0+csize/2.0
@@ -1065,6 +1085,17 @@ program SET_MAP
             call next_D8(dval,dx,dy)
             iix = iix + dx 
             iiy = iiy + dy
+            if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+                iix0 = iix
+                iiy0 = iiy
+                ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+                ! west0=west+csize/2.0
+                ! south0=south+csize/2.0
+                ! north0=south+10.0+csize/2.0
+                ! print*, "go to next tile", west0,south0
+                flag=-9
+                exit
+            end if
             lon2=lon1+real(dx)*csize 
             lat2=lat1+real(dy)*csize
             flow_dist=flow_dist+hubeny_real(lat1, lon1, lat2, lon2)
@@ -1270,7 +1301,7 @@ program SET_MAP
     !
     do while (flag<2)
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,iix,iiy)
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
             ! west0=west
             ! south0=south
             ! print*, "go to next tile", west0,south0
@@ -1307,22 +1338,23 @@ program SET_MAP
     return
     end subroutine next_out
     !*****************************************************************
-    subroutine got_to_next_tile(ix0,iy0,nx,ny,west,south,hiresmap,flwdir,visual,ix,iy)
+    subroutine got_to_next_tile(ix0,iy0,nx,ny,west0,south0,hiresmap,flwdir,visual,west,south,ix,iy)
     implicit none
     integer                         :: nx, ny
     integer*1,dimension(nx,ny)      :: flwdir, visual
     integer                         :: ix0, iy0
-    real                            :: west, south
+    real                            :: west0, south0
     character*128                   :: hiresmap
     integer                         :: ix, iy
     !--
     integer                         :: dval, ios
     real                            :: dlon, dlat
     character*128                   :: rfile, cname
+    real                            :: west, south
     !----------------------------------------
     call find_next_tile(ix0,iy0,nx,ny,dval,ix,iy,dlon,dlat)
-    west=west+dlon 
-    south=south+dlat
+    west=west0+dlon 
+    south=south0+dlat
     call set_name(west,south,cname)
 
     print*, "go to next tile", west, south, trim(cname)
