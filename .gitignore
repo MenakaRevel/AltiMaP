@@ -38,3 +38,4 @@ MK_netCDF_elediff.o*
 
 # VScode
 *.vscode
+.nfs000000178c31913100002d9a

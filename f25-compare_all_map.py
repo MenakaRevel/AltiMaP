@@ -7,7 +7,6 @@ from numpy import ma
 import matplotlib
 matplotlib.use('Agg')
 from mpl_toolkits.basemap import Basemap
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -30,14 +29,7 @@ import cartopy.crs as ccrs
 import cartopy
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import cartopy.feature as cfeature
-
-sys.path.append("./src")
-# import read_hydroweb as hweb
-import read_cgls as cgls
-import read_hydrosat as hsat
-import read_icesat as isat
-import read_grrats as grt
-from read_upstream import upstream
+#=========================================
 #=============================
 def mkdir(path):
     try:
@@ -47,10 +39,93 @@ def mkdir(path):
             pass
         else:
             raise
+#========================================
+def filter_nan(s,o):
+    """
+    this functions removed the data  from simulated and observed data
+    where ever the observed data contains nan
+    """
+    data = np.array([s.flatten(),o.flatten()])
+    data = np.transpose(data)
+    data = data[~np.isnan(data).any(1)]
+
+    return data[:,0],data[:,1]
+#========================================
+def RMSE(s,o):
+    """
+    Root Mean Squre Error
+    input:
+        s: simulated
+        o: observed
+    output:
+        RMSE: Root Mean Squre Error
+    """
+    o=ma.masked_where(o<=0.0,o).filled(0.0)
+    s=ma.masked_where(o<=0.0,s).filled(0.0)
+    s,o = filter_nan(s,o)
+    return np.sqrt(np.mean((s-o)**2))
+#=========================================
+# sfcelv
+syear=2002
+eyear=2013
+#=========================================
+#TAG="CGLS"
+TAG="HydroWeb"
+# TAG="ICESat"
+# TAG="HydroSat"
+#=========================================
+# odir = "/cluster/data6/menaka/CaMaVal/results_daily/camavali"
+# fname = odir+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
+odir="/cluster/data6/menaka/Altimetry/results"
+if TAG=="HydroWeb":
+    fname0=odir+"/HydroWeb/hydroweb_cmf_daily_wse_VIC_BC.nc"
+    fname1=odir+"/HydroWeb/hydroweb_cmf_linear_daily_wse_VIC_BC.nc"
+    fname2=odir+"/HydroWeb/hydroweb_cmf_elediff_daily_wse_VIC_BC.nc"
+if TAG=="CGLS":
+    fname0=odir+"/CGLS/cgls_cmf_daily_wse_VIC_BC.nc"
+    fname1=odir+"/CGLS/cgls_cmf_daily_wse_VIC_BC.nc"
+    fname2=odir+"/CGLS/cgls_cmf_daily_wse_VIC_BC.nc"
+if TAG=="ICESat":
+    fname0=odir+"/ICESat/icesat_cmf_daily_wse_VIC_BC.nc"
+    fname1=odir+"/ICESat/icesat_cmf_daily_wse_VIC_BC.nc"
+    fname3=odir+"/ICESat/icesat_cmf_daily_wse_VIC_BC.nc"
+if TAG=="HydroSat":
+    fname0=odir+"/HydroSat/hydrosat_cmf_daily_wse_VIC_BC.nc"
+    fname1=odir+"/HydroSat/hydrosat_cmf_daily_wse_VIC_BC.nc"
+    fname2=odir+"/HydroSat/hydrosat_cmf_daily_wse_VIC_BC.nc"
+############################################################
+######################## original data #####################
+nc0 = xr.open_dataset(fname0)
+sfcelv_hydroweb0=nc0.sfcelv_hydroweb.values
+sfcelv_cmf0=nc0.sfcelv_cmf.values
+pname=nc0.name.values
+lons=nc0.lon.values
+lats=nc0.lat.values
+basins=nc0.Basin.values
+rivers=nc0.river.values
+countries=nc0.country.values
+sfcelv_hydroweb_max=nc0.sfcelv_hydroweb_max.values
+sfcelv_hydroweb_min=nc0.sfcelv_hydroweb_min.values
+sfcelv_cmf_max=nc0.sfcelv_cmf_max.values
+sfcelv_cmf_min=nc0.sfcelv_cmf_min.values
+disttomouth=nc0.disttomouth.values
+elediff=nc0.elediff.values
+flag=nc0.flag.values
+nc0.close()
+######################## interpolated data #####################
+nc1 = xr.open_dataset(fname1)
+pname1=nc1.name.values
+sfcelv_cmf1=nc1.sfcelv_cmf.values
+nc1.close()
+######################## elevation differnce data #####################
+nc2 = xr.open_dataset(fname2)
+pname2=nc2.name.values
+sfcelv_cmf2=nc2.sfcelv_cmf.values
+nc2.close()
+############################################################
 #=============================
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-tag="3sec"
 # print sys.argv
 # mapname=sys.argv[1]
 # CaMa_dir=sys.argv[2]
@@ -89,10 +164,6 @@ rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 nextX=nextxy[0]
 nextY=nextxy[1]
 #=====================================
-# high-resolution data
-visual=CaMa_dir+"/map/"+mapname+"/"+tag+"/s20w060.visual.bin"
-visual=np.fromfile(visual,np.int8).reshape(12000,12000)
-#=====================================
 markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
 colors={"HydroWeb":"xkcd:reddy brown","CGLS":"xkcd:dark pink","ICESat":"xkcd:pinkish","HydroSat":"xkcd:light urple","GRRATS":"xkcd:tangerine"} 
 #=============================
@@ -116,49 +187,8 @@ start=datetime.date(syear,1,1)
 end=datetime.date(eyear,12,31)
 days=(end-start).days + 1
 #=============================
-lnames=[]
-lflags=[]
-# leledf=[]
-l_lons=[]
-l_lats=[]
-#=============================
-fname="./out/altimetry_"+mapname+".txt"
-with open(fname, "r") as f:
-    lines=f.readlines()
-    for line in lines[1::]:
-        line = filter(None,re.split(" ", line))
-        # print line
-        Id   = line[0].strip()
-        name = line[1].strip()
-        dname= line[2].strip()
-        lon  = float(line[3])
-        lat  = float(line[4])
-        ix0  = int(line[5]) 
-        iy0  = int(line[6])
-        eled = float(line[7])
-        egm08= float(line[8])
-        egm96= float(line[9])
-        sat  = line[10].strip()
-        flag = int(line[11])
-        ix   = ix0 - 1
-        iy   = iy0 - 1
-        #---------------------------
-        lnames.append(name)
-        l_lons.append(lon)
-        l_lats.append(lat)
-        lflags.append(flag)
-#=============================      
-lnames=np.array(lnames)
-l_lons=np.array(l_lons)
-l_lats=np.array(l_lats)
-lflags=np.array(lflags)
-# leledf=np.array(leledf)
-# l_lons=np.array(l_lons)
-# l_lats=np.array(l_lats)
-N=float(len(lnames))
-#=============================
 mkdir("./fig")
-mkdir("./fig/criteria")
+mkdir("./fig/"+TAG)
 #=============================
 # river width
 sup=2
@@ -169,23 +199,23 @@ width=0.5
 land="#C0C0C0"
 water="#FFFFFF"
 
-lllat = -20.
-urlat = -19.75
-lllon = -60.
-urlon = -59.75
+west=-180.0
+east=180.0
+north=90.0
+south=-58.0
 
-west  = lllon
-east  = urlon
-north = urlat
-south = lllat
+lllat = -58.
+urlat = 90.
+lllon = -180.
+urlon = 180.
 
-londiff=int((east-west)*1200)
-latdiff=int((north-south)*1200)
+londiff=(east-west)*4
+latdiff=(north-south)*4
 
-npix= 0 #(90-north)*4
-spix= latdiff #(90-south)*4
-wpix= 0 #(180+west)*4
-epix= londiff #(180+east)*4
+npix=(90-north)*4
+spix=(90-south)*4
+wpix=(180+west)*4
+epix=(180+east)*4
 
 #cmap=make_colormap(colors_list)
 #cmap=mbar.colormap("H02")
@@ -194,67 +224,56 @@ epix= londiff #(180+east)*4
 # #cmap.set_under("w",alpha=0)
 # cmapL=cmap #cm.get_cmap("rainbow_r")
 vmin=1.0
-vmax=26.0
+vmax=4.0
 norm=Normalize(vmin=vmin,vmax=vmax)
 
-bounds=np.arange(-0.5,26,1.0)
+bounds=np.arange(0.5,4.0,1.0)
 #cmap=colors.ListedColormap(['grey',"xkcd:ultramarine",'xkcd:clear blue','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:greeny blue","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 # cmap=colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
-###
-# sea=0
-# land(undefined)=1
-# land(defined in CaMa)=2 
-# grid-box=3 
-# catchment-boundary=5 
-# channel=10 
-# outlet-pixel=20 
-# river-mouth=25
-#
-cmapL = matplotlib.colors.ListedColormap(['w','w','grey','k','w','k','w','y','w','w','blue','w','w','w','w','w','w','w','w','w','red', 'w','w','w','w','red'])
+cmapL = matplotlib.colors.ListedColormap(['green', 'blue','red']) #'purple', 'yellow', ])
+# cmapL=matplotlib.colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
 cmapL.set_under("none") #"#000000",alpha=0)
 cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
 
-# cmap=cmapL #cm.rainbow
-# cmapL = cm.viridis_r
-# norml=BoundaryNorm(bounds,cmapL.N)
-
-print "making figure"
 hgt= 11.69*(1.0/3.0)
 wdt= 8.27
 fig= plt.figure(figsize=(wdt, hgt))
 G  = gridspec.GridSpec(1,1)
-ax = fig.add_subplot(G[0,0])#,projection=ccrs.Robinson())
-#-----------------------------
-m = Basemap(projection='cyl',llcrnrlat=south,urcrnrlat=north,llcrnrlon=west,urcrnrlon=east, lat_ts=0,resolution='c',ax=ax)
-#m.drawcoastlines( linewidth=0.1, color='k' )
-# m.fillcontinents(color=land,lake_color=water,zorder=99)  
-# ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
-# ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
-# #
-m.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=10,linewidth=0,zorder=102)
-m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0,zorder=102)
-# pnum=len(lnames)
-#--
-print "imshow"
-# [0:500,0:500]
-im=m.imshow(ma.masked_less_equal(visual[npix:spix,wpix:epix],-9999.0),cmap=cmapL,norm=norml) # interpolation="nearest",origin="upper",
-# im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
-# im.set_visible(False)
-pnum=len(lnames)
+ax = fig.add_subplot(G[0,0],projection=ccrs.Robinson())
+#-----------------------------  
+ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
+#
+pnum=len(pname)
+#=============================
 for point in np.arange(pnum):
-    lon  = l_lons[point]
-    lat  = l_lats[point]
-    ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
-#-
+    #prepare
+    cmf0=sfcelv_cmf0[:,point]
+    cmf1=sfcelv_cmf1[:,point]
+    cmf2=sfcelv_cmf2[:,point]
+    org=sfcelv_hydroweb0[:,point]
+    #----------------
+    RMSE0=RMSE(cmf0,org)
+    RMSE1=RMSE(cmf1,org)
+    RMSE2=RMSE(cmf2,org)
+    minRMSE=np.argmin(np.array([RMSE0,RMSE1,RMSE2])) + 1
+    lon  = lons[point]
+    lat  = lats[point]
+    c=cmapL(norml(minRMSE))
+    print (lon,lat,minRMSE)
+    ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree()) #, 
+#--
+im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
+im.set_visible(False)
 #cbar=M.colorbar(im,"right",size="2%")
-# ax.outline_patch.set_linewidth(0.0)
+ax.outline_patch.set_linewidth(0.0)
 #colorbar
-# cax=fig.add_axes([0.40,0.10,0.4,.01])
-# cbar=plt.colorbar(im,orientation="horizontal",ticks=np.arange(0,25+0.1,1.0))#,cax=cax) #ticks=np.arange(vmin,vmax+0.1,1.0),,extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
-# cbar.ax.tick_params(labelsize=6)
-# cbar.set_label("Visuals Flags",fontsize=8)
-plt.savefig("./fig/criteria/high-resolution_map.png",dpi=500)
+cax=fig.add_axes([0.40,0.10,0.4,.01])
+cbar=plt.colorbar(im,orientation="horizontal",ticks=np.arange(vmin,vmax+0.1,1.0),cax=cax) #,extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
+cbar.ax.tick_params(labelsize=6)
+cbar.set_label("RMSE comaprison",fontsize=8)
+plt.savefig("./fig/"+TAG+"/RMSE_compare_map.png",dpi=500)

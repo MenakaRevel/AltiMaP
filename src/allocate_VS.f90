@@ -48,7 +48,8 @@ program SET_MAP
     ! calculation
     integer                       ::  nn
     real                          ::  lag, lag_now!, upa
-    real                          ::  down_dist, flow_dist
+    real                          ::  lat1, lon1, lat2, lon2
+    real                          ::  down_dist, flow_dist, hubeny_real
     ! real                          ::  err1, slope, threshold
     
     ! Station list
@@ -307,6 +308,8 @@ program SET_MAP
     !! permanat water
     kx=ix
     ky=iy
+    lat1=lat0
+    lon1=lon0
     ! print*, "==========================================================="
     ! print*, "Initial allocation: ",kx, ky, visual(kx,ky)
     ! if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
@@ -326,8 +329,8 @@ program SET_MAP
         lag=1.0e20
         do dy=-nn,nn
             do dx=-nn,nn
-                jx=kx+dx
-                jy=ky+dy
+                jx=ix+dx
+                jy=iy+dy
                 if ( jx<=0 ) cycle !jx=1
                 if ( jx>nx ) cycle !jx=nx
                 if ( jy<=0 ) cycle !jy=1
@@ -346,7 +349,10 @@ program SET_MAP
                 if ( visual(jx,jy) /= 10 ) cycle
                 ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
                 ! print*, "===",kx,ky,jx,jy,"==="
-                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+                ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+                lat2=north1 - (jy-1)*(1/dble(hres))
+                lon2=west1 + (jx-1)*(1/dble(hres))
+                lag_now=hubeny_real(lat1, lon1, lat2, lon2)
                 if ( lag_now == -9999.0 ) cycle
                 ! print*, lag, lag_now
                 if ( lag_now < lag ) then
@@ -373,8 +379,8 @@ program SET_MAP
         lag=1.0e20
         do dy=-nn,nn
             do dx=-nn,nn
-                jx=kx+dx
-                jy=ky+dy
+                jx=ix+dx
+                jy=iy+dy
                 if ( jx<=0 ) cycle !jx=1
                 if ( jx>nx ) cycle !jx=nx
                 if ( jy<=0 ) cycle !jy=1
@@ -393,7 +399,10 @@ program SET_MAP
                 if ( visual(jx,jy) /= 10) cycle
                 ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
                 ! print*, "===",kx,ky,jx,jy,"==="
-                lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+                ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+                lat2=north1 - (jy-1)*(1/dble(hres))
+                lon2=west1 + (jx-1)*(1/dble(hres))
+                lag_now=hubeny_real(lat1, lon1, lat2, lon2)
                 if ( lag_now == -9999.0 ) cycle
                 ! print*, lag, lag_now
                 if ( lag_now < lag ) then
@@ -459,14 +468,14 @@ program SET_MAP
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
     !============
-    print*, trim(station), flag, diffdist*1e-3
-    ! ! if (iXX > 0 .or. iYY > 0) then
-    ! !     print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
-    ! !     &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
-    ! !     &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
-    ! ! ! else
-    ! ! !     print*, "no data"
-    ! ! end if
+    ! print*, trim(station), flag, diffdist*1e-3
+    if (iXX > 0 .or. iYY > 0) then
+        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
+        &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
+        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
+    ! else
+    !     print*, "no data"
+    end if
         ! write(27,'(a14,2x,a40,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)') trim(adjustl(id)),& 
         ! &trim(station),trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
         ! &egm08, egm96, trim(sat)
@@ -868,8 +877,8 @@ program SET_MAP
             west0=west0+csize/2.0
             ! south0=south0+csize/2.0
             north0=south0+10.0+csize/2.0
-            print*, west, south, "to ",west0, south0
-            print*, iix0, iiy0, "to ", iix, iiy
+            ! print*, west, south, "to ",west0, south0
+            ! print*, iix0, iiy0, "to ", iix, iiy
             ! exit
         end if
         lon2=lon1+real(dx)*csize 
@@ -1357,7 +1366,7 @@ program SET_MAP
     south=south0+dlat
     call set_name(west,south,cname)
 
-    print*, "go to next tile", west, south, trim(cname)
+    ! print*, "go to next tile", west, south, trim(cname)
     ! open files
     rfile=trim(hiresmap)//trim(cname)//'.visual.bin'
     open(21,file=rfile,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)

@@ -171,7 +171,7 @@ def write_pdf(inputlist):
             if abs(lllon-urlon) < val:
                 urlon=round_half_up(urlon+val,dec)
                 lllon=round_half_down(lllon-val,dec)
-            print lllat, lllon, urlat, urlon
+            print (lllat, lllon, urlat, urlon)
             M = Basemap(resolution='h', projection='cyl',llcrnrlon=lllon, llcrnrlat=lllat, \
                 urcrnrlon=urlon, urcrnrlat=urlat, ax=ax00)
             try:
@@ -226,7 +226,7 @@ def write_pdf(inputlist):
                 obss.append(org)
                 tags.append(TAG)
                 labels.append(TAG)
-                print labels
+                print (labels)
                 # if rflag==1:
                 #     obss.append(org)
                 #     tags.append(TAG)
@@ -290,7 +290,7 @@ def write_pdf(inputlist):
             ######################################
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
-            print "============================"
+            print ("============================")
         # set the file's metadata via the PdfPages object:
         d = pdf.infodict()
         d['Title'] = 'Comparison of HydroWeb, CGLS, HydroSat, ICESat altimetry data'

@@ -57,6 +57,7 @@ if TAG=="HydroWeb":
     fname0=odir+"/HydroWeb/hydroweb_cmf_daily_wse_VIC_BC.nc"
     fname1=odir+"/HydroWeb/hydroweb_cmf_linear_daily_wse_VIC_BC.nc"
     fname2=odir+"/HydroWeb/hydroweb_cmf_elediff_daily_wse_VIC_BC.nc"
+    fname3=odir+"/HydroWeb/hydroweb_cmf_updown_daily_wse_VIC_BC.nc"
 if TAG=="CGLS":
     fname0=odir+"/CGLS/cgls_cmf_daily_wse_VIC_BC.nc"
     fname1=odir+"/CGLS/cgls_cmf_daily_wse_VIC_BC.nc"
@@ -98,11 +99,17 @@ nc2 = xr.open_dataset(fname2)
 pname2=nc2.name.values
 sfcelv_cmf2=nc2.sfcelv_cmf.values
 nc2.close()
+######################## upstream downstream data #####################
+nc3 = xr.open_dataset(fname3)
+pname3=nc3.name.values
+sfcelv_cmf3=nc3.sfcelv_upstream_cmf.values
+sfcelv_cmf4=nc3.sfcelv_downstream_cmf.values
+nc3.close()
 ############################################################
 pnum=len(pname)
 #print np.shape(sfcelv_hydroweb)
-colors=['xkcd:pastel blue','xkcd:teal','xkcd:aqua green','xkcd:dark pink']
-labels=["cmf oroginal","cmf interpolated","cmf ele diff",TAG]
+colors=['xkcd:pastel blue','xkcd:teal','xkcd:aqua green','xkcd:dark pink','xkcd:purple','xkcd:magenta']
+labels=["cmf-org","cmf-inter","cmf-ed",TAG,"cmf-up","cmf-down"]
 #==========
 #nbyears = eyear - syear + 1
 #nt, pnum = np.shape(sfcelv_cmf)
@@ -161,6 +168,8 @@ with PdfPages(pdfname) as pdf:
         cmf0=sfcelv_cmf0[:,point]
         cmf1=sfcelv_cmf1[:,point]
         cmf2=sfcelv_cmf2[:,point]
+        cmf3=sfcelv_cmf3[:,point]
+        cmf4=sfcelv_cmf4[:,point]
         org=sfcelv_hydroweb0[:,point]
         org0=ma.masked_where(sfcelv_hydroweb0[:,point]==-9999.0,sfcelv_hydroweb0[:,point])
         locs=np.where(sfcelv_hydroweb0[:,point]!=-9999.0)[0]
@@ -249,6 +258,9 @@ with PdfPages(pdfname) as pdf:
         lines=[ax1.plot(np.arange(0,len(sfcelv_hydroweb0[:,point])),cmf0,color=colors[0],label=labels[0],linewidth=0.5)[0]]
         lines.append(ax1.plot(np.arange(0,len(sfcelv_hydroweb0[:,point])),cmf1,color=colors[1],label=labels[1],linewidth=0.5)[0])
         lines.append(ax1.plot(np.arange(0,len(sfcelv_hydroweb0[:,point])),cmf2,color=colors[2],label=labels[2],linewidth=0.5)[0])
+        ####
+        lines.append(ax1.plot(np.arange(0,len(sfcelv_hydroweb0[:,point])),cmf3,color=colors[4],label=labels[2],linewidth=0.5)[0])
+        lines.append(ax1.plot(np.arange(0,len(sfcelv_hydroweb0[:,point])),cmf4,color=colors[5],label=labels[2],linewidth=0.5)[0])
         #hydroweb
         lines.append(ax1.plot(locs,org0,color="k",label=TAG,linestyle='None',linewidth=0,marker="o",fillstyle="none",markersize=5)[0])
         ax1.set_ylabel('WSE $(m)$', color='k',fontsize=10)

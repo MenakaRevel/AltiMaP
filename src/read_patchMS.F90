@@ -305,7 +305,7 @@
     integer,intent(IN)                        :: i,j,nx,ny
     integer,dimension(nx,ny),intent(IN)       :: nextX,nextY !,rivseq
     real,dimension(nx,ny),intent(IN)          :: uparea
-    integer,intent(OUT)                       ::x,y
+    integer,intent(OUT)                       :: x,y
     !--
     real                                      :: dA ! area differnce nextdst,
     integer                                   :: ix,iy,iix,iiy,tx,ty,ud,d

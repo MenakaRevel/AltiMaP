@@ -1,8 +1,8 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q F40
-#PBS -l select=1:ncpus=40:mem=100gb
+#PBS -q E20
+#PBS -l select=1:ncpus=20:mem=100gb
 #PBS -l place=scatter
 #PBS -j oe
 #PBS -m ea
@@ -12,7 +12,7 @@
 
 #source ~/.bashrc
 
-NCPUS=40
+NCPUS=20
 export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
@@ -46,12 +46,12 @@ fi
 
 echo "strating calculations........"
 # echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
-printf '%30s%67s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite dist_to_mouth flag kx ky ##> tmp.txt
-SOUTH=-10 ##-60
-while [ $SOUTH -lt 0 ]; ##90 ];
+printf '%30s%67s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite dist_to_mouth flag kx ky > tmp.txt
+SOUTH=-10
+while [ $SOUTH -lt 5 ];
 do
-  WEST=-70 ##-180
-  while [ $WEST -lt -60 ]; ##180 ];
+  WEST=-80
+  while [ $WEST -lt -45 ];
   do
     CNAME=`./src/set_name $WEST $SOUTH`
     # #echo $CNAME ${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
@@ -62,7 +62,7 @@ do
             # echo $flag
             if [ $flag = 1 ]; then
                 # echo "./src/allocate_VS $WEST $SOUTH $data"
-                ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir ##>> tmp.txt &
+                ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt &
                 ## for parallel computation using multiple CPUs 
                 NUM=`ps aux -U $USER | grep /src/allocate_VS | wc -l | awk '{print $1}'`
                 # echo $USER $NUM
@@ -82,4 +82,5 @@ done
 
 
 wait 
-# mv tmp.txt ${outdir}/altimetry_${map}_test.txt
+day=`printf '%(%Y%m%d)T\n' -1`
+mv tmp.txt ${outdir}/altimetry_${map}_${day}.txt
