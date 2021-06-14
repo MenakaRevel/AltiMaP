@@ -5,13 +5,13 @@ import datetime
 import numpy as np
 from numpy import ma
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import LogNorm,Normalize,ListedColormap,BoundaryNorm
 from matplotlib import colors
-matplotlib.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 import warnings;warnings.filterwarnings('ignore')
 import xarray as xr
@@ -19,6 +19,8 @@ import math
 import seaborn as sns
 import re
 import sys
+from scipy import stats
+from sklearn.metrics import r2_score
 
 from read_patchMS import upstream
 from river_function import river_profile
@@ -74,6 +76,25 @@ def river_along_profile(ix,iy,west,south,csize,nx,ny,hiresmap):
     # print (length, elevation, k)
     return length[0:k] , elevation[0:k]
 #=============================
+def r_squared(x,y,a,b):
+    # for linear function of y = a + bx 
+    # fit values, and mean
+    x    = np.array(x)
+    y    = np.array(y)
+    yhat = a + b * x                 # or [a + b * z for z in x]
+    # print (y)
+    # print (yhat)
+    # for i in range(len(x)):
+    #     print (x[i], y[i], yhat[i])
+    ybar  = np.sum(y)/len(y)            # or sum(y)/len(y) # np.mean(y) 
+    sstot = np.sum((y    - ybar)**2)    # or sum([ (yi - ybar)**2 for yi in y])
+    ssreg = np.sum((yhat - ybar)**2)    # or sum([ (yihat - ybar)**2 for yihat in yhat])
+    sserr = np.sum((yhat - y   )**2)    # or sum([ (yhat[i] - y[i])**2 for i in range(len(y))])
+    # print ("$r^2$ calculation: ",ssreg, sserr, sstot, ssreg+sserr)
+    r2 = ssreg / sstot
+
+    return r2
+#=============================
 # sfcelv
 syear=2000
 eyear=2020
@@ -94,6 +115,7 @@ mapname=sys.argv[4] #"glb_06min"
 CaMa_dir=sys.argv[5] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 restag=sys.argv[6] #"3sec"
 obstxt=sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
+stream0=["AMAZONAS","CONGO"]
 #=============================
 TAG=dataname
 res=1.0/1200.0
@@ -168,8 +190,12 @@ for line in lines[1::]:
     # print (riv,station,kx,ky)
     if riv != rivername0:
         continue
-    # if stream != stream0:
-    #     continue
+    if riv == "AMAZONAS":
+        if stream != stream0[0]:
+            continue
+    elif riv == "CONGO":
+        if stream != stream0[1]:
+            continue
     nums.append(num)
     river.append(riv)
     pname.append(station)
@@ -261,9 +287,9 @@ with PdfPages(pdfname) as pdf:
         print (npix,":",spix,",",wpix,":",epix)
         #=====================================
         # high-resolution data
-        print (cname0)
+        # print (cname0)
         visual=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".visual.bin"
-        print (visual)
+        # print (visual)
         visual=np.fromfile(visual,np.int8).reshape(12000,12000)
         #-----------------------------
         ax0 = fig.add_subplot(G[0,0])
@@ -288,7 +314,7 @@ with PdfPages(pdfname) as pdf:
         m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0,zorder=102)
         data = ma.masked_less_equal(visual[npix:spix,wpix:epix],2)
         im=m.imshow(data,interpolation="nearest",origin="upper",cmap=cmapL,norm=norml,zorder=110) # interpolation="nearest",origin="upper",
-        print (lon,lat)
+        # print (lon,lat)
         # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
         ax0.plot(lon ,lat ,color="g",marker="o",markersize=7,zorder=111) #fillstyle="none",
         kx = kxlst[point]
@@ -296,11 +322,15 @@ with PdfPages(pdfname) as pdf:
         lat0 = south + res/2.0 + 10.0 - ky*res  
         lon0 = west + res/2.0 + kx*res
         ax0.plot(lon0 ,lat0 ,color="r",marker="o",markersize=7,zorder=112) #fillstyle="none",
-        print (kx,ky,lon0,lat0)
+        # print (kx,ky,lon0,lat0)
         #========================================================
         ax1 = fig.add_subplot(G[0,1])
-        print ("calculate river profile...........",kx,ky,visual[ky-1,kx-1])
-        length, elevation = river_along_profile(kx,ky,west,south,res,nx,ny,hiresmap)
+        # print ("calculate river profile...........",kx,ky,visual[ky-1,kx-1])
+        try:
+            length, elevation = river_along_profile(kx,ky,west,south,res,nx,ny,hiresmap)
+        except:
+            length=[0.0]
+            elevation=[0.0]
         # print (length, elevation)
         if visual[ky-1,kx-1]!=10:
             length=[0.0]
@@ -311,9 +341,36 @@ with PdfPages(pdfname) as pdf:
         # print (elevtn)
         elevtn=np.fromfile(elevtn,np.float32).reshape(12000,12000)
         disttom=ldtom[point]
-        print (length[-1],"-",disttom,elevtn[ky-1,kx-1])
+        # print (length[-1],"-",disttom,elevtn[ky-1,kx-1])
         ax1.plot([length[-1]-disttom*1e3],[elevtn[ky-1,kx-1]],color="r",marker="o",markersize=7,linestyle='none',linewidth=0.0)
         ax1.plot([0,length[-1]],[elevation[0],elevation[-1]],color="g",linestyle='--',linewidth=0.5)
+        
+        # r = r2_score(elevation, elevation[0]+((elevation[-1]-elevation[0])/length[-1]*1e-20)*length)
+        # slope = ((elevation[-1]-elevation[0])/(length[-1]+1e-20))
+        # intercept = elevation[0]
+        # print (intercept,slope)
+        # r = r_squared(length,elevation,intercept,slope)
+
+        ## linear model
+        try:
+            slope0, intercept0, r0, p, se = stats.linregress(length, elevation)
+            rsqrt1="$r^2$:%4.3f"%(r0**2)
+            ax1.text(0.6,0.9,rsqrt1,color="b",transform=ax1.transAxes,fontsize=10)
+            ax1.plot(length,intercept0+slope0*length,color="b",linestyle='--',linewidth=0.5)
+        except:
+            print ("cannot plot fitted line")
+        ## polynomial model
+        try:
+            polymodel = np.poly1d(np.polyfit(length, elevation, 2))
+            r1 = r2_score(elevation, polymodel(length))
+            rsqrt2="$r^2$:%4.3f"%(r1**2)
+            ax1.text(0.6,0.7,rsqrt2,color="orange",transform=ax1.transAxes,fontsize=10)
+            ax1.plot(length,polymodel(length),color="orange",linestyle='--',linewidth=0.5)
+        except:
+            print ("cannot fit a polynomial")
+            r1=0.0
+        print ("linear model:", r0**2,"polynomial model:", r1)
+        ####
         locs,org = get_data(pname[point],TAG,egm08=egm08[point],egm96=egm96[point])
         ax1.axhline(y=np.mean(org),xmin=0.0,xmax=length[-1],color=colors[TAG],linestyle='--',linewidth=0.5)
         ax1.set_xlim(xmin=0,xmax=length[-1])

@@ -344,9 +344,10 @@ program SET_MAP
                 ! !     if ( jx>nx ) jx=nx
                 ! ! end if
                 !-----
+                if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
                 if ( kx == jx .and. ky == jy) cycle
                 if ( (catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0) ) cycle
-                if ( visual(jx,jy) /= 10 ) cycle
+                ! if ( visual(jx,jy) /= 10 ) cycle
                 ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
                 ! print*, "===",kx,ky,jx,jy,"==="
                 ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
@@ -394,9 +395,9 @@ program SET_MAP
                 ! !     if( jx>nx ) jx=nx
                 ! ! end if
                 !-----
+                if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
                 if ( kx == jx .and. ky == jy) cycle
                 if ((catmXX(jx,jy) <= 0) .or. (catmYY(jx,jy) <= 0)) cycle
-                if ( visual(jx,jy) /= 10) cycle
                 ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
                 ! print*, "===",kx,ky,jx,jy,"==="
                 ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
@@ -422,7 +423,7 @@ program SET_MAP
         end if
     else
         flag=9
-        ! print*, "flag: 9 ->", kx, ky, visual(kx,ky)
+        ! print*, "flag: 9 ->", kx, ky, visual(kx,ky) 
     end if
     !
     !---
@@ -468,10 +469,10 @@ program SET_MAP
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
     !============
-    ! print*, trim(station), flag, diffdist*1e-3
+    ! print*, trim(station)!, flag, diffdist*1e-3
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)', trim(adjustl(id)),&
-        &trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
+        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)',& 
+        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
         &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
     ! else
     !     print*, "no data"
@@ -872,14 +873,14 @@ program SET_MAP
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             iix0 = iix
             iiy0 = iiy 
-            call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
-            !replace west0, south0, flwdir0, visual0
-            west0=west0+csize/2.0
-            ! south0=south0+csize/2.0
-            north0=south0+10.0+csize/2.0
-            ! print*, west, south, "to ",west0, south0
-            ! print*, iix0, iiy0, "to ", iix, iiy
-            ! exit
+            ! ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! ! !replace west0, south0, flwdir0, visual0
+            ! ! west0=west0+csize/2.0
+            ! ! ! south0=south0+csize/2.0
+            ! ! north0=south0+10.0+csize/2.0
+            ! ! ! print*, west, south, "to ",west0, south0
+            ! ! ! print*, iix0, iiy0, "to ", iix, iiy
+            exit
         end if
         lon2=lon1+real(dx)*csize 
         lat2=lat1+real(dy)*csize
@@ -1446,4 +1447,276 @@ program SET_MAP
         iy=iy0+ny   
     end if
     end subroutine find_next_tile  
+    !*****************************************************************
+    subroutine hires_upstream(i,j,nx,ny,flwdir,uparea,visual,x,y)
+    implicit none 
+    ! find the upstream pixel with closest upstream area to the i,j
+    !--
+    integer,intent(IN)                        :: i,j,nx,ny
+    integer*1,dimension(nx,ny),intent(IN)     :: flwdir, visual !,rivseq
+    real,dimension(nx,ny),intent(IN)          :: uparea
+    integer,intent(OUT)                       :: x,y
+    !--
+    real                                      :: dA ! area differnce nextdst,
+    integer                                   :: ix,iy,tx,ty,d !,iix,iiy,ud
+    !real                                      :: length,rl
+    !--
+    x=-9999
+    y=-9999
+    d=3 ! look at 3*3 box
+    dA=1.0e20 ! area differnce
+    !--
+    !write(*,*)i,j
+    do tx=i-d,i+d
+        do ty=j-d,j+d
+        if (tx==i .and. ty==j) cycle
+        if (visual(tx,ty) ==10 .or. visual(tx,ty) ==20 ) then
+        !write(*,*)tx,ty
+        ! call ixy2iixy(tx,ty, nx, ny, ix, iy)
+        !write(*,*)nextX(ix,iy),nextY(ix,iy),ix,iy,uparea(ix,iy),rivseq(ix,iy)
+            call next_pixel(tx,ty,flwdir,nx,ny,ix,iy)
+            if (ix == i .and. iy == j) then
+                !write(*,*)ix,iy
+                if (abs(uparea(i,j)-uparea(tx,ty)) < dA) then
+                    dA=abs(uparea(i,j)-uparea(tx,ty))
+                    x=tx
+                    y=ty
+                    !write(*,*)x,y
+                end if
+                ! end if
+            end if
+        end if
+        end do
+    end do
+    return
+    end subroutine hires_upstream
+!*****************************************************************
+    subroutine next_pixel(tx,ty,flwdir,nx,ny,ix,iy)
+    implicit none
+    integer                                   :: tx,ty,ix,iy !iix,iiy,ud,d
+    integer                                   :: nx, ny
+    integer*1,dimension(nx,ny)                :: flwdir
+    integer                                   :: dval, dx, dy
+    !----
+    dval=flwdir(tx,ty)
+    call next_D8(dval,dx,dy)
+    ix=tx+dx 
+    iy=ty+dy 
+    return
+    end subroutine next_pixel
+!*****************************************************************
+    subroutine up_until_mouth(ix,iy,flwdir,uparea,visual,nx,ny,x,y)
+    implicit none
+    ! find the upstream unit catchment mouth 
+    !--
+    integer,intent(IN)                        :: ix,iy,nx,ny
+    integer*1,dimension(nx,ny),intent(IN)     :: flwdir, visual !,rivseq
+    real,dimension(nx,ny),intent(IN)          :: uparea
+    integer,intent(OUT)                       :: x,y
+    !--
+    !real                                      :: dA ! area differnce nextdst,
+    integer                                   :: iix,iiy,x0,y0 !,tx,ty,ud,d
+    !real                                      :: length,rl
+    !------------
+    x=-9999
+    y=-9999
+    iix=ix
+    iiy=iy 
+    ! print*, iix, iiy
+    do while (visual(iix,iiy)==10)
+        ! print*, iix, iiy, visual(iix,iiy)
+        call hires_upstream(iix,iiy,nx,ny,flwdir,uparea,visual,x0,y0)
+        iix=x0
+        iiy=y0
+        ! print*, "at upstream:",visual(iix,iiy)
+        if (visual(iix,iiy) == 20) then ! upstream unit-catchment mouth found
+            x=x0
+            y=y0
+            exit
+        end if
+    end do
+    return
+    end subroutine up_until_mouth
+    !*****************************************************************
+    subroutine river_profile(ix,iy,west,south,csize,nx,ny,flwdir,visual,uparea,elevtn,len,ele,k)
+    implicit none
+    ! output the river profile along the river channel from upstream unit-catchment mouth
+    ! to unit-catchment mouth of this catchment
+    integer                                   :: ix,iy,nx,ny
+    real                                      :: west,south,csize
+    integer*1,dimension(nx,ny)                :: flwdir, visual !,rivseq
+    real,dimension(nx,ny)                     :: uparea, elevtn
+    real,dimension(1000)                      :: len, ele
+    integer                                   :: k
+    !- for clculations
+    ! character*128                             :: rfile1
+    ! character*7                               :: cname
+    ! integer                                   :: ios
+    ! integer,parameter                         :: nx=1200, ny=1200
+    integer                                   :: iix,iiy,x0,y0,x,y !,tx,ty,ud,d
+    integer                                   :: dval, dx,dy
+    real                                      :: down_dist
+    real                                      :: west0, south0, north0 !, tval
+    real                                      :: lon1, lat1, lon2, lat2
+    integer*1,dimension(nx,ny)                :: flwdir0, visual0
+    real,dimension(nx,ny)                     :: uparea0, elevtn0
+    real                                      :: hubeny_real
+    !--
+    flwdir0=flwdir
+    visual0=visual
+    uparea0=uparea
+    elevtn0=elevtn
+    west0=west+csize/2.0
+    south0=south+csize/2.0
+    north0=south+10.0+csize/2.0
+    down_dist = 0.0
+    !----------
+    len=-9999.0
+    ele=-9999.0
+    ! find the upstream unit-catchment mouth
+    ! print*, "up_until_mouth", visual0(iix,iiy)
+    call up_until_mouth(ix,iy,flwdir0,uparea0,visual0,nx,ny,x0,y0)
+    iix=x0
+    iiy=y0
+    !==============================
+    ! upstream unit-catchment mouth
+    len(1)=0.0
+    ele(1)=elevtn(iix,iiy)
+    lon1=west0+real(iix)*csize
+    lat1=north0-real(iiy)*csize
+    ! print*, "next_pixel"
+    !==============================
+    ! go to the next pixel
+    call next_pixel(x0,y0,flwdir0,nx,ny,x,y)
+    iix=x
+    iiy=y
+    lon2=west0+real(iix)*csize
+    lat2=north0-real(iiy)*csize
+    down_dist = hubeny_real(lat1, lon1, lat2, lon2)
+    len(2)=down_dist
+    ele(2)=elevtn(iix,iiy)
+    k=3
+    !------------------------------
+    lon1=lon2
+    lat1=lat2
+    ! print*, "Start do-loop:" ,iix,iiy, visual0(iix,iiy)
+    do while (visual0(iix,iiy)==10)
+        ! print* ,iix,iiy, visual0(iix,iiy)
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! west0=west+csize/2.0
+            ! south0=south+csize/2.0
+            ! north0=south+10.0+csize/2.0
+            ! print*, "go to next tile", west0,south0
+            ! flag=-9
+            exit
+        end if
+        ! river mouth
+        if (flwdir0(iix,iiy) == -9 ) then
+            ! print*, "River mouth", visual(iix,iiy)
+            exit
+        end if
+        ! land
+        if (visual0(iix,iiy) == 2 ) then
+            ! print*, "Not in the river channel", visual(iix,iiy)
+            exit
+        end if
+        ! outlet pixel
+        if (visual0(iix,iiy) == 20 ) then
+            ! print*, "Outlet pixel", visual(iix,iiy)
+            exit
+        end if
+        dval=flwdir0(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! iix0 = iix
+            ! iiy0 = iiy 
+            ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! replace west0, south0, flwdir0, visual0
+            ! west0=west0+csize/2.0
+            ! south0=south0+csize/2.0
+            ! north0=south0+10.0+csize/2.0
+            ! print*, west, south, "to ",west0, south0
+            ! print*, iix0, iiy0, "to ", iix, iiy
+            exit
+        end if
+        lon2=lon1+real(dx)*csize 
+        lat2=lat1+real(dy)*csize
+        down_dist=down_dist+hubeny_real(lat1, lon1, lat2, lon2)
+        len(k)=down_dist
+        ele(k)=elevtn(iix,iiy)
+        ! print*,k , iix, iiy, down_dist, elevtn(iix,iiy)
+        ! print*, iix, iiy, lon1, lat1, down_dist ,visual(iix,iiy), dval
+        lon1=lon2
+        lat1=lat2
+        k=k+1
+    end do
+    !--
+    k=k-1 
+    return
+    end subroutine river_profile
+    !*****************************************************************
+    subroutine calc_r_sqrared(x, y, k, a, b, r_sqrt)
+    implicit none
+    integer                      :: k
+    real,dimension(k)            :: x, y
+    real                         :: a, b, r_sqrt
+    integer                      :: size_x, size_y, i
+    real                         :: sum_x, sum_y, sum_xx, sum_xy, sum_yy
+    real                         :: mean_x, mean_y, SST, SSR, SSE
+
+    size_x = size(x)
+    size_y = size(y)
+    if (size_x == 0 .or. size_y == 0) then
+        print *, "[ERROR] array size == 0"
+        stop
+    end if
+    if (size_x /= size_y) then
+        print *, "[ERROR] size(X) != size(Y)"
+        stop
+    end if
+
+    sum_x  = sum(x)
+    sum_y  = sum(y)
+    sum_xx = sum(x * x)
+    sum_xy = sum(x * y)
+    sum_yy = sum(y * y)
+
+    mean_x = sum_x/real(size_x)
+    mean_y = sum_y/real(size_x)
+
+    SST = sum((y - mean_y)**2)
+    SSR = sum(((a + b * x) - mean_y)**2)
+    SSE = sum(((a + b * x) - y)**2)
+
+    !   print*, SST, SSR, SSE, SSR+SSE
+
+    r_sqrt = SSR/SST
+    end subroutine calc_r_sqrared
+    !*****************************************************************
+    function river_p_r2(ix,iy,west,south,csize,nx,ny,flwdir,visual,uparea,elevtn)
+    implicit none
+    integer                                   :: ix,iy,nx,ny
+    real                                      :: west,south,csize
+    integer*1,dimension(nx,ny)                :: flwdir, visual !,rivseq
+    real,dimension(nx,ny)                     :: uparea, elevtn
+    real                                      :: river_p_r2
+    !------
+    real,dimension(1000)                      :: len0, ele0
+    real,allocatable                          :: len(:), ele(:)
+    integer                                   :: k
+    real                                      :: a, b
+    !--- get the river profile --
+    call river_profile(ix,iy,west,south,csize,nx,ny,flwdir,visual,uparea,elevtn,len0,ele0,k)
+    !--- calculate the r2 values against linear river profile
+    allocate (ele(k),len(k))
+    ele = ele0(1:k)
+    len = len0(1:k)
+    a = ele(1)  ! intercept
+    b = (ele(k)-ele(1))/(len(k)+1e-20)
+    call calc_r_sqrared(len, ele, k, a, b, river_p_r2)
+    return
+    end function river_p_r2
     !*****************************************************************

@@ -5,13 +5,13 @@ import datetime
 import numpy as np
 from numpy import ma
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import LogNorm,Normalize,ListedColormap,BoundaryNorm
 from matplotlib import colors
-matplotlib.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 import warnings;warnings.filterwarnings('ignore')
 import xarray as xr
@@ -179,6 +179,8 @@ mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 tag="3sec"
 res=1.0/1200.0
+upthr=10.0
+dwthr=10.0
 #=============================
 # Read the CMF variables
 if mapname == 'glb_15min':
@@ -205,7 +207,7 @@ nxtdst = CaMa_dir+"/map/"+mapname+"/nxtdst.bin"
 rivseq = CaMa_dir+"/map/"+mapname+"/rivseq.bin"
 nextxy = np.fromfile(nextxy,np.int32).reshape(2,ny,nx)
 # rivwth = np.fromfile(rivwth,np.float32).reshape(ny,nx)
-# rivhgt = np.fromfile(rivhgt,np.float32).reshape(ny,nx)
+rivhgt = np.fromfile(rivhgt,np.float32).reshape(ny,nx)
 # rivlen = np.fromfile(rivlen,np.float32).reshape(ny,nx)
 elevtn = np.fromfile(elevtn,np.float32).reshape(ny,nx)
 lonlat = np.fromfile(lonlat,np.float32).reshape(2,ny,nx)
@@ -239,8 +241,8 @@ cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
 ############################################################
-rivernames=["CONGO","AMAZONAS","LENA","GANGES-BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"]
-streams=["CONGO","AMAZONAS","LENA","BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"]
+rivernames=["AMAZONAS","CONGO","AMAZONAS","LENA","GANGES-BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"]
+streams=["XINGU","CONGO","AMAZONAS","LENA","BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"]
 for j in np.arange(len(rivernames)):
     rivername0 = rivernames[j]
     stream0 = streams[j]
@@ -263,6 +265,9 @@ for j in np.arange(len(rivernames)):
     kylst=[]
     #-------------------------------------------
     fname="./out/altimetry_"+mapname+"_test.txt"
+    # fname="./out/altimetry_"+mapname+"_20210602.txt"
+    # fname="./out/altimetry_"+mapname+"_20210531.txt"
+    # fname="./tmp.txt"
     #--
     f=open(fname,"r")
     lines=f.readlines()
@@ -333,19 +338,22 @@ for j in np.arange(len(rivernames)):
     mean_WSE=[]
     std_WSE=[]
     cmf_WSE=[]
+    riv_hgt=[]
     dist=0.0
     for point in np.arange(pnum):
-        print (pname00[point], rvlen00[point], meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point]), elevtn[ylist00[point],xlist00[point]], 
-                rivseq[ylist00[point],xlist00[point]], meanWSE_VICBC[ylist00[point],xlist00[point]])
+        # print (pname00[point], rvlen00[point], meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point]), elevtn[ylist00[point],xlist00[point]], 
+        #         rivseq[ylist00[point],xlist00[point]], meanWSE_VICBC[ylist00[point],xlist00[point]])
         meanW, stdW = meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point])
         mean_WSE.append(meanW)
         std_WSE.append(stdW)
         mean_elevation.append(elevtn[ylist00[point],xlist00[point]])
         cmf_WSE.append(meanWSE_VICBC[ylist00[point],xlist00[point]])
+        riv_hgt.append(rivhgt[ylist00[point],xlist00[point]])
     mean_WSE=np.array(mean_WSE)
     std_WSE=np.array(std_WSE)
     cmf_WSE=np.array(cmf_WSE)
     mean_elevation=np.array(mean_elevation)
+    riv_hgt=np.array(riv_hgt)
     #-------------------------------------------
     hgt=11.69*(1.0/2.0)
     wdt=8.27
@@ -358,14 +366,68 @@ for j in np.arange(len(rivernames)):
     ax.errorbar(rvlen00,mean_WSE,yerr=std_WSE,color="k",label=TAG,linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=2,
                 ecolor="k",elinewidth=0.5,capsize=1.0)
     ax.plot(rvlen00,mean_elevation,color="g",label="CaMa-Flood")
-    ax.plot(rvlen00,mean_elevation + 15.0,color="xkcd:bluish green",label="CaMa-Flood",linestyle='--',linewidth=0.5)
+    ax.plot(rvlen00,mean_elevation + 10.0,color="xkcd:bluish green",label="CaMa-Flood",linestyle='--',linewidth=0.5)
     ax.plot(rvlen00,mean_elevation - 10.0,color="xkcd:bluish green",label="CaMa-Flood",linestyle='--',linewidth=0.5)
+    ax.plot(rvlen00,mean_elevation - riv_hgt,color="purple",label="CaMa-Flood",linestyle='--',linewidth=0.5) #"xkcd:bluish green"
     ax.plot(rvlen00,cmf_WSE,color="r",label="CaMa-Flood",linestyle='-',linewidth=0.5) #xkcd:bright blue
+    # plot the unacceptble VS
+    slp_thr=1.0*abs((mean_elevation[0]-mean_elevation[-1])/rvlen00[-1])
+    print slp_thr
+    slope0=0.0
+    slope_org = [0.0] #[abs((mean_elevation[i]-mean_elevation[i-1])/(rvlen00[i-1]-rvlen00[i])) for i in range(1,pnum)]
+    print slope_org 
+    slopes=[]
+    slopes0=[]
+    slp_len=[]
+    for point in range(pnum):
+        if point < 1:
+            continue
+        #-------------------
+        uppoint1 = point - 1
+        dwpoint1 = point + 1
+        slope_obs = abs((mean_WSE[uppoint1]-mean_WSE[point])/(rvlen00[point]-rvlen00[uppoint1]))
+        slope_cmf = abs((mean_elevation[uppoint1]-mean_elevation[point])/(rvlen00[point]-rvlen00[uppoint1]))
+        slopes.append(slope_cmf)
+        slopes.append(slope_cmf)
+        slope_arr=np.array(slopes)
+        mean_slope=np.mean(slope_arr)
+        slope_org.append(mean_slope)
+        if abs(mean_slope - slope_cmf) > slp_thr:
+            print "="*50
+            slopes=[]
+            slp_len.append(rvlen00[point])
+        # print "%69s\t%12.5e\t%12.5e\t%12.5e"%(pname00[point], slope_obs, slope_cmf, slope_cmf-slope0)
+        slope0=slope_cmf
+        
+        # if mean_elevation[point] + upthr < mean_WSE[point] or mean_elevation[point] - dwthr > mean_WSE[point]:
+        #     print (pname00[point],rivername0,rvlen00[point],mean_WSE[point]) #,mean_WSE[point],mean_WSE[dwpoint1])
+        #     ax.plot(rvlen00[point],mean_WSE[point],color="r",linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=10)
+        
+        # if point < 2:
+        #     continue
+        # if point > pnum -2:
+        #     continue
+        # #-------------------
+        # uppoint1 = point - 1
+        # dwpoint1 = point + 1
+        # uppoint2 = point - 2
+        # dwpoint2 = point + 2
+        # flag = 0
+        # # print (mean_WSE[uppoint],mean_WSE[point],mean_WSE[dwpoint])
+        # if mean_WSE[uppoint1] + upthr < mean_WSE[point] or mean_WSE[dwpoint1] - dwthr > mean_WSE[point]:
+        #     if mean_WSE[uppoint2] < mean_WSE[point] or mean_WSE[dwpoint2] > mean_WSE[point]:
+        #         print (pname00[point],rivername0,rvlen00[point],mean_WSE[uppoint1],mean_WSE[point],mean_WSE[dwpoint1])
+        #         ax.plot(rvlen00[point],mean_WSE[point],color="r",linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=10)
+    #--
+    slp00=[abs(slope_org[i]-slope_org[i-1]) for i in range(1,pnum)]
+    slp_len=(slp00 > slp_thr)*rvlen00[1::]
+    # slp_len=np.array(slp_len)
+    ax.vlines(x=slp_len,ymin=0.0,ymax=max(mean_elevation + 10.0), colors="yellow")
     ax.set_ylabel('Mean Elevation $(m)$', color='k',fontsize=10)
     ax.tick_params('y',labelsize=6, colors='k')
     ax.set_xlabel('Distance along river\nto river mouth $(km)$', color='k',fontsize=10)
     ax.tick_params('x',labelsize=6, colors='k')
-    ax.set_xlim(xmin=0.0)
-    ax.set_ylim(ymin=0.0)
+    ax.set_xlim(xmin=0.0) #,xmax=1500.0)
+    # ax.set_ylim(ymin=250.0)
     print (rivername0+"-"+stream0)
     plt.savefig("./fig/"+TAG+"/along_river_VS/"+rivername0+"-"+stream0+".png",dpi=500) 
