@@ -94,7 +94,7 @@ def r_squared(x,y,a,b):
     r2 = ssreg / sstot
 
     return r2
-#=============================
+#============================= 
 # sfcelv
 syear=2000
 eyear=2020
@@ -109,13 +109,24 @@ TAG="HydroWeb"
 #=========================================
 ############################################################
 rivername0=sys.argv[1] #"CONGO" #"AMAZONAS"
-dataname=sys.argv[2]
-odir=sys.argv[3] #"/cluster/data6/menaka/Altimetry/results"
-mapname=sys.argv[4] #"glb_06min"
-CaMa_dir=sys.argv[5] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-restag=sys.argv[6] #"3sec"
-obstxt=sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
-stream0=["AMAZONAS","CONGO"]
+stream0=sys.argv[2]
+dataname=sys.argv[3]
+odir=sys.argv[4] #"/cluster/data6/menaka/Altimetry/results"
+mapname=sys.argv[5] #"glb_06min"
+CaMa_dir=sys.argv[6] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+restag=sys.argv[7] #"3sec"
+obstxt=sys.argv[8] #"./out/altimetry_"+mapname+"_test.txt"
+# # stream0=["AMAZONAS","CONGO"]
+# # #=
+# # rivername0="CONGO" #"AMAZONAS"
+# # stream0="CONGO" #
+# # dataname="HydroWeb"
+# # odir="/cluster/data6/menaka/Altimetry/results"
+# # mapname="glb_06min"
+# # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+# # restag="3sec"
+# # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210617.txt"
+# # # stream0=["AMAZONAS","CONGO"]
 #=============================
 TAG=dataname
 res=1.0/1200.0
@@ -157,8 +168,10 @@ egm96=[]
 llsat=[]
 ldtom=[]
 lflag=[]
-kxlst=[]
-kylst=[]
+kx1lt=[]
+ky1lt=[]
+kx2lt=[]
+ky2lt=[]
 #-------------------------------------------
 # fname="./out/altimetry_"+mapname+"_test.txt"
 # fname="./out/altimetry_"+mapname+"_20210518.txt"
@@ -184,18 +197,26 @@ for line in lines[1::]:
     sat     = line[10].strip()
     dist    = float(line[11])
     flag    = int(line[12])
-    kx      = int(line[13])
-    ky      = int(line[14])
+    kx1     = int(line[13])
+    ky1     = int(line[14])
+    kx2     = int(line[15])
+    ky2     = int(line[16])
     #-----------------------
     # print (riv,station,kx,ky)
     if riv != rivername0:
         continue
-    if riv == "AMAZONAS":
-        if stream != stream0[0]:
-            continue
-    elif riv == "CONGO":
-        if stream != stream0[1]:
-            continue
+    if stream != stream0:
+        continue
+
+    # if riv == "AMAZONAS":
+    #     if stream != stream0:
+    #         continue
+    # elif riv == "CONGO":
+    #     if stream != stream0:
+    #         continue
+    # else:
+    #     if stream != stream0:
+    #         continue
     nums.append(num)
     river.append(riv)
     pname.append(station)
@@ -209,8 +230,10 @@ for line in lines[1::]:
     llsat.append(sat)
     ldtom.append(dist)
     lflag.append(flag)
-    kxlst.append(kx)
-    kylst.append(ky)
+    kx1lt.append(kx1)
+    ky1lt.append(ky1)
+    kx2lt.append(kx2)
+    ky2lt.append(ky2)
     # print (riv,station)
 #=============================
 pnum=len(pname)
@@ -234,19 +257,19 @@ maps = ['ESRI_Imagery_World_2D',    # 0
         ]
 #=============================
 if TAG=="HydroWeb":
-    pdfname=odir+"/HydroWeb/high_res/hydroweb_cmf_hres_map_"+rivername0+".pdf"
+    pdfname=odir+"/HydroWeb/high_res/hydroweb_cmf_hres_map_"+rivername0+"-"+stream0+".pdf"
 if TAG=="CGLS":
-    pdfname=odir+"/CGLS/high_res/cgls_cmf_hres_map_"+rivername0+".pdf"
+    pdfname=odir+"/CGLS/high_res/cgls_cmf_hres_map_"+rivername0+"-"+stream0+".pdf"
 if TAG=="ICESat":
-    pdfname=odir+"/ICESat/high_res/icesat_cmf_hres_map_"+rivername0+".pdf"
+    pdfname=odir+"/ICESat/high_res/icesat_cmf_hres_map_"+rivername0+"-"+stream0+".pdf"
 if TAG=="HydroSat":
-    pdfname=odir+"/HydroSat/high_res/hydrosat_cmf_hres_map_"+rivername0+".pdf"
+    pdfname=odir+"/HydroSat/high_res/hydrosat_cmf_hres_map_"+rivername0+"-"+stream0+".pdf"
 #============================
 with PdfPages(pdfname) as pdf:
-    for point in np.arange(pnum):
+    for point in np.arange(0,pnum):
         ######################
         print ("=======================================")
-        print (pname[point], lflag[point])
+        print (point, pname[point], lflag[point])
         hgt=11.69
         wdt=8.27
         fig=plt.figure(figsize=(wdt, hgt))
@@ -294,6 +317,8 @@ with PdfPages(pdfname) as pdf:
         #-----------------------------
         ax0 = fig.add_subplot(G[0,0])
         ax0.text(1.0,1.3,pname[point],va="center",ha="center",transform=ax0.transAxes,fontsize=14)
+        flag_ch="flag: %d"%(lflag[point])
+        ax0.text(1.0,1.1,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=14)
         m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
         try:
             m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
@@ -317,22 +342,32 @@ with PdfPages(pdfname) as pdf:
         # print (lon,lat)
         # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
         ax0.plot(lon ,lat ,color="g",marker="o",markersize=7,zorder=111) #fillstyle="none",
-        kx = kxlst[point]
-        ky = kylst[point]
-        lat0 = south + res/2.0 + 10.0 - ky*res  
-        lon0 = west + res/2.0 + kx*res
-        ax0.plot(lon0 ,lat0 ,color="r",marker="o",markersize=7,zorder=112) #fillstyle="none",
+        #================
+        kx1= kx1lt[point]
+        ky1= ky1lt[point]
+        lat1 = south + 10.0 - res/2.0 - ky1*res  
+        lon1 = west + res/2.0 + kx1*res
+        ax0.plot(lon1 ,lat1 ,color="r",marker="o",markersize=7,zorder=112) #fillstyle="none",
+        #================
+        kx2= kx2lt[point]
+        ky2= ky2lt[point]
+        if kx2 != -9999 and ky2 != -9999:
+            lat2 = south + 10.0 - res/2.0 - ky2*res  
+            lon2 = west + res/2.0 + kx2*res
+            ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",markersize=7,zorder=112)
         # print (kx,ky,lon0,lat0)
         #========================================================
         ax1 = fig.add_subplot(G[0,1])
+        length=[1.0]
+        elevation=[1.0]
         # print ("calculate river profile...........",kx,ky,visual[ky-1,kx-1])
         try:
-            length, elevation = river_along_profile(kx,ky,west,south,res,nx,ny,hiresmap)
+            length, elevation = river_along_profile(kx1,ky1,west,south,res,nx,ny,hiresmap)
         except:
             length=[0.0]
             elevation=[0.0]
-        # print (length, elevation)
-        if visual[ky-1,kx-1]!=10:
+        # # print (length, elevation)
+        if visual[ky1-1,kx1-1]!=10: # or visual[ky-1,kx-1]!=20:
             length=[0.0]
             elevation=[0.0]
         ax1.plot(length,elevation,color="grey",linestyle='-',linewidth=3.0)
@@ -342,7 +377,7 @@ with PdfPages(pdfname) as pdf:
         elevtn=np.fromfile(elevtn,np.float32).reshape(12000,12000)
         disttom=ldtom[point]
         # print (length[-1],"-",disttom,elevtn[ky-1,kx-1])
-        ax1.plot([length[-1]-disttom*1e3],[elevtn[ky-1,kx-1]],color="r",marker="o",markersize=7,linestyle='none',linewidth=0.0)
+        ax1.plot([length[-1]-disttom*1e3],[elevtn[ky1-1,kx1-1]],color="r",marker="o",markersize=7,linestyle='none',linewidth=0.0)
         ax1.plot([0,length[-1]],[elevation[0],elevation[-1]],color="g",linestyle='--',linewidth=0.5)
         
         # r = r2_score(elevation, elevation[0]+((elevation[-1]-elevation[0])/length[-1]*1e-20)*length)
@@ -351,26 +386,26 @@ with PdfPages(pdfname) as pdf:
         # print (intercept,slope)
         # r = r_squared(length,elevation,intercept,slope)
 
-        ## linear model
-        try:
-            slope0, intercept0, r0, p, se = stats.linregress(length, elevation)
-            rsqrt1="$r^2$:%4.3f"%(r0**2)
-            ax1.text(0.6,0.9,rsqrt1,color="b",transform=ax1.transAxes,fontsize=10)
-            ax1.plot(length,intercept0+slope0*length,color="b",linestyle='--',linewidth=0.5)
-        except:
-            print ("cannot plot fitted line")
-        ## polynomial model
-        try:
-            polymodel = np.poly1d(np.polyfit(length, elevation, 2))
-            r1 = r2_score(elevation, polymodel(length))
-            rsqrt2="$r^2$:%4.3f"%(r1**2)
-            ax1.text(0.6,0.7,rsqrt2,color="orange",transform=ax1.transAxes,fontsize=10)
-            ax1.plot(length,polymodel(length),color="orange",linestyle='--',linewidth=0.5)
-        except:
-            print ("cannot fit a polynomial")
-            r1=0.0
-        print ("linear model:", r0**2,"polynomial model:", r1)
-        ####
+        # # ## linear model
+        # # try:
+        # #     slope0, intercept0, r0, p, se = stats.linregress(length, elevation)
+        # #     rsqrt1="$r^2$:%4.3f"%(r0**2)
+        # #     ax1.text(0.6,0.9,rsqrt1,color="b",transform=ax1.transAxes,fontsize=10)
+        # #     ax1.plot(length,intercept0+slope0*length,color="b",linestyle='--',linewidth=0.5)
+        # # except:
+        # #     print ("cannot plot fitted line")
+        # # ## polynomial model
+        # # try:
+        # #     polymodel = np.poly1d(np.polyfit(length, elevation, 2))
+        # #     r1 = r2_score(elevation, polymodel(length))
+        # #     rsqrt2="$r^2$:%4.3f"%(r1**2)
+        # #     ax1.text(0.6,0.7,rsqrt2,color="orange",transform=ax1.transAxes,fontsize=10)
+        # #     ax1.plot(length,polymodel(length),color="orange",linestyle='--',linewidth=0.5)
+        # # except:
+        # #     print ("cannot fit a polynomial")
+        # #     r1=0.0
+        # # print ("linear model:", r0**2,"polynomial model:", r1)
+        # # ####
         locs,org = get_data(pname[point],TAG,egm08=egm08[point],egm96=egm96[point])
         ax1.axhline(y=np.mean(org),xmin=0.0,xmax=length[-1],color=colors[TAG],linestyle='--',linewidth=0.5)
         ax1.set_xlim(xmin=0,xmax=length[-1])

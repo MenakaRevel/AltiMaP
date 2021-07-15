@@ -46,15 +46,15 @@ fi
 
 echo "strating calculations........"
 # echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
-printf '%30s%67s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s\n' ID station dataname lon lat ix iy ele_diff EGM08 EGM96 satellite dist_to_mouth flag kx ky > tmp.txt
+printf '%30s%67s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s%8s%8s%12s%12s\n' ID station dataname lon lat ix iy elevation EGM08 EGM96 satellite dist_to_mouth flag kx1 ky1 kx2 ky2 dist1 dist2 > tmp.txt
 SOUTH=-60
-while [ $SOUTH -lt 0 ];
+while [ $SOUTH -lt 90 ];
 do
   WEST=-180
   while [ $WEST -lt 180 ];
   do
     CNAME=`./src/set_name $WEST $SOUTH`
-    # #echo $CNAME ${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
+    # echo $CNAME #${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
     if [ -s ${CaMa_dir}"/map/"${map}/${TAG}/${CNAME}".catmxy.bin" ]; then
         for data in "HydroWeb"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
         do
@@ -80,11 +80,10 @@ do
 SOUTH=$(( $SOUTH + 10 ))
 done
 
-
 wait 
 
 # day=`printf '%(%Y%m%d)T\n' -1`
 day=$(date +"%Y%m%d")
-# mv tmp.txt ${outdir}/altimetry_${map}_${day}.txt
+mv tmp.txt ${outdir}/altimetry_${map}_${day}.txt
 echo "Saving ..."
 echo ${outdir}/altimetry_${map}_${day}.txt

@@ -127,12 +127,12 @@ TAG="HydroWeb"
 #=========================================
 ############################################################
 # rivername0=sys.argv[1] #"CONGO" #"AMAZONAS"
-dataname="HydroWeb" #sys.argv[2]
-odir="/cluster/data6/menaka/Altimetry/results" #sys.argv[3] #"/cluster/data6/menaka/Altimetry/results"
-mapname="glb_06min" #sys.argv[4] #"glb_06min"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514" #sys.argv[5] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-restag="3sec" #sys.argv[6] #"3sec"
-obstxt="./out/altimetry_"+mapname+"_test.txt"#sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
+dataname=sys.argv[1] #"HydroWeb" #sys.argv[2]
+# odir=sys.argv[2] #"/cluster/data6/menaka/Altimetry/results" #sys.argv[3] #"/cluster/data6/menaka/Altimetry/results"
+mapname=sys.argv[2] #"glb_06min" #sys.argv[4] #"glb_06min"
+CaMa_dir=sys.argv[3] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514" #sys.argv[5] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+restag=sys.argv[4] #"3sec" #sys.argv[6] #"3sec"
+obstxt=sys.argv[5] #"./out/altimetry_"+mapname+"_test.txt"#sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
 stream0="AMAZONAS"
 upthr = 10.0
 dwthr = 10.0
@@ -212,7 +212,7 @@ lons =[]
 lats =[]
 xlist=[]
 ylist=[]
-leled=[]
+lelev=[]
 egm08=[]
 egm96=[]
 llsat=[]
@@ -239,7 +239,7 @@ for line in lines[1::]:
     lat     = float(line[4])
     ix      = int(line[5])-1
     iy      = int(line[6])-1
-    eled    = float(line[7])
+    elev    = float(line[7])
     EGM08   = float(line[8])
     EGM96   = float(line[9])
     sat     = line[10].strip()
@@ -260,7 +260,7 @@ for line in lines[1::]:
     lats.append(lat)
     xlist.append(ix)
     ylist.append(iy)
-    leled.append(eled)
+    lelev.append(elev)
     egm08.append(EGM08)
     egm96.append(EGM96)
     llsat.append(sat)
@@ -276,5 +276,7 @@ for point in np.arange(pnum):
     meanW, stdW = meanHydroWeb(pname[point],egm96=egm96[point],egm08=egm08[point])
     iXX = xlist[point]
     iYY = ylist[point]
-    if meanW > elevtn[iYY,iXX] + upthr or meanW < elevtn[iYY,iXX] - dwthr:
-        print "%69s%12.3f%12.3f%12.3f"%(pname[point],elevtn[iYY,iXX],meanW,meanWSE_VICBC[iYY,iXX])
+    elev= lelev[point]
+    # if meanW > elevtn[iYY,iXX] + upthr or meanW < elevtn[iYY,iXX] - dwthr:
+    if meanW > elev + upthr or meanW < elev - dwthr:
+        print "%69s%4d%12.3f%12.3f%12.3f"%(pname[point],lflag[point],elev,meanW,meanWSE_VICBC[iYY,iXX])

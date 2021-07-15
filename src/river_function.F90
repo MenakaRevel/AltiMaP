@@ -154,8 +154,8 @@
             west0=west0+csize/2.0
             ! south0=south0+csize/2.0
             north0=south0+10.0+csize/2.0
-            print*, west, south, "to ",west0, south0
-            print*, iix0, iiy0, "to ", iix, iiy
+            ! print*, west, south, "to ",west0, south0
+            ! print*, iix0, iiy0, "to ", iix, iiy
             ! exit
         end if
         lon2=lon1+real(dx)*csize 
@@ -189,6 +189,9 @@
     !write(*,*)i,j
     do tx=i-d,i+d
       do ty=j-d,j+d
+        ! print*, "L192: ",tx, ty
+        if (tx<=0 .or. ty<=0) cycle
+        if (tx>nx .or. ty>ny) cycle
         if (tx==i .and. ty==j) cycle
         if (visual(tx,ty) ==10 .or. visual(tx,ty) ==20 ) then
         !write(*,*)tx,ty
@@ -196,18 +199,19 @@
         !write(*,*)nextX(ix,iy),nextY(ix,iy),ix,iy,uparea(ix,iy),rivseq(ix,iy)
             call next_pixel(tx,ty,flwdir,nx,ny,ix,iy)
             if (ix == i .and. iy == j) then
-                !write(*,*)ix,iy
+                ! print*, tx, ty
                 if (abs(uparea(i,j)-uparea(tx,ty)) < dA) then
                     dA=abs(uparea(i,j)-uparea(tx,ty))
                     x=tx
                     y=ty
-                    !write(*,*)x,y
+                    ! print*, x,y
                 end if
                 ! end if
             end if
         end if
       end do
     end do
+    ! print*, "L211: upstream ->",x,y
     return
     end subroutine upstream
 !*****************************************************************
@@ -242,12 +246,18 @@
     y=-9999
     iix=ix
     iiy=iy 
-    ! print*, iix, iiy
+    ! print*, iix, iiy, visual(iix,iiy)
     do while (visual(iix,iiy)==10)
-        ! print*, iix, iiy, visual(iix,iiy)
+        ! print*, "upstream", iix, iiy, visual(iix,iiy)
         call upstream(iix,iiy,nx,ny,flwdir,uparea,visual,x0,y0)
         iix=x0
         iiy=y0
+        ! print*, "L252: ",iix, iiy
+        if (iix == -9999 .or. iiy == -9999) then
+            x=-9999
+            y=-9999
+            exit
+        end if
         ! print*, "at upstream:",visual(iix,iiy)
         if (visual(iix,iiy) == 20) then ! upstream unit-catchment mouth found
             x=x0
@@ -317,7 +327,7 @@
     south=south0+dlat
     call set_name(west,south,cname)
 
-    print*, "go to next tile", west, south, trim(cname)
+    ! print*, "go to next tile", west, south, trim(cname)
     ! open files
     rfile=trim(hiresmap)//trim(cname)//'.visual.bin'
     open(21,file=rfile,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
@@ -422,12 +432,14 @@
     integer*1,dimension(nx,ny)                :: flwdir0, visual0
     real,dimension(nx,ny)                     :: uparea0
     real                                      :: hubeny_real
+    integer                                   :: flag
     !========
     call set_name(west,south,cname)
     
-    print*, "open high-resolution maps  ",ix, iy, " ", trim(cname)!, "  ",trim(hiresmap)
+    ! print*, "open high-resolution maps  ",ix, iy, " ", trim(cname)!, "  ",trim(hiresmap)
     ! open high-resolution maps
     rfile1=trim(hiresmap)//trim(cname)//'.elevtn.bin'
+    ! print*, "open: ",trim(rfile1)
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=4*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
         read(21,rec=1) elevtn
@@ -437,6 +449,7 @@
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.uparea.bin'
+    ! print*, "open: ",trim(rfile1)
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=4*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
         read(21,rec=1) uparea
@@ -446,6 +459,7 @@
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.visual.bin'
+    ! print*, "open: ",trim(rfile1)
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
         read(21,rec=1) visual
@@ -455,6 +469,7 @@
     endif
     ! print*, "visual:" , visual(ix,iy), visual(iy,ix), ios
     rfile1=trim(hiresmap)//trim(cname)//'.flwdir.bin'
+    ! print*, "open: ",trim(rfile1)
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
         read(21,rec=1) flwdir
@@ -465,102 +480,117 @@
 
     
     !--
+    ! print*, "intialize"
     flwdir0=flwdir
     visual0=visual
     uparea0=uparea
+    ! print*, "coordinates ",west, south
     west0=west+csize/2.0
+    ! print*, "L484"
     south0=south+csize/2.0
     north0=south+10.0+csize/2.0
+    ! print*, "L487"
     down_dist = 0.0
-    
+    ! print*, "L489"
     ! iix=ix
     ! iiy=iy
-    ! print*, "start calculation............", iix, iiy, visual0(iix,iiy), visual(iix,iiy)
+    ! print*, "start calculation............"!, iix, iiy, visual0(iix,iiy), visual(iix,iiy)
     ! intilize len, ele
     len=-9999.0
     ele=-9999.0
+
     ! find the upstream unit-catchment mouth
-    ! print*, "up_until_mouth", visual0(iix,iiy)
+    flag=1
+    ! print*, "up_until_mouth", visual0(ix,iy)
     call up_until_mouth(ix,iy,flwdir0,uparea0,visual0,nx,ny,x0,y0)
-    iix=x0
-    iiy=y0
-    !==============================
-    ! upstream unit-catchment mouth
-    len(1)=0.0
-    ele(1)=elevtn(iix,iiy)
-    lon1=west0+real(iix)*csize
-    lat1=north0-real(iiy)*csize
-    ! print*, "next_pixel"
-    !==============================
-    ! go to the next pixel
-    call next_pixel(x0,y0,flwdir0,nx,ny,x,y)
-    iix=x
-    iiy=y
-    lon2=west0+real(iix)*csize
-    lat2=north0-real(iiy)*csize
-    down_dist = hubeny_real(lat1, lon1, lat2, lon2)
-    len(2)=down_dist
-    ele(2)=elevtn(iix,iiy)
-    k=3
-    !------------------------------
-    lon1=lon2
-    lat1=lat2
-    ! print*, "Start do-loop:" ,iix,iiy, visual0(iix,iiy)
-    do while (visual0(iix,iiy)==10)
-        ! print* ,iix,iiy, visual0(iix,iiy)
-        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
-            ! west0=west+csize/2.0
-            ! south0=south+csize/2.0
-            ! north0=south+10.0+csize/2.0
-            ! print*, "go to next tile", west0,south0
-            ! flag=-9
-            exit
-        end if
-        ! river mouth
-        if (flwdir0(iix,iiy) == -9 ) then
-            ! print*, "River mouth", visual(iix,iiy)
-            exit
-        end if
-        ! land
-        if (visual0(iix,iiy) == 2 ) then
-            ! print*, "Not in the river channel", visual(iix,iiy)
-            exit
-        end if
-        ! outlet pixel
-        if (visual0(iix,iiy) == 20 ) then
-            ! print*, "Outlet pixel", visual(iix,iiy)
-            exit
-        end if
-        dval=flwdir0(iix,iiy)
-        call next_D8(dval,dx,dy)
-        iix = iix + dx 
-        iiy = iiy + dy
-        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            ! iix0 = iix
-            ! iiy0 = iiy 
-            ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
-            ! replace west0, south0, flwdir0, visual0
-            ! west0=west0+csize/2.0
-            ! south0=south0+csize/2.0
-            ! north0=south0+10.0+csize/2.0
-            ! print*, west, south, "to ",west0, south0
-            ! print*, iix0, iiy0, "to ", iix, iiy
-            exit
-        end if
-        lon2=lon1+real(dx)*csize 
-        lat2=lat1+real(dy)*csize
-        down_dist=down_dist+hubeny_real(lat1, lon1, lat2, lon2)
-        len(k)=down_dist
-        ele(k)=elevtn(iix,iiy)
-        ! print*,k , iix, iiy, down_dist, elevtn(iix,iiy)
-        ! print*, iix, iiy, lon1, lat1, down_dist ,visual(iix,iiy), dval
+    ! print* , x0, y0
+    if (x0 == -9999 .or. y0 == -9999) then
+        flag=-9999
+        ! print*, "no upstream location, ", flag
+    end if
+
+    if (flag == 1) then
+        iix=x0
+        iiy=y0
+        !==============================
+        ! upstream unit-catchment mouth
+        len(1)=0.0
+        ele(1)=elevtn(iix,iiy)
+        lon1=west0+real(iix)*csize
+        lat1=north0-real(iiy)*csize
+        ! print*, "next_pixel"
+        !==============================
+        ! go to the next pixel
+        call next_pixel(x0,y0,flwdir0,nx,ny,x,y)
+        iix=x
+        iiy=y
+        lon2=west0+real(iix)*csize
+        lat2=north0-real(iiy)*csize
+        down_dist = hubeny_real(lat1, lon1, lat2, lon2)
+        len(2)=down_dist
+        ele(2)=elevtn(iix,iiy)
+        k=3
+        !------------------------------
         lon1=lon2
         lat1=lat2
-        k=k+1
-    end do
-    !--
-    k=k-1 
+        ! print*, "Start do-loop:" ,iix,iiy, visual0(iix,iiy)
+        do while (visual0(iix,iiy)==10)
+            ! print* ,iix,iiy, visual0(iix,iiy)
+            if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+                ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+                ! west0=west+csize/2.0
+                ! south0=south+csize/2.0
+                ! north0=south+10.0+csize/2.0
+                ! print*, "go to next tile", west0,south0
+                ! flag=-9
+                exit
+            end if
+            ! river mouth
+            if (flwdir0(iix,iiy) == -9 ) then
+                ! print*, "River mouth", visual(iix,iiy)
+                exit
+            end if
+            ! land
+            if (visual0(iix,iiy) == 2 ) then
+                ! print*, "Not in the river channel", visual(iix,iiy)
+                exit
+            end if
+            ! outlet pixel
+            if (visual0(iix,iiy) == 20 ) then
+                ! print*, "Outlet pixel", visual(iix,iiy)
+                exit
+            end if
+            dval=flwdir0(iix,iiy)
+            call next_D8(dval,dx,dy)
+            iix = iix + dx 
+            iiy = iiy + dy
+            if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+                ! iix0 = iix
+                ! iiy0 = iiy 
+                ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+                ! replace west0, south0, flwdir0, visual0
+                ! west0=west0+csize/2.0
+                ! south0=south0+csize/2.0
+                ! north0=south0+10.0+csize/2.0
+                ! print*, west, south, "to ",west0, south0
+                ! print*, iix0, iiy0, "to ", iix, iiy
+                exit
+            end if
+            lon2=lon1+real(dx)*csize 
+            lat2=lat1+real(dy)*csize
+            down_dist=down_dist+hubeny_real(lat1, lon1, lat2, lon2)
+            len(k)=down_dist
+            ele(k)=elevtn(iix,iiy)
+            ! print*,k , iix, iiy, down_dist, elevtn(iix,iiy)
+            ! print*, iix, iiy, lon1, lat1, down_dist ,visual(iix,iiy), dval
+            lon1=lon2
+            lat1=lat2
+            k=k+1
+        end do
+        k=k-1 
+    else 
+        k=0    
+    end if
     return
     end subroutine river_profile
     !*****************************************************************

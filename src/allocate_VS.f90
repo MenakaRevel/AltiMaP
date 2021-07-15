@@ -21,6 +21,7 @@ program SET_MAP
     ! index higer resoultion [1min, 15sec, 3sec]
     integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
     integer                       ::  ibx, iby ! bifurication locations
+    integer                       ::  kx1, ky1, kx2, ky2, kx3, ky3
     integer                       ::  nx, ny
     integer                       ::  hres
     real                          ::  west1, south1, north1, east1
@@ -48,8 +49,11 @@ program SET_MAP
     ! calculation
     integer                       ::  nn
     real                          ::  lag, lag_now!, upa
+    real                          ::  lag1, lag2, lag3
     real                          ::  lat1, lon1, lat2, lon2
+    real                          ::  dist1, dist2
     real                          ::  down_dist, flow_dist, hubeny_real
+    real                          ::  uparea_max
     ! real                          ::  err1, slope, threshold
     
     ! Station list
@@ -66,6 +70,9 @@ program SET_MAP
     character*128                 ::  outdir
     character*128                 ::  rfile1, rlist
     character*128                 ::  wfile1
+
+    integer, dimension(3)         :: tarray0, tarray1, tarray2, tarray3
+
     ! ===============================================
     call getarg(1,buf)
     read(buf,*) west1
@@ -287,17 +294,18 @@ program SET_MAP
     end if
     !print*, trim(id), " ", trim(station), " ", trim(river), lon0, lat0
     !-------------------------------------
-    ix=int( (lon0 - west1 )*dble(hres) )+1
-    iy=int( (north1 - lat0)*dble(hres) )+1
+    ix=int( (lon0   - west1     - csize/2.0)*dble(hres) )+1
+    iy=int( (north1 - csize/2.0 - lat0     )*dble(hres) )+1
     !-----------
     ! flag identity
-    ! 1 = location was directly found
-    ! 2 = location was on the unit-catchment outlet
-    ! 3 = found the nearest permeant water
-    ! 4 = correction for ocean grids
-    ! 5 = bifurcation location
+    ! 10 = location was directly found
+    ! 20 = location was on the unit-catchment outlet
+    ! 30 = found the nearest river
+    ! 31 = found the nearest main river
+    ! 40 = correction for ocean grids
+    ! 50 = bifurcation location
     flag=-9
-    ! print*, trim(station), "ix:", ix, "iy:",iy
+    ! print*, trim(station), " ix:", ix, "iy:",iy
     ! get the nearest west and south 
     ! call westsouth(lon0,lat0,mwin,west1,south1)
     !================
@@ -306,126 +314,79 @@ program SET_MAP
     ! print*, iXX, iYY
     !================
     !! permanat water
-    kx=ix
-    ky=iy
+    kx1=-9999
+    ky1=-9999
+    kx2=-9999
+    ky2=-9999
+    kx1=ix
+    ky2=iy
+
     lat1=lat0
     lon1=lon0
+    ! call itime(tarray0)
     ! print*, "==========================================================="
-    ! print*, "Initial allocation: ",kx, ky, visual(kx,ky)
+    ! print*, trim(station)
+    ! print*, "Initial allocation: ",kx, ky, visual(kx,ky), tarray0
     ! if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
-    if (visual(kx,ky) == 10) then  !! river channel
+    if (visual(ix,iy) == 10) then  !! river channel
         ! print*, "flag: 1  ","river channel"
-        kx=ix
-        ky=iy
-        flag=1
-    else if (visual(kx,ky) == 20) then  !! unit-catchment mouth
+        kx1=ix
+        ky1=iy
+        kx2=-9999
+        ky2=-9999
+        flag=10
+    else if (visual(ix,iy) == 20) then  !! unit-catchment mouth
         ! print*, "flag: 2  ","unit-catchment mouth"
-        kx=ix
-        ky=iy
-        flag=2
-    else if (visual(kx,ky) == 2 .or. visual(kx,ky) == 3 .or. visual(kx,ky) == 5 .or. visual(kx,ky) == 7) then   !! correction for land/grid box, boundry to channel
+        kx1=ix
+        ky1=iy
+        kx2=-9999
+        ky2=-9999
+        flag=20
+    ! first find the max uparea 
+    ! 80% of uparea max with colsest
+    else if (visual(ix,iy) == 2 .or. visual(ix,iy) == 3 .or. visual(ix,iy) == 5 .or. visual(ix,iy) == 7) then   !! correction for land/grid box, boundry to channel
         ! print*, "flag: 3  ","correction for land to channel"
-        nn=10
-        lag=1.0e20
-        do dy=-nn,nn
-            do dx=-nn,nn
-                jx=ix+dx
-                jy=iy+dy
-                if ( jx<=0 ) cycle !jx=1
-                if ( jx>nx ) cycle !jx=nx
-                if ( jy<=0 ) cycle !jy=1
-                if ( jy>nx ) cycle !jy=ny
-                ! ! !! for regional maps
-                ! ! if ( (east-west)==360.0 ) then
-                ! !     if ( jx<=0 ) jx=jx+nx
-                ! !     if ( jx>nx ) jx=jx-nx
-                ! ! else
-                ! !     if ( jx<=0 ) jx=1
-                ! !     if ( jx>nx ) jx=nx
-                ! ! end if
-                !-----
-                if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
-                if ( kx == jx .and. ky == jy) cycle
-                if ( (catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0) ) cycle
-                ! if ( visual(jx,jy) /= 10 ) cycle
-                ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
-                ! print*, "===",kx,ky,jx,jy,"==="
-                ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
-                lat2=north1 - (jy-1)*(1/dble(hres))
-                lon2=west1 + (jx-1)*(1/dble(hres))
-                lag_now=hubeny_real(lat1, lon1, lat2, lon2)
-                if ( lag_now == -9999.0 ) cycle
-                ! print*, lag, lag_now
-                if ( lag_now < lag ) then
-                    ! if( riv1m(jx,jy)/=-9999 .and. riv1m(jx,jy)/=0 )then
-                    if ( visual(jx,jy) == 10 ) then
-                    ! iXX=catmXX(jx,jy)
-                    ! iyy=catmYY(jx,jy)
-                        kx=jx
-                        ky=jy
-                        lag=lag_now
-                        ! print*, "Found new location: ",flag, kx,ky,lag
-                    end if
-                end if
-            end do
-        end do
-        if ( kx /= ix .or. ky /= iy ) then
-            flag=3
+        call find_nearest_main_river(ix,iy,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,kx3,ky3,lag3)
+        call find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx2,ky2,lag2)
+        call find_nearest_main_river_ppend(kx2,ky2,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,riv1m,kx1,ky1,lag1)
+        if ( kx1 == -9999 .or. ky1 == -9999 ) then
+            flag=30
+            kx1=kx2
+            ky1=ky2
+            kx2=-9999
+            ky2=-9999
+        elseif ( kx1 /= kx2 .or. ky1 /= ky2 ) then
+            flag=30
+            if (lag2 < lag1) then
+                flag=31
+            else
+                kx2=-9999
+                ky2=-9999
+            end if
         else
-            flag=1
+            flag=30
+            kx1=kx2
+            ky1=ky2
+            kx2=-9999
+            ky2=-9999
         end if
-    else if ( visual(kx,ky)==0 .or. visual(kx,ky)==1 .or. visual(kx,ky)==25 ) then !! correction for ocean grids
+    else if ( visual(ix,iy)==0 .or. visual(ix,iy)==1 .or. visual(ix,iy)==25 ) then !! correction for ocean grids
         ! print*, "flag: 4  ","correction for ocean grids"
-        nn=10
-        lag=1.0e20
-        do dy=-nn,nn
-            do dx=-nn,nn
-                jx=ix+dx
-                jy=iy+dy
-                if ( jx<=0 ) cycle !jx=1
-                if ( jx>nx ) cycle !jx=nx
-                if ( jy<=0 ) cycle !jy=1
-                if ( jy>nx ) cycle !jy=ny
-                ! ! !! for regional maps
-                ! ! if ( (east-west)==360.0 ) then
-                ! !     if( jx<=0 ) jx=kx+nx
-                ! !     if( jx>nx ) jx=kx-nx
-                ! ! else
-                ! !     if( jx<=0 ) jx=1
-                ! !     if( jx>nx ) jx=nx
-                ! ! end if
-                !-----
-                if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
-                if ( kx == jx .and. ky == jy) cycle
-                if ((catmXX(jx,jy) <= 0) .or. (catmYY(jx,jy) <= 0)) cycle
-                ! lag_now=sqrt((real(dx)**2)+(real(dy)**2))
-                ! print*, "===",kx,ky,jx,jy,"==="
-                ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
-                lat2=north1 - (jy-1)*(1/dble(hres))
-                lon2=west1 + (jx-1)*(1/dble(hres))
-                lag_now=hubeny_real(lat1, lon1, lat2, lon2)
-                if ( lag_now == -9999.0 ) cycle
-                ! print*, lag, lag_now
-                if ( lag_now < lag ) then
-                    if ( visual(jx,jy) == 10 ) then
-                        kx=jx
-                        ky=jy
-                        lag=lag_now
-                        ! print*, "Found new location: ",flag, kx,ky,lag
-                    end if
-                end if
-            end do
-        end do
-        if ( kx /= ix .or. ky /= iy ) then
-            flag=4
+        call find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx1,ky1,lag1)
+        if ( kx1 /= ix .or. ky1 /= iy ) then
+            kx2=-9999
+            ky2=-9999
+            flag=40
         else
-            flag=1
+            flag=10
         end if
     else
-        flag=9
+        flag=90
         ! print*, "flag: 9 ->", kx, ky, visual(kx,ky) 
     end if
     !
+    kx=kx1
+    ky=ky1
     !---
     if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
         goto 1000
@@ -439,41 +400,74 @@ program SET_MAP
         goto 1000
     end if
     !============
+    ! call itime(tarray1)
     ! find maximum uparea perpendicular to river
     ! in case of braided river
     ! considering the bifurcation tag
     if ( biftag(iXX,iYY) == 1 ) then
         ! call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
-        call loc_pepndD8(kx,ky,nx,ny,flwdir,visual,uparea,west1,south1,hiresmap,ibx,iby)
+        call loc_pepndD8(kx,ky,nx,ny,flwdir,visual,uparea,riv1m,west1,south1,hiresmap,ibx,iby)
         if ( ibx/=-9 .and. iby/=-9 ) then
             ! print*, "burification location", ibx, iby
-            flag=5
-            kx=ibx
-            ky=iby
+            flag=50
+            kx2=kx1
+            ky2=ky1
+            kx1=ibx
+            ky1=iby
         end if
     end if
     ! print*, flag
     ! print*, "After allocation:   ",kx, ky, visual(kx,ky), flag
+    kx=kx1
+    ky=ky1
     !---
     ! print*, kx, ky
     if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
         goto 1000
     end if
     !--
+    ! ! call itime(tarray2)
+    ! ! print*, "calculate downstream distance"
     if (visual(kx,ky)==10) then
         diffdist=down_dist(kx,ky,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
     else
         diffdist=0.0
     end if
+    if (diffdist == -9999.0) then
+        ! print*, "Cannot allocate :", trim(station)
+        goto 1000
+    end if
+    !===========
+    ! print*, "initial allocsation finshed"
+    ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+    dist1=-9999.0
+    dist2=-9999.0
+    lat2=north1 - csize/2.0 - (ky-1)*(1/dble(hres))
+    lon2=west1 + csize/2.0 + (kx-1)*(1/dble(hres))
+    dist1=hubeny_real(lat1, lon1, lat2, lon2)
+    ! print*, "dist1: ",lat1, lon1, lat2, lon2, dist1
+    if ( kx2 /= -9999 .or. ky2 /= -9999 ) then
+        lat2=north1 - csize/2.0 - (ky2-1)*(1/dble(hres))
+        lon2=west1 + csize/2.0 + (kx2-1)*(1/dble(hres))
+        dist2=hubeny_real(lat1, lon1, lat2, lon2)
+        ! print*, "dist2: ",lat1, lon1, lat2, lon2, dist2
+    end if
     !===========
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
     !============
-    ! print*, trim(station)!, flag, diffdist*1e-3
+    ! call itime(tarray3) 
+    
+    ! print*, trim(station), visual(kx,ky), visual(ix,iy), diffdist
+    ! print*, "up to find another locations: ",tarray1 - tarray0
+    ! print*, "up to down dist: ",tarray2 - tarray1
+    ! print*, "down dist to now: ", tarray3 - tarray2
+    ! print*, trim(station), lon0, lat0, elevtn(iXX,iYY), ele1m(kx,ky), visual(kx,ky), visual(ix,iy), tarray1 - tarray0 !, flag, diffdist*1e-3
+    ! print*, "================================================"
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,2i8.0)',& 
-        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, elevtn(iXX,iYY)-ele1m(kx,ky),&
-        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx, ky
+        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2)',& 
+        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
+        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2       ! elevtn(iXX,iYY)-
     ! else
     !     print*, "no data"
     end if
@@ -820,6 +814,7 @@ program SET_MAP
     real                            :: lon1, lat1, lon2, lat2
     integer*1,dimension(nx,ny)      :: flwdir0, visual0
     real                            :: hubeny_real
+    integer                         :: count
     !--------------------
     ! visual
     ! 0  - sea
@@ -835,13 +830,17 @@ program SET_MAP
     visual0=visual
     west0=west+csize/2.0
     south0=south+csize/2.0
-    north0=south+10.0+csize/2.0
+    north0=south+10.0-csize/2.0
     down_dist = 0.0
     iix = ix 
     iiy = iy
     lon1=west0+real(ix)*csize
     lat1=north0-real(iy)*csize
+    count=0
     do while (visual0(iix,iiy) /= 20)
+        if (count > 1000) then
+            exit
+        end if
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
             ! west0=west+csize/2.0
@@ -873,14 +872,14 @@ program SET_MAP
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             iix0 = iix
             iiy0 = iiy 
-            ! ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
-            ! ! !replace west0, south0, flwdir0, visual0
-            ! ! west0=west0+csize/2.0
-            ! ! ! south0=south0+csize/2.0
-            ! ! north0=south0+10.0+csize/2.0
-            ! ! ! print*, west, south, "to ",west0, south0
-            ! ! ! print*, iix0, iiy0, "to ", iix, iiy
-            exit
+            call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            !replace west0, south0, flwdir0, visual0
+            west0=west0+csize/2.0
+            ! south0=south0+csize/2.0
+            north0=south0+10.0+csize/2.0
+            ! print*, west, south, "to ",west0, south0
+            ! print*, iix0, iiy0, "to ", iix, iiy
+            ! exit
         end if
         lon2=lon1+real(dx)*csize 
         lat2=lat1+real(dy)*csize
@@ -888,7 +887,11 @@ program SET_MAP
         ! print*, iix, iiy, lon1, lat1, down_dist ,visual(iix,iiy), dval
         lon1=lon2
         lat1=lat2
+        count=count+1
     end do 
+    if (count > 1000) then 
+        down_dist=-9999.0
+    end if
     return
     end function down_dist
     !*****************************************************************
@@ -1170,12 +1173,12 @@ program SET_MAP
     return
     end subroutine next_P2D8
     !*****************************************************************
-    subroutine loc_pepndD8(ix,iy,nx,ny,flwdir,visual,uparea,west0,south0,hiresmap,oxx,oyy)
+    subroutine loc_pepndD8(ix,iy,nx,ny,flwdir,visual,uparea,riv1m,west0,south0,hiresmap,oxx,oyy)
     ! river location perpendicular to the flowing direction
     implicit none
     integer                      :: ix, iy, nx, ny
     integer*1,dimension(nx,ny)   :: flwdir, visual
-    real,dimension(nx,ny)        :: uparea
+    real,dimension(nx,ny)        :: uparea, riv1m
     integer                      :: oxx, oyy
     integer,allocatable          :: xlist(:), ylist(:)
     character*128                :: hiresmap
@@ -1198,7 +1201,9 @@ program SET_MAP
     !|-----------|
     !-------------
     dval=flwdir(ix,iy)
-    k=30*6
+    ! k=30*6
+    k=int(riv1m(ix,iy)/90.0)+2
+    k=max(k,3)
     allocate (xlist(2*k+1),ylist(2*k+1))
     xlist=-9
     ylist=-9
@@ -1231,8 +1236,8 @@ program SET_MAP
     elseif (dval==4 .or. dval==8) then
         j=1
         do i=-k,k
-            iix=ix+i 
-            iiy=iy-i
+            iix=ix-i 
+            iiy=iy+i
             if (iix > nx) cycle
             if (iix < 1) cycle
             if (iiy > ny) cycle
@@ -1524,6 +1529,11 @@ program SET_MAP
     iiy=iy 
     ! print*, iix, iiy
     do while (visual(iix,iiy)==10)
+        if (iix == -9999 .or. iiy == -9999) then
+            x=-9999
+            y=-9999
+            exit
+        end if
         ! print*, iix, iiy, visual(iix,iiy)
         call hires_upstream(iix,iiy,nx,ny,flwdir,uparea,visual,x0,y0)
         iix=x0
@@ -1720,3 +1730,398 @@ program SET_MAP
     return
     end function river_p_r2
     !*****************************************************************
+    subroutine find_nearest_main_river(ix,iy,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,kx,ky,lag)
+    implicit none
+    integer                       ::  nx, ny
+    integer*2,dimension(nx,ny)    ::  catmXX, catmYY
+    integer*1,dimension(nx,ny)    ::  visual, flwdir!catmZZ(:,:), , flwdir(:,:) 
+    real,dimension(nx,ny)         ::  upa1m !, ele1m(:,:)
+    ! real,allocatable              ::  riv1m(:,:), flddif(:,:), hand(:,:)
+    integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
+    integer                       ::  iix, iiy, x0, y0
+    integer                       ::  nn
+    real                          ::  lag, lag_now!, upa
+    real                          ::  uparea_max !, dist
+    ! find the nearst main river which has upper unit catchment mouth uparea of the larges river.
+    iix=ix
+    iiy=iy
+    nn=60
+    ! print*, iix, iiy
+    lag=1.0e20
+    lag_now=1.0e20
+    uparea_max=0.0
+    do dy=-nn,nn
+        do dx=-nn,nn
+            jx=ix+dx
+            jy=iy+dy
+            ! print*, jx,jy, visual(jx,jy)
+            if ( jx<=0 ) cycle !jx=1
+            if ( jx>nx ) cycle !jx=nx
+            if ( jy<=0 ) cycle !jy=1
+            if ( jy>ny ) cycle !jy=ny
+            ! ! !! for regional maps
+            ! ! if ( (east-west)==360.0 ) then
+            ! !     if ( jx<=0 ) jx=jx+nx
+            ! !     if ( jx>nx ) jx=jx-nx
+            ! ! else
+            ! !     if ( jx<=0 ) jx=1
+            ! !     if ( jx>nx ) jx=nx
+            ! ! end if
+            !-----
+            if ( visual(jx,jy) /= 10) cycle
+            if ( visual(jx,jy) < 10) cycle
+            ! if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
+            if ( kx == jx .and. ky == jy) cycle
+            if ( (catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0) ) cycle
+            if ( upa1m(jx,jy) > uparea_max) then
+                uparea_max=upa1m(jx,jy)
+                iix=jx 
+                iiy=jy
+            end if
+        end do
+    end do
+    !=============================================
+    ! find the upstream location of unit catchment
+    call up_until_mouth(iix,iiy,flwdir,upa1m,visual,nx,ny,x0,y0)
+    ! print* , x0, y0
+    if (x0 == -9999 .or. y0 == -9999) then
+        uparea_max=0.01*uparea_max
+        ! print*, "no upstream location, ", flag
+    else
+        uparea_max=upa1m(x0,y0)
+    end if
+    !---------------------------------------------
+    do dy=-nn,nn
+        do dx=-nn,nn
+            jx=ix+dx
+            jy=iy+dy
+            ! print*, jx,jy, visual(jx,jy)
+            if ( jx<=0 ) cycle !jx=1
+            if ( jx>nx ) cycle !jx=nx
+            if ( jy<=0 ) cycle !jy=1
+            if ( jy>ny ) cycle !jy=ny
+            ! if ( visual(jx,jy) /= 10 ) cycle
+            lag_now=sqrt((real(dx)**2)+(real(dy)**2))
+            ! print*, "===",kx,ky,jx,jy,"==="
+            ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+            ! lat2=north1 - csize/2.0 - (jy-1)*(1/dble(hres))
+            ! lon2=west1 + csize/2.0 + (jx-1)*(1/dble(hres))
+            ! lag_now=hubeny_real(lat1, lon1, lat2, lon2)
+            if ( lag_now == -9999.0 ) cycle
+            if ( upa1m(jx,jy) < uparea_max) cycle
+            ! print*, lag, lag_now
+            if ( lag_now < lag ) then
+                ! if( riv1m(jx,jy)/=-9999 .and. riv1m(jx,jy)/=0 )then
+                if ( visual(jx,jy) == 10 ) then
+                    kx=jx
+                    ky=jy
+                    lag=lag_now
+                    ! print*, visual(kx,ky)
+                    ! print*, "Found new location: ",flag, kx, ky, lag, visual(kx,ky)
+                end if
+            end if
+        end do
+    end do
+    return
+    end subroutine find_nearest_main_river
+    !*****************************************************************
+    subroutine find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx,ky,lag)
+    implicit none
+    integer                       ::  nx, ny
+    integer*2,dimension(nx,ny)    ::  catmXX, catmYY
+    integer*1,dimension(nx,ny)    ::  visual!catmZZ(:,:), , flwdir(:,:) 
+    ! real,allocatable              ::  upa1m(:,:)!, ele1m(:,:)
+    ! real,allocatable              ::  riv1m(:,:), flddif(:,:), hand(:,:)
+    integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
+    integer                       ::  nn
+    real                          ::  lag, lag_now !, dist!, upa
+    ! real                          ::   !uparea_max, 
+    ! find the nearst main river which has 80% of uparea of the larges river.
+    nn=60
+    lag=1.0e20
+    lag_now=1.0e20
+    do dy=-nn,nn
+        do dx=-nn,nn
+            jx=ix+dx
+            jy=iy+dy
+            ! print*, jx, jy
+            if ( jx<=0 ) cycle !jx=1
+            if ( jx>nx ) cycle !jx=nx
+            if ( jy<=0 ) cycle !jy=1
+            if ( jy>ny ) cycle !jy=ny
+            ! ! !! for regional maps
+            ! ! if ( (east-west)==360.0 ) then
+            ! !     if( jx<=0 ) jx=kx+nx
+            ! !     if( jx>nx ) jx=kx-nx
+            ! ! else
+            ! !     if( jx<=0 ) jx=1
+            ! !     if( jx>nx ) jx=nx
+            ! ! end if
+            !-----
+            if ( visual(jx,jy) /= 10) cycle
+            if ( visual(jx,jy) < 10) cycle
+            ! if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
+            if ( kx == jx .and. ky == jy) cycle
+            if ((catmXX(jx,jy) <= 0) .or. (catmYY(jx,jy) <= 0)) cycle
+            lag_now=sqrt((real(dx)**2)+(real(dy)**2))
+            ! print*, "===",kx,ky,jx,jy,"==="
+            ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+            ! lat2=north1 - csize/2.0 - (jy-1)*(1/dble(hres))
+            ! lon2=west1 + csize/2.0 + (jx-1)*(1/dble(hres))
+            ! lag_now=hubeny_real(lat1, lon1, lat2, lon2)
+            if ( lag_now == -9999.0 ) cycle
+            ! print*, lag, lag_now
+            if ( lag_now < lag ) then
+                if ( visual(jx,jy) == 10 ) then
+                    ! if ( upa1m(jx,jy) > uparea_max) then
+                    kx=jx
+                    ky=jy
+                    lag=lag_now
+                    ! print*, visual(kx,ky)
+                    ! print*, "Found new location: ",flag, kx,ky,lag, visual(kx,ky)
+                    !     uparea_max=upa1m(jx,jy)
+                    ! end if
+                end if
+            end if
+        end do
+    end do
+    return 
+    end subroutine find_nearest_river
+    !*****************************************************************
+    subroutine perpendicular_grid(ix,iy,nx,ny,flwdir,riv1m,xlist,ylist,k)
+    ! grids perpendicular to the give river section
+    implicit none
+    integer                      :: ix, iy, nx, ny
+    integer*1,dimension(nx,ny)   :: flwdir !, visual
+    real,dimension(nx,ny)        :: riv1m !uparea, 
+    ! integer                      :: oxx, oyy
+    integer,dimension(10)        :: xlist, ylist
+    ! character*128                :: hiresmap
+    ! real                         :: west0, south0
+    integer                      :: k
+
+    integer                      :: iix, iiy, i, j !dx, dy, j0x, j0y, jx, jy, 
+    ! real                         :: tval 
+    integer                      :: dval !, D8 ! d8 numbering
+    ! real                         :: upa, upn
+    !==============================================
+    ! -----------|
+    !  D 8 graph
+    !|-----------|
+    !| 8 | 1 | 2 |
+    !|-----------|
+    !| 7 | 0 | 3 |
+    !|-----------|
+    !| 6 | 5 | 4 |
+    !|-----------|
+    !-------------
+    dval=flwdir(ix,iy)
+    ! k=30*6
+    k=int(riv1m(ix,iy)/90.0)+10
+    k=max(k,10)
+    !=========================
+    xlist=-9
+    ylist=-9
+    if (dval==1 .or. dval==5) then
+        j=1
+        do i=-k,k
+            iix=ix+i  
+            iiy=iy
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    elseif (dval==3 .or. dval==7) then
+        j=1
+        do i=-k,k
+            iix=ix 
+            iiy=iy+i
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    elseif (dval==4 .or. dval==8) then
+        j=1
+        do i=-k,k
+            iix=ix-i 
+            iiy=iy+i
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    elseif (dval==2 .or. dval==6) then
+        j=1
+        do i=-k,k
+            iix=ix+i 
+            iiy=iy+i
+            if (iix > nx) cycle
+            if (iix < 1) cycle
+            if (iiy > ny) cycle
+            if (iiy < 1) cycle
+            xlist(j)=iix 
+            ylist(j)=iiy
+            j=j+1
+        end do
+    end if
+    k=j-1
+    return
+    end subroutine perpendicular_grid
+    !*****************************************************************
+    subroutine find_nearest_main_river_ppend(ix,iy,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,riv1m,kx,ky,lag)
+    implicit none
+    integer                       ::  nx, ny
+    integer*2,dimension(nx,ny)    ::  catmXX, catmYY
+    integer*1,dimension(nx,ny)    ::  visual, flwdir!catmZZ(:,:), , flwdir(:,:) 
+    real,dimension(nx,ny)         ::  upa1m, riv1m !, ele1m(:,:)
+    ! real,allocatable              ::  riv1m(:,:), flddif(:,:), hand(:,:)
+    integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
+    integer                       ::  iix, iiy !, x0, y0
+    ! integer                       ::  nn
+    real                          ::  lag, lag_now!, upa
+    real                          ::  uparea_max !, dist
+    integer,dimension(10)         ::  xlist, ylist
+    integer                       ::  i, k
+    ! find the nearst main river which has upper unit catchment mouth uparea of the larges river.
+    call perpendicular_grid(ix,iy,nx,ny,flwdir,riv1m,xlist,ylist,k)
+    lag=max((2.0*riv1m(ix,iy)/90.0)+10.0,10.0)
+    kx=-9999
+    ky=-9999
+    iix=ix
+    iiy=iy
+    lag=1.0e20
+    lag_now=1.0e20
+    uparea_max=0.0
+    do i=1, k
+        jx=xlist(i)
+        jy=ylist(i)
+        ! print*, jx,jy, visual(jx,jy)
+        if ( jx<=0 ) cycle !jx=1
+        if ( jx>nx ) cycle !jx=nx
+        if ( jy<=0 ) cycle !jy=1
+        if ( jy>ny ) cycle !jy=ny
+        ! ! !! for regional maps
+        ! ! if ( (east-west)==360.0 ) then
+        ! !     if ( jx<=0 ) jx=jx+nx
+        ! !     if ( jx>nx ) jx=jx-nx
+        ! ! else
+        ! !     if ( jx<=0 ) jx=1
+        ! !     if ( jx>nx ) jx=nx
+        ! ! end if
+        !-----
+        if ( visual(jx,jy) /= 10) cycle
+        if ( visual(jx,jy) < 10) cycle
+        ! if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
+        if ( kx == jx .and. ky == jy) cycle
+        if ( (catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0) ) cycle
+        if ( upa1m(jx,jy) > uparea_max) then
+            dx=ix-jx
+            dy=iy-jy
+            lag_now=sqrt((real(dx)**2)+(real(dy)**2))
+            if ( lag_now > lag ) cycle
+            uparea_max=upa1m(jx,jy)
+            kx=ix 
+            ky=iy
+        end if
+    end do
+    lag=lag_now
+    return
+    end subroutine find_nearest_main_river_ppend
+    !*****************************************************************
+    ! subroutine up_until_mouth(ix,iy,flwdir,uparea,visual,nx,ny,x,y)
+    ! implicit none
+    ! ! find the upstream unit catchment mouth 
+    ! !--
+    ! integer,intent(IN)                        :: ix,iy,nx,ny
+    ! integer*1,dimension(nx,ny),intent(IN)     :: flwdir, visual !,rivseq
+    ! real,dimension(nx,ny),intent(IN)          :: uparea
+    ! integer,intent(OUT)                       :: x,y
+    ! !--
+    ! !real                                      :: dA ! area differnce nextdst,
+    ! integer                                   :: iix,iiy,x0,y0 !,tx,ty,ud,d
+    ! !real                                      :: length,rl
+    ! !------------
+    ! x=-9999
+    ! y=-9999
+    ! iix=ix
+    ! iiy=iy 
+    ! ! print*, iix, iiy, visual(iix,iiy)
+    ! do while (visual(iix,iiy)==10)
+    !     ! print*, "upstream", iix, iiy, visual(iix,iiy)
+    !     call upstream_up(iix,iiy,nx,ny,flwdir,uparea,visual,x0,y0)
+    !     iix=x0
+    !     iiy=y0
+    !     ! print*, "L252: ",iix, iiy
+    !     if (iix == -9999 .or. iiy == -9999) then
+    !         x=-9999
+    !         y=-9999
+    !         exit
+    !     end if
+    !     ! print*, "at upstream:",visual(iix,iiy)
+    !     if (visual(iix,iiy) == 20) then ! upstream unit-catchment mouth found
+    !         x=x0
+    !         y=y0
+    !         exit
+    !     end if
+    ! end do
+    ! return
+    ! end subroutine up_until_mouth
+    ! !*****************************************************************
+    ! subroutine upstream_up(i,j,nx,ny,flwdir,uparea,visual,x,y)
+    ! implicit none 
+    ! ! find the upstream pixel with closest upstream area to the i,j
+    ! !--
+    ! integer,intent(IN)                        :: i,j,nx,ny
+    ! integer*1,dimension(nx,ny),intent(IN)     :: flwdir, visual !,rivseq
+    ! real,dimension(nx,ny),intent(IN)          :: uparea
+    ! integer,intent(OUT)                       :: x,y
+    ! !--
+    ! real                                      :: dA ! area differnce nextdst,
+    ! integer                                   :: ix,iy,tx,ty,d !,iix,iiy,ud
+    ! !real                                      :: length,rl
+    ! !--
+    ! x=-9999
+    ! y=-9999
+    ! d=3 ! look at 3*3 box
+    ! dA=1.0e20 ! area differnce
+    ! !--
+    ! !write(*,*)i,j
+    ! do tx=i-d,i+d
+    !     do ty=j-d,j+d
+    !     ! print*, "L192: ",tx, ty
+    !     if (tx<=0 .or. ty<=0) cycle
+    !     if (tx>nx .or. ty>ny) cycle
+    !     if (tx==i .and. ty==j) cycle
+    !     if (visual(tx,ty) ==10 .or. visual(tx,ty) ==20 ) then
+    !     !write(*,*)tx,ty
+    !     ! call ixy2iixy(tx,ty, nx, ny, ix, iy)
+    !     !write(*,*)nextX(ix,iy),nextY(ix,iy),ix,iy,uparea(ix,iy),rivseq(ix,iy)
+    !         call next_pixel(tx,ty,flwdir,nx,ny,ix,iy)
+    !         if (ix == i .and. iy == j) then
+    !             ! print*, tx, ty
+    !             if (abs(uparea(i,j)-uparea(tx,ty)) < dA) then
+    !                 dA=abs(uparea(i,j)-uparea(tx,ty))
+    !                 x=tx
+    !                 y=ty
+    !                 ! print*, x,y
+    !             end if
+    !             ! end if
+    !         end if
+    !     end if
+    !     end do
+    ! end do
+    ! ! print*, "L211: upstream ->",x,y
+    ! return
+    ! end subroutine upstream_up
+    ! !*****************************************************************

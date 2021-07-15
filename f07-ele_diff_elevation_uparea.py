@@ -132,7 +132,9 @@ l_lats=[]
 lupare=[]
 lelevt=[]
 #=============================
-fname="./out/altimetry_"+mapname+".txt"
+# fname="./out/altimetry_"+mapname+".txt"
+# fname="./out/altimetry_"+mapname+".txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -149,19 +151,19 @@ with open(fname, "r") as f:
         egm08= float(line[8])
         egm96= float(line[9])
         sat  = line[10].strip()
-        flag = int(line[11])
+        flag = int(line[12])
         ix   = ix0 - 1
         iy   = iy0 - 1
         #---------------------------
-        if flag == 1:
-            lnames.append(name)
-            leledf.append(abs(eled))
-            l_lons.append(lon)
-            l_lats.append(lat)
-            lupare.append(uparea[iy,ix]*1e-6)
-            lelevt.append(elevtn[iy,ix])
-        else:
-            continue
+        # if flag == 1:
+        lnames.append(name)
+        leledf.append(abs(eled-elevtn[iy,ix]))
+        l_lons.append(lon)
+        l_lats.append(lat)
+        lupare.append(uparea[iy,ix]*1e-6)
+        lelevt.append(elevtn[iy,ix])
+        # else:
+        #     continue
 
 #=============================      
 lnames=np.array(lnames)

@@ -18,7 +18,7 @@ fname="./inp/"+data+"Station_list.txt"
 with open(fname) as f:
     lines = f.readlines()
     for line in lines[1::]:
-        line = filter(None, re.split(" ",line))
+        line = list(filter(None, re.split(" ",line)))
         lon  = float(line[5])
         lat  = float(line[6])
         #print lon, lat

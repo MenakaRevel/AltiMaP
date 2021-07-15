@@ -132,7 +132,10 @@ lflags=[]
 l_lons=[]
 l_lats=[]
 #=============================
-fname="./out/altimetry_"+mapname+"_test.txt"
+# fname="./out/altimetry_"+mapname+"_test.txt"
+# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210618.txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
+# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210706.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -209,16 +212,27 @@ vmin=1.0
 vmax=6.0
 norm=Normalize(vmin=vmin,vmax=vmax)
 
-bounds=np.arange(0.5,6.0,1.0)
+bounds=np.arange(0.5,7.0,1.0)
+bounds=np.arange(0.0,6.0,1.0)
+#-----------
+# flag identity
+# 10 = location was directly found
+# 20 = location was on the unit-catchment outlet
+# 30 = found the nearest river
+# 31 = found the nearest main river
+# 40 = correction for ocean grids
+# 50 = bifurcation location
 #cmap=colors.ListedColormap(['grey',"xkcd:ultramarine",'xkcd:clear blue','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:greeny blue","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 # cmap=colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
-cmapL = matplotlib.colors.ListedColormap(['green', 'blue','purple', 'yellow', 'red'])
 # cmapL=matplotlib.colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
-cmapL.set_under("none") #"#000000",alpha=0)
-cmapL.set_over("none")
-cmapL.colorbar_extend="neither"
+marlist={10:'^', 20:'d',30:'+', 31:'*', 40:'X',50:'1'}
+corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 40:'red',50:'xkcd:deep teal'}
+cmapL = matplotlib.colors.ListedColormap(['green', 'blue','purple', 'yellow', 'red', 'xkcd:deep teal'])
+# cmapL.set_under("none") #"#000000",alpha=0)
+# cmapL.set_over("none")
+# cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
 
 hgt= 11.69*(1.0/3.0)
@@ -233,20 +247,25 @@ ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor
 pnum=len(lnames)
 for point in np.arange(pnum):
     # eled=leledf[point]
+    name = lnames[point]
     lon  = l_lons[point]
     lat  = l_lats[point]
     flag = lflags[point]
-    c=cmapL(norml(flag))
-    print (lon,lat,flag)
-    ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree()) #, 
+    # c=cmapL(norml(flag))
+    print (name,lon,lat,flag)
+    c=corlist[flag]
+    m=marlist[flag]
+    ax.scatter(lon,lat,s=0.1,marker=m,zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree()) #, 
 #--
 im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
 im.set_visible(False)
 #cbar=M.colorbar(im,"right",size="2%")
 ax.outline_patch.set_linewidth(0.0)
-#colorbar
+# colorbar
 cax=fig.add_axes([0.40,0.10,0.4,.01])
-cbar=plt.colorbar(im,orientation="horizontal",ticks=np.arange(vmin,vmax+0.1,1.0),cax=cax) #,extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
+cbar=plt.colorbar(im,orientation="horizontal",ticks=np.arange(0.5,7.0,1.0),cax=cax) #[10,20,30,31,40,50],extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
+cbar.set_ticklabels(['10', '20', '30', '31', '40', '50'])
+# cbar.ax.set_ticklabels(['10', '20', '30', '31', '40', '50'])  # vertically oriented colorbar
 cbar.ax.tick_params(labelsize=6)
 cbar.set_label("Allocation Flags",fontsize=8)
 plt.savefig("./fig/criteria/allocation_flag_map.png",dpi=500)

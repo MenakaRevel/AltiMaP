@@ -35,6 +35,9 @@ Comm_VS.o*
 Alng_Riv.o*
 MK_netCDF_inter.o*
 MK_netCDF_elediff.o*
+Alloc_VS.e*
+Alloc_VS.o*
+Unreal_VS.o*
 
 # VScode
 *.vscode

@@ -44,20 +44,33 @@ dataname="HydroWeb"
 outdir="/cluster/data6/menaka/Altimetry/results"
 
 # observation list
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_test.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_test.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210531.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210602.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210618.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210701.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210706.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210709.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210714.txt"
 
 mkdir -p ${outdir}/${dataname}/high_res
 
 USER=`whoami`
 
 # python src/river_map.py $map $CaMa_dir $NCPUS & #> /dev/null 2>&1 & 
-# python src/high_res.py "CONGO" $dataname $outdir $map $CaMa_dir $TAG $obstxt
-# "AMAZONAS" 
-for rivername in "AMAZONAS" "CONGO"; #"MEKONG" "PARANA" "YANGTZE" "AMUR" "VOLGA" "NIGER" "IRRAWADDY" "MISSISSIPPI" "GANGES-BRAHMAPUTRA" "DANUBE" "LENA" "ORINOCO" "PARNAIBA" "SAO-FRANCISCO"; 
+# python src/high_res.py "CONGO" "CONGO" $dataname $outdir $map $CaMa_dir $TAG $obstxt #&
+# python src/high_res.py "AMAZONAS" "CONGO" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+# python src/high_res.py "LENA" "LENA" $dataname $outdir $map $CaMa_dir $TAG $obstxt #&
+#  "AMAZONAS" "CONGO"; #
+python src/high_res.py "AMAZONAS" "MADEIRA" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+python src/high_res.py "CONGO" "KASAI" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+python src/high_res.py "GANGES-BRAHMAPUTRA" "GANGES" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+python src/high_res.py "GANGES-BRAHMAPUTRA" "BRAHMAPUTRA" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+
+
+for rivername in "AMAZONAS" "CONGO" "MEKONG" "PARANA" "YANGTZE" "AMUR" "VOLGA" "NIGER" "IRRAWADDY" "MISSISSIPPI" "DANUBE" "LENA" "ORINOCO" "PARNAIBA" "SAO-FRANCISCO"; 
 do
-    python src/high_res.py $rivername $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+    python src/high_res.py $rivername $rivername $dataname $outdir $map $CaMa_dir $TAG $obstxt &
     ## for parallel computation using multiple CPUs 
     NUM=`ps aux -U $USER | grep /src/allocate_VS | wc -l | awk '{print $1}'`
     echo $USER $NUM
