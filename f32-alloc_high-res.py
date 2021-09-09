@@ -143,12 +143,6 @@ stream0="CONGO" #
 # station0="R_CONGO_BUSIRA_KM1444"
 # station0="R_CONGO_CONGO_KM0309"
 # station0="R_AMAZONAS_AMAZONAS_KM3491"
-# station0="R_LENA_LENA_KM2195"
-# station0="R_LENA_LENA_KM2501"
-# station0="R_AMAZONAS_MADEIRA_KM2310"
-# station0="R_AMAZONAS_MADEIRA_KM2053"
-station0="R_AMAZONAS_AMAZONAS_KM0343"
-# station0="R_PARAIBA-DO-SOL_URURAI-TRIB-01_KM0109"
 dataname="HydroWeb"
 odir="/cluster/data6/menaka/Altimetry/results"
 mapname="glb_06min"
@@ -160,8 +154,7 @@ restag="3sec"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210806.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210807.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210808.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210812.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210817.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210812.txt"
 # stream0=["AMAZONAS","CONGO"]
 #=============================
 TAG=dataname
@@ -190,90 +183,125 @@ cmapL.set_under("none") #"#000000",alpha=0)
 cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
-############################################################
-nums=[]
-river=[]
-pname=[]
-lons =[]
-lats =[]
-xlist=[]
-ylist=[]
-leled=[]
-egm08=[]
-egm96=[]
-llsat=[]
-ldtom=[]
-lflag=[]
-kx1lt=[]
-ky1lt=[]
-kx2lt=[]
-ky2lt=[]
-#-------------------------------------------
-# fname="./out/altimetry_"+mapname+"_test.txt"
-# fname="./out/altimetry_"+mapname+"_20210518.txt"
-fname=obstxt
-#--
-f=open(fname,"r")
-lines=f.readlines()
-for line in lines[1::]:
-    line    = filter(None,re.split(" ",line))
-    #print line
-    num     = line[0]
-    station = line[1].strip()
-    line2   = re.split("_",station)
-    # print num, line2
-    riv     = line2[1]
-    stream  = line2[2]
-    lon     = float(line[3])
-    lat     = float(line[4])
-    ix      = int(line[5])-1
-    iy      = int(line[6])-1
-    eled    = float(line[7])
-    EGM08   = float(line[8])
-    EGM96   = float(line[9])
-    sat     = line[10].strip()
-    dist    = float(line[11])
-    flag    = int(line[12])
-    kx1     = int(line[13])
-    ky1     = int(line[14])
-    kx2     = int(line[15])
-    ky2     = int(line[16])
-    #-----------------------
-    # # # print (riv,station,kx,ky)
-    # # if riv != rivername0:
-    # #     continue
-    # # if riv == "AMAZONAS":
-    # #     if stream != stream0:
-    # #         continue
-    # # elif riv == "CONGO":
-    # #     if stream != stream0:
-    # #         continue
-    # # else:
-    # #     if stream != stream0:
-    # #         continue
-    # print station
-    if station==station0:
-        print "station found: ",station0
-        nums.append(num)
-        river.append(riv)
-        pname.append(station)
-        lons.append(lon)
-        lats.append(lat)
-        xlist.append(ix)
-        ylist.append(iy)
-        leled.append(eled)
-        egm08.append(EGM08)
-        egm96.append(EGM96)
-        llsat.append(sat)
-        ldtom.append(dist)
-        lflag.append(flag)
-        kx1lt.append(kx1)
-        ky1lt.append(ky1)
-        kx2lt.append(kx2)
-        ky2lt.append(ky2)
-    # print (riv,station)
+# ############################################################
+# nums=[]
+# river=[]
+# pname=[]
+# lons =[]
+# lats =[]
+# xlist=[]
+# ylist=[]
+# leled=[]
+# egm08=[]
+# egm96=[]
+# llsat=[]
+# ldtom=[]
+# lflag=[]
+# kx1lt=[]
+# ky1lt=[]
+# kx2lt=[]
+# ky2lt=[]
+# #-------------------------------------------
+# # fname="./out/altimetry_"+mapname+"_test.txt"
+# # fname="./out/altimetry_"+mapname+"_20210518.txt"
+# fname=obstxt
+# #--
+# f=open(fname,"r")
+# lines=f.readlines()
+# for line in lines[1::]:
+#     line    = filter(None,re.split(" ",line))
+#     #print line
+#     num     = line[0]
+#     station = line[1].strip()
+#     line2   = re.split("_",station)
+#     # print num, line2
+#     riv     = line2[1]
+#     stream  = line2[2]
+#     lon     = float(line[3])
+#     lat     = float(line[4])
+#     ix      = int(line[5])-1
+#     iy      = int(line[6])-1
+#     eled    = float(line[7])
+#     EGM08   = float(line[8])
+#     EGM96   = float(line[9])
+#     sat     = line[10].strip()
+#     dist    = float(line[11])
+#     flag    = int(line[12])
+#     kx1     = int(line[13])
+#     ky1     = int(line[14])
+#     kx2     = int(line[15])
+#     ky2     = int(line[16])
+#     #-----------------------
+#     # # # print (riv,station,kx,ky)
+#     # # if riv != rivername0:
+#     # #     continue
+#     # # if riv == "AMAZONAS":
+#     # #     if stream != stream0:
+#     # #         continue
+#     # # elif riv == "CONGO":
+#     # #     if stream != stream0:
+#     # #         continue
+#     # # else:
+#     # #     if stream != stream0:
+#     # #         continue
+#     # print station
+#     if station==station0:
+#         print "station found: ",station0
+#         nums.append(num)
+#         river.append(riv)
+#         pname.append(station)
+#         lons.append(lon)
+#         lats.append(lat)
+#         xlist.append(ix)
+#         ylist.append(iy)
+#         leled.append(eled)
+#         egm08.append(EGM08)
+#         egm96.append(EGM96)
+#         llsat.append(sat)
+#         ldtom.append(dist)
+#         lflag.append(flag)
+#         kx1lt.append(kx1)
+#         ky1lt.append(ky1)
+#         kx2lt.append(kx2)
+#         ky2lt.append(ky2)
+#     # print (riv,station)
 #=============================
-pnum=len(pname)
+# station0="R_CONGO_CONGO_KM0031"
+# lon0="12.72"
+# lat0="-6.03"
+# station0="R_AMAZONAS_MADEIRA_KM1570"
+# lon0="-61.05"
+# lat0="-5.62"
+station0="R_AMAZONAS_AMAZONAS_KM0343"
+lon0="-53.38"
+lat0="-1.74"
+os.system("./src/test_allcate "+station0+" "+lon0+" "+lat0)
+os.system("./src/test_allcate "+station0+" "+lon0+" "+lat0+" > tmp.txt")
+#=============================
+with open("tmp.txt","r") as f:
+    line=f.readlines()
+# print (filter(None,re.split(" ",line[0]))) #line,
+line    = filter(None,re.split(" ",line[0]))
+station = line[0].strip()
+line2   = re.split("_",station)
+riv     = line2[1]
+stream  = line2[2]
+lon     = float(line[1])
+lat     = float(line[2])
+ix      = int(line[3])-1
+iy      = int(line[4])-1
+# eled    = float(line[7])
+# EGM08   = float(line[8])
+# EGM96   = float(line[9])
+# sat     = line[10].strip()
+# dist    = float(line[11])
+flag    = int(line[5])
+kx1     = int(line[6])
+ky1     = int(line[7])
+kx2     = int(line[8])
+ky2     = int(line[9])
+#=============================
+# pnum=len(pname)
 #=====================================
 markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
 colors={"HydroWeb":"xkcd:sea blue","CGLS":"xkcd:dark pink","ICESat":"xkcd:pinkish","HydroSat":"xkcd:light urple","GRRATS":"xkcd:tangerine"} 
@@ -304,19 +332,19 @@ maps = ['ESRI_Imagery_World_2D',    # 0
 # #============================
 # with PdfPages(pdfname) as pdf:
 # for point in np.arange(0,pnum):
-print pname
+print station0
 point=0
 ######################
 print ("=======================================")
-print (point, pname[point], lflag[point])
+print (point, station0, flag)
 hgt=11.69*(1.0/2.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
 #plt.title(pname[point][0],fontsize=12)
 # G = gridspec.GridSpec(3,2)
 G = gridspec.GridSpec(1,1)
-lon = lons[point]
-lat = lats[point]
+# lon = lons[point]
+# lat = lats[point]
 west, south = westsouth(lat,lon)
 north = south + 10.0
 east  = west + 10.0
@@ -356,8 +384,8 @@ visual=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".visual.bin"
 visual=np.fromfile(visual,np.int8).reshape(12000,12000)
 #-----------------------------
 ax0 = fig.add_subplot(G[0,0])
-ax0.text(0.0,1.1,pname[point],va="center",ha="center",transform=ax0.transAxes,fontsize=14)
-flag_ch="flag: %d"%(lflag[point])
+ax0.text(0.0,1.1,station0,va="center",ha="center",transform=ax0.transAxes,fontsize=14)
+flag_ch="flag: %d"%(flag)
 ax0.text(0.8,1.1,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=14)
 m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
 try:
@@ -383,14 +411,14 @@ im=m.imshow(data,interpolation="nearest",origin="upper",cmap=cmapL,norm=norml,zo
 # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
 ax0.plot(lon ,lat ,color="g",marker="o",markersize=7,zorder=111) #fillstyle="none",
 #================
-kx1= kx1lt[point]
-ky1= ky1lt[point]
+# kx1= kx1lt[point]
+# ky1= ky1lt[point]
 lat1 = south + 10.0 - res/2.0 - ky1*res  
 lon1 = west + res/2.0 + kx1*res
 ax0.plot(lon1 ,lat1 ,color="r",marker="o",markersize=7,zorder=112) #fillstyle="none",
 #================
-kx2= kx2lt[point]
-ky2= ky2lt[point]
+# kx2= kx2lt[point]
+# ky2= ky2lt[point]
 if kx2 != -9999 and ky2 != -9999:
     lat2 = south + 10.0 - res/2.0 - ky2*res  
     lon2 = west + res/2.0 + kx2*res
@@ -438,7 +466,7 @@ if kx2 != -9999 and ky2 != -9999:
 #========================================================
 # plt.show()
 plt.savefig("./fig/high_res_map/"+station0+".png",dpi=500)
-# pdf.savefig()  # saves the current figure into a pdf page
+# pdf.savefig("./fig/high_res_map/"+station0+".png",dpi=500)  # saves the current figure into a pdf page
 # plt.close()
 # # set the file's metadata via the PdfPages object:
 # d = pdf.infodict()
@@ -448,3 +476,4 @@ plt.savefig("./fig/high_res_map/"+station0+".png",dpi=500)
 # d['Keywords'] = TAG+', high resolution, '+restag+', '+rivername0
 # d['CreationDate'] = datetime.datetime(2021, 5, 25)
 # d['ModDate'] = datetime.datetime.today()
+os.system("rm -r tmp.txt")

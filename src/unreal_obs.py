@@ -155,14 +155,26 @@ if mapname == 'glb_15min':
     nXX     = 1440
     nYY     = 720
     nY_     = 640
+    dXX     = 0
+    dYY     = 0
 elif mapname == 'glb_06min':
     nXX     = 3600
     nYY     = 1800
     nY_     = 1500
+    dXX     = 0
+    dYY     = 0
 elif mapname == 'glb_01min':
     nXX     = 21600
     nYY     = 10800
     nY_     = 10800
+    dXX     = 0
+    dYY     = 0
+elif mapname == 'amz_06min':
+    nXX     = 350
+    nYY     = 250
+    nY_     = 250
+    dXX     = 1000
+    dYY     = 85
 #=============================
 nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
 rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
@@ -187,7 +199,7 @@ nextX=nextxy[0]
 nextY=nextxy[1]
 #=============================
 meanWSE_VICBC="/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC001/sfcelv_mean2000-2013.bin"
-meanWSE_VICBC=np.fromfile(meanWSE_VICBC,np.float32).reshape(nY_,nXX)
+meanWSE_VICBC=np.fromfile(meanWSE_VICBC,np.float32).reshape(1500,3600)
 ############################################################
 # pnum=10 #len(pname)
 #print np.shape(sfcelv_hydroweb)
@@ -279,4 +291,4 @@ for point in np.arange(pnum):
     elev= lelev[point]
     # if meanW > elevtn[iYY,iXX] + upthr or meanW < elevtn[iYY,iXX] - dwthr:
     if meanW > elev + upthr or meanW < elev - dwthr:
-        print "%69s%4d%12.3f%12.3f%12.3f"%(pname[point],lflag[point],elev,meanW,meanWSE_VICBC[iYY,iXX])
+        print "%69s%4d%12.3f%12.3f%12.3f"%(pname[point],lflag[point],elev,meanW,meanWSE_VICBC[iYY+dYY,iXX+dXX])

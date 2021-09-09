@@ -11,12 +11,12 @@
 #PBS -N Unreal_VS
 
 # import virtual environment
-source ~/.bashrc
-source ~/.bash_conda
+# source ~/.bashrc
+# source ~/.bash_conda
 
-source activate pydef
+# source activate pydef
 
-which python
+# which python
 
 NCPUS=20
 export OMP_NUM_THREADS=$NCPUS
@@ -26,14 +26,15 @@ export OMP_NUM_THREADS=$NCPUS
 cd "/cluster/data6/menaka/Altimetry"
 
 #CaMA-Flood directory
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-
+# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 
 # gigh resolution tag
 TAG="15sec"
 
 # map name
-map="glb_06min"
+# map="glb_06min"
+map="amz_06min"
 
 # date name
 dataname="HydroWeb"
@@ -43,7 +44,10 @@ dataname="HydroWeb"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210531.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210602.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210618.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210709.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210709.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210807.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210817.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210826.txt"
 
 # out dir
 outdir="./out"
@@ -59,4 +63,4 @@ python src/unreal_obs.py $dataname $map $CaMa_dir $TAG $obstxt > "$outdir/unreal
 
 wait
 
-conda deactivate
+# conda deactivate

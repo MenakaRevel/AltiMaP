@@ -108,6 +108,7 @@ TAG="HydroWeb"
 # TAG="HydroSat"
 #=========================================
 ############################################################
+# if len(sys.argv) > 1:
 rivername0=sys.argv[1] #"CONGO" #"AMAZONAS"
 stream0=sys.argv[2]
 dataname=sys.argv[3]
@@ -116,16 +117,16 @@ mapname=sys.argv[5] #"glb_06min"
 CaMa_dir=sys.argv[6] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 restag=sys.argv[7] #"3sec"
 obstxt=sys.argv[8] #"./out/altimetry_"+mapname+"_test.txt"
-# # stream0=["AMAZONAS","CONGO"]
-# # #=
-# # rivername0="CONGO" #"AMAZONAS"
-# # stream0="CONGO" #
-# # dataname="HydroWeb"
-# # odir="/cluster/data6/menaka/Altimetry/results"
-# # mapname="glb_06min"
-# # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-# # restag="3sec"
-# # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210617.txt"
+# stream0=["AMAZONAS","CONGO"]
+# else:
+#     rivername0="CONGO" #"AMAZONAS"
+#     stream0="CONGO" #
+#     dataname="HydroWeb"
+#     odir="/cluster/data6/menaka/Altimetry/results"
+#     mapname="glb_06min"
+#     CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+#     restag="3sec"
+#     obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210808.txt"
 # # # stream0=["AMAZONAS","CONGO"]
 #=============================
 TAG=dataname
@@ -181,7 +182,7 @@ f=open(fname,"r")
 lines=f.readlines()
 for line in lines[1::]:
     line    = filter(None,re.split(" ",line))
-    #print line
+    # print line
     num     = line[0]
     station = line[1]
     line2   = re.split("_",station)
@@ -377,8 +378,16 @@ with PdfPages(pdfname) as pdf:
         elevtn=np.fromfile(elevtn,np.float32).reshape(12000,12000)
         disttom=ldtom[point]
         # print (length[-1],"-",disttom,elevtn[ky-1,kx-1])
-        ax1.plot([length[-1]-disttom*1e3],[elevtn[ky1-1,kx1-1]],color="r",marker="o",markersize=7,linestyle='none',linewidth=0.0)
-        ax1.plot([0,length[-1]],[elevation[0],elevation[-1]],color="g",linestyle='--',linewidth=0.5)
+        try:
+            ax1.plot([length[-1]-disttom*1e3],[elevtn[ky1-1,kx1-1]],color="r",marker="o",markersize=7,linestyle='none',linewidth=0.0)
+            ax1.plot([0,length[-1]],[elevation[0],elevation[-1]],color="g",linestyle='--',linewidth=0.5)
+        except:
+            length=[0.0]
+            elevation=[0.0]
+            ax1.plot([length[-1]-disttom*1e3],[elevtn[ky1-1,kx1-1]],color="r",marker="o",markersize=7,linestyle='none',linewidth=0.0)
+            ax1.plot([0,length[-1]],[elevation[0],elevation[-1]],color="g",linestyle='--',linewidth=0.5)
+            print ("error in river profile")
+
         
         # r = r2_score(elevation, elevation[0]+((elevation[-1]-elevation[0])/length[-1]*1e-20)*length)
         # slope = ((elevation[-1]-elevation[0])/(length[-1]+1e-20))
@@ -407,8 +416,16 @@ with PdfPages(pdfname) as pdf:
         # # print ("linear model:", r0**2,"polynomial model:", r1)
         # # ####
         locs,org = get_data(pname[point],TAG,egm08=egm08[point],egm96=egm96[point])
-        ax1.axhline(y=np.mean(org),xmin=0.0,xmax=length[-1],color=colors[TAG],linestyle='--',linewidth=0.5)
-        ax1.set_xlim(xmin=0,xmax=length[-1])
+        try:
+            ax1.axhline(y=np.mean(org),xmin=0.0,xmax=length[-1],color=colors[TAG],linestyle='--',linewidth=0.5)
+            ax1.set_xlim(xmin=0,xmax=length[-1])
+        except:
+            length=[0.0]
+            elevation=[0.0]
+            ax1.axhline(y=np.mean(org),xmin=0.0,xmax=length[-1],color=colors[TAG],linestyle='--',linewidth=0.5)
+            ax1.set_xlim(xmin=0,xmax=length[-1])
+            print ("error in river profile, L417")
+        #-------------------------------
         ax1.set_xlabel("Distance $(m)$")
         ax1.set_ylabel("Elevation $(m EGM96)$")
         #========================================================

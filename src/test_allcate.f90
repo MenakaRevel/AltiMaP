@@ -74,21 +74,32 @@ program SET_MAP
     integer, dimension(3)         :: tarray0, tarray1, tarray2, tarray3
 
     ! ===============================================
-    call getarg(1,buf)
-    read(buf,*) west1
-    call getarg(2,buf)
-    read(buf,*) south1
-    call getarg(3,buf)
-     read(buf,"(A)") dataname
-    call getarg(4,buf)
-     read(buf,"(A)") camadir
-    call getarg(5,buf)
-     read(buf,"(A)") map
-    call getarg(6,buf)
-     read(buf,"(A)") tag
-    call getarg(7,buf)
-     read(buf,"(A)") outdir
+    ! call getarg(1,buf)
+    ! read(buf,*) west1
+    ! call getarg(2,buf)
+    ! read(buf,*) south1
+    ! call getarg(3,buf)
+    ! read(buf,"(A)") dataname
+    ! call getarg(4,buf)
+    ! read(buf,"(A)") camadir
+    ! call getarg(5,buf)
+    ! read(buf,"(A)") map
+    ! call getarg(6,buf)
+    ! read(buf,"(A)") tag
+    ! call getarg(7,buf)
+    ! read(buf,"(A)") outdir
     
+    call getarg(1,buf)
+    read(buf,"(A)") station
+    call getarg(2,buf)
+    read(buf,*) lon0
+    call getarg(3,buf)
+    read(buf,*) lat0
+
+    !====
+    camadir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+    map="glb_06min"
+    tag="3sec"
     !print*, west1, south1, trim(dataname)
     !==
     finp=trim(camadir)//"/map/"//trim(map)//"/params.txt"
@@ -193,6 +204,7 @@ program SET_MAP
     !=======
     ! do num=1,1
     !     dataname=datanames(num)
+    call westsouth(lon0,lat0,mwin,west1,south1)
     north1=south1+10.0
     east1=west1+10.0
     !====================================
@@ -276,23 +288,24 @@ program SET_MAP
     read(21,rec=1) flwdir
     close(21)
     endif
-    ! ===============================================
-    ! read data 
-    ! ===============================================
-    ! print *, 'read '//trim(dataname)//' data'
-    rlist='./inp/'//trim(dataname)//'Station_list.txt'
-    !print *, rlist
-    open(11, file=rlist, form='formatted')
-    read(11,*)
-    !----
-1000 continue
-    read(11,*,end=1090) id, station, river, bsn, country, lon0, lat0, ele0, egm08, egm96, sat, stime, etime, status
-    ! print*, trim(id), trim(station), trim(river)
-    !== regional maps
-    if (lon0 < west1 .or. lon0 > east1 .or. lat0 < south1 .or. lat0 > north1) then
-        goto 1000
-    end if
+!     ! ===============================================
+!     ! read data 
+!     ! ===============================================
+!     ! print *, 'read '//trim(dataname)//' data'
+!     rlist='./inp/'//trim(dataname)//'Station_list.txt'
+!     !print *, rlist
+!     open(11, file=rlist, form='formatted')
+!     read(11,*)
+!     !----
+! 1000 continue
+!     read(11,*,end=1090) id, station, river, bsn, country, lon0, lat0, ele0, egm08, egm96, sat, stime, etime, status
+!     ! print*, trim(id), trim(station), trim(river)
+!     !== regional maps
+!     if (lon0 < west1 .or. lon0 > east1 .or. lat0 < south1 .or. lat0 > north1) then
+!         goto 1000
+!     end if
     !print*, trim(id), " ", trim(station), " ", trim(river), lon0, lat0
+    
     !-------------------------------------
     ix=int( (lon0   - west1     - csize/2.0)*dble(hres) )+1
     iy=int( (north1 - csize/2.0 - lat0     )*dble(hres) )+1
@@ -373,11 +386,6 @@ program SET_MAP
                 kx1=kx3
                 ky1=ky3
             end if
-            ! flag=30
-            ! kx1=kx2
-            ! ky1=ky2
-            ! kx2=-9999
-            ! ky2=-9999
             ! if ( kx3 /= kx2 .or. ky3 /= ky2 ) then
             !     if (lag2 < lag3) then
             !         flag=32
@@ -433,17 +441,19 @@ program SET_MAP
     kx=kx1
     ky=ky1
     !---
-    if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
-        goto 1000
-    end if
-    ! print*, kx, ky
+    ! if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
+    !     ! goto 1000
+    !     print*, kx,ky
+    ! end if
+    ! print*, kx, ky, kx2, ky2
     !===========
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
     !!============
-    if ( iXX < 1 .or. iYY < 1 .or. iXX > nXX .or. iYY > nYY ) then 
-        goto 1000
-    end if
+    ! if ( iXX < 1 .or. iYY < 1 .or. iXX > nXX .or. iYY > nYY ) then 
+    !     ! goto 1000
+    !     print*, iXX, iYY
+    ! end if
     !============
     ! call itime(tarray1)
     ! find maximum uparea perpendicular to river
@@ -453,13 +463,12 @@ program SET_MAP
         ! call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
         ! call loc_pepndD8(kx,ky,nx,ny,flwdir,visual,uparea,riv1m,west1,south1,hiresmap,ibx,iby)
         ! if ( ibx/=-9 .and. iby/=-9 ) then
-        ! if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
         !     ! print*, "burification location", ibx, iby
         !     flag=50
-            ! kx2=kx1
-            ! ky2=ky1
-            ! kx1=ibx
-            ! ky1=iby
+        !     kx2=kx1
+        !     ky2=ky1
+        !     kx1=ibx
+        !     ky1=iby
         if ( kx2 /= -9999 .or. ky2 /= -9999 ) then
             if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
                 ! print*, "burification location", ibx, iby
@@ -474,7 +483,8 @@ program SET_MAP
     !---
     ! print*, kx, ky
     if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
-        goto 1000
+        ! goto 1000
+        print*,kx,ky
     end if
     !--
     ! ! call itime(tarray2)
@@ -486,7 +496,8 @@ program SET_MAP
     end if
     if (diffdist == -9999.0) then
         ! print*, "Cannot allocate :", trim(station)
-        goto 1000
+        ! goto 1000
+        print*, diffdist
     end if
     !===========
     ! print*, "initial allocsation finshed"
@@ -517,9 +528,10 @@ program SET_MAP
     ! print*, trim(station), lon0, lat0, ix, iy, flag, dist1, dist2
     ! print*, "================================================"
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2)',& 
-        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
-        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2       ! elevtn(iXX,iYY)-
+        print '(a65,2x,2f10.2,2x,2i8.0,2x,i4.0,2x,4i8.0,2f12.2)', trim(station), lon0, lat0, iXX, iYY, flag, kx1, ky1, kx2, ky2, dist1, dist2
+        ! print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2)',& 
+        ! &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
+        ! &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2       ! elevtn(iXX,iYY)-
     ! else
     !     print*, "no data"
     end if
@@ -527,8 +539,8 @@ program SET_MAP
         ! &trim(station),trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
         ! &egm08, egm96, trim(sat)
 
-    goto 1000
-1090 continue
+!     goto 1000
+! 1090 continue
     close(11)
     !---
     deallocate(uparea,basin,elevtn,nxtdst,nextXX,nextYY)
@@ -922,16 +934,16 @@ program SET_MAP
         iix = iix + dx 
         iiy = iiy + dy
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            ! iix0 = iix
-            ! iiy0 = iiy 
-            ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
-            ! !replace west0, south0, flwdir0, visual0
-            ! west0=west0+csize/2.0
-            ! ! south0=south0+csize/2.0
-            ! north0=south0+10.0+csize/2.0
-            ! ! print*, west, south, "to ",west0, south0
-            ! ! print*, iix0, iiy0, "to ", iix, iiy
-            exit
+            iix0 = iix
+            iiy0 = iiy 
+            call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            !replace west0, south0, flwdir0, visual0
+            west0=west0+csize/2.0
+            ! south0=south0+csize/2.0
+            north0=south0+10.0+csize/2.0
+            ! print*, west, south, "to ",west0, south0
+            ! print*, iix0, iiy0, "to ", iix, iiy
+            ! exit
         end if
         lon2=lon1+real(dx)*csize 
         lat2=lat1+real(dy)*csize
@@ -1989,15 +2001,16 @@ program SET_MAP
     call unit_catchment_mouth(ix,iy,nx,ny,flwdir,visual,x0,y0)
     dx=x0-ix 
     dy=y0-iy
-    ! dval=D8(dx,dy)
+    ! print*, "perpendicular_grid: ", ix, iy, x0, y0, dx, dy
+    ! print*, visual(ix,iy)
     if (dx==0 .and. dy==0) then
         dval=flwdir(ix,iy)
     else
         dval=D8(dx,dy)
     end if
+    ! print*, "perpendicular_grid: ", dval, D8(dx,dy)
     ! dval=flwdir(ix,iy)
     ! k=30*6
-    j=0
     k=int(riv1m(ix,iy)/90.0)+100
     k=max(k,100)
     !=========================
@@ -2235,12 +2248,6 @@ program SET_MAP
     ! print*, "Start do-loop:" ,iix,iiy, visual0(iix,iiy)
     do while (visual(iix,iiy)==10)
         ! print* ,iix,iiy, visual0(iix,iiy)
-        dval=flwdir(iix,iiy)
-        call next_D8(dval,dx,dy)
-        iix = iix + dx 
-        iiy = iiy + dy
-        x0  = iix 
-        y0  = iiy
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
             ! west0=west+csize/2.0
@@ -2250,6 +2257,13 @@ program SET_MAP
             ! flag=-9
             exit
         end if
+        dval=flwdir(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy
+        x0  = iix
+        y0  = iiy
+        ! print*, "unit_catchment_mouth: ",x0, y0
         ! river mouth
         if (flwdir(iix,iiy) == -9 ) then
             ! print*, "River mouth", visual(iix,iiy)
@@ -2267,6 +2281,7 @@ program SET_MAP
             y0=iiy
             exit
         end if
+        
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             ! iix0 = iix
             ! iiy0 = iiy 

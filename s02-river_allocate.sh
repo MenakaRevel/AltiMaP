@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q E20
+#PBS -q F20
 #PBS -l select=1:ncpus=20:mem=10gb
 #PBS -l place=scatter
 #PBS -j oe
@@ -41,7 +41,8 @@ TAG="3sec"
 dataname="HydroWeb"
 
 # out put directory
-outdir="/cluster/data6/menaka/Altimetry/results"
+# outdir="/cluster/data6/menaka/Altimetry/results"
+outdir="/cluster/data6/menaka/Altimetry/fig"
 
 # observation list
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_test.txt"
@@ -51,7 +52,10 @@ outdir="/cluster/data6/menaka/Altimetry/results"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210701.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210706.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210709.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210714.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210714.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210808.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210817.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210909.txt"
 
 mkdir -p ${outdir}/${dataname}/high_res
 
@@ -62,22 +66,28 @@ USER=`whoami`
 # python src/high_res.py "AMAZONAS" "CONGO" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
 # python src/high_res.py "LENA" "LENA" $dataname $outdir $map $CaMa_dir $TAG $obstxt #&
 #  "AMAZONAS" "CONGO"; #
+
+# create figures for each river reach
 python src/high_res.py "AMAZONAS" "MADEIRA" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+python src/high_res.py "AMAZONAS" "PURUS" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+python src/high_res.py "AMAZONAS" "NEGRO" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+python src/high_res.py "AMAZONAS" "SOLIMOES" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
 python src/high_res.py "CONGO" "KASAI" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
 python src/high_res.py "GANGES-BRAHMAPUTRA" "GANGES" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
 python src/high_res.py "GANGES-BRAHMAPUTRA" "BRAHMAPUTRA" $dataname $outdir $map $CaMa_dir $TAG $obstxt &
 
 
-for rivername in "AMAZONAS" "CONGO" "MEKONG" "PARANA" "YANGTZE" "AMUR" "VOLGA" "NIGER" "IRRAWADDY" "MISSISSIPPI" "DANUBE" "LENA" "ORINOCO" "PARNAIBA" "SAO-FRANCISCO"; 
+for rivername in "AMAZONAS" "CONGO" "MEKONG" "VOLGA" "NIGER" "IRRAWADDY" "MISSISSIPPI" "LENA";  # "PARANA" "YANGTZE" "AMUR" "DANUBE" "ORINOCO" "PARNAIBA" "SAO-FRANCISCO"
 do
     python src/high_res.py $rivername $rivername $dataname $outdir $map $CaMa_dir $TAG $obstxt &
+    # echo "python src/high_res.py $rivername $rivername $dataname $outdir $map $CaMa_dir $TAG $obstxt" &
     ## for parallel computation using multiple CPUs 
-    NUM=`ps aux -U $USER | grep /src/allocate_VS | wc -l | awk '{print $1}'`
+    NUM=`ps aux -U $USER | grep src/high_res.py | wc -l | awk '{print $1}'`
     echo $USER $NUM
     while [ $NUM -gt $NCPUS ];
     do
         sleep 1
-        NUM=`ps aux -U $USER | grep /src/allocate_VS | wc -l | awk '{print $1}'`
+        NUM=`ps aux -U $USER | grep src/high_res.py | wc -l | awk '{print $1}'`
         echo $USER $NUM
     done
 done
