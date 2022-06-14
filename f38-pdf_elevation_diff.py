@@ -20,18 +20,12 @@ import re
 import os
 import sys
 import errno
-from matplotlib.colors import LogNorm,Normalize,ListedColormap
-import matplotlib.cm as cm
 from multiprocessing import Pool
 from multiprocessing import Process
 from multiprocessing import sharedctypes
-import cartopy.crs as ccrs
-import cartopy
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-import cartopy.feature as cfeature
 
 sys.path.append("./src")
-# import read_hydroweb as hweb
+import read_hydroweb as hweb
 import read_cgls as cgls
 import read_hydrosat as hsat
 import read_icesat as isat
@@ -102,22 +96,6 @@ rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 nextX=nextxy[0]
 nextY=nextxy[1]
 #=====================================
-markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
-colors={"HydroWeb":"xkcd:reddy brown","CGLS":"xkcd:dark pink","ICESat":"xkcd:pinkish","HydroSat":"xkcd:light urple","GRRATS":"xkcd:tangerine"} 
-#=============================
-maps = ['ESRI_Imagery_World_2D',    # 0
-        'ESRI_StreetMap_World_2D',  # 1
-        'NatGeo_World_Map',         # 2
-        'NGS_Topo_US_2D',           # 3
-        'Ocean_Basemap',            # 4
-        'USA_Topo_Maps',            # 5
-        'World_Imagery',            # 6
-        'World_Physical_Map',       # 7
-        'World_Shaded_Relief',      # 8
-        'World_Street_Map',         # 9
-        'World_Terrain_Base',       # 10
-        'World_Topo_Map'            # 11
-        ]
 #=============================
 syear=2003
 eyear=2020
@@ -126,10 +104,9 @@ end=datetime.date(eyear,12,31)
 days=(end-start).days + 1
 #=============================
 lnames=[]
+lflags=[]
+ldstms=[]
 leledf=[]
-ldistd=[]
-l_lons=[]
-l_lats=[]
 #=============================
 # fname="./out/altimetry_"+mapname+"_test.txt"
 fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
@@ -153,88 +130,30 @@ with open(fname, "r") as f:
         flag = int(line[12])
         ix   = ix0 - 1
         iy   = iy0 - 1
-        print (dist)
         #---------------------------
-        if flag != -9:
-            lnames.append(name)
-            leledf.append(eled)
-            ldistd.append(dist)
-            l_lons.append(lon)
-            l_lats.append(lat)
-        else:
-            continue
-#=============================      
-lnames=np.array(lnames)
-leledf=np.array(leledf)
-ldistd=np.array(ldistd)
-l_lons=np.array(l_lons)
-l_lats=np.array(l_lats)
-N=float(len(lnames))
+        lnames.append(name)
+        lflags.append(flag)
+        ldstms.append(dist)
+        # leledf.append(elevtn[iy,ix]-eled)
+        if elevtn[iy,ix]-eled >= -20.0:
+            leledf.append(elevtn[iy,ix]-eled)
+        if elevtn[iy,ix]-eled < -20.0:
+            print (name, eled, elevtn[iy,ix],elevtn[iy,ix]-eled)
 #=============================
 mkdir("./fig")
 mkdir("./fig/criteria")
 #=============================
-# river width
-sup=2
-w=0.02
-alpha=1
-width=0.5
-
-land="#C0C0C0"
-water="#FFFFFF"
-
-west=-180.0
-east=180.0
-north=90.0
-south=-58.0
-
-lllat = -58.
-urlat = 90.
-lllon = -180.
-urlon = 180.
-
-londiff=(east-west)*4
-latdiff=(north-south)*4
-
-npix=(90-north)*4
-spix=(90-south)*4
-wpix=(180+west)*4
-epix=(180+east)*4
-
-#cmap=make_colormap(colors_list)
-#cmap=mbar.colormap("H02")
-cmap=cm.gist_ncar_r
-#cmap.set_under("w",alpha=0)
-cmapL=cmap #cm.get_cmap("rainbow_r")
-vmin=0.0
-vmax=10.0
-norm=Normalize(vmin=vmin,vmax=vmax)
-
 hgt=11.69*(1.0/3.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
 G  = gridspec.GridSpec(1,1)
-ax=fig.add_subplot(G[0,0],projection=ccrs.Robinson())
-#-----------------------------  
-ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
-ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
-#
-pnum=len(lnames)
-for point in np.arange(pnum):
-    dist=ldistd[point]
-    lon =l_lons[point]
-    lat =l_lats[point]
-    c=cmapL(norm(dist))
-    #print lon,lat,pname[point][0],mean_bias
-    ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree())
-#--
-im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norm)#
-im.set_visible(False)
-#cbar=M.colorbar(im,"right",size="2%")
-ax.outline_patch.set_linewidth(0.0)
-#colorbar
-cax=fig.add_axes([0.40,0.10,0.4,.01])
-cbar=plt.colorbar(im,orientation="horizontal",extend='max',ticks=np.arange(vmin,vmax+0.1,1.0),cax=cax) #,extend='both',ticks=np.arange(0.0,1.0+0.001,0.1)
-cbar.ax.tick_params(labelsize=6)
-cbar.set_label("Distance to Mouth $(km)$",fontsize=8)
-plt.savefig("./fig/criteria/distance_to_mouth_map.png",dpi=500)
+ax = fig.add_subplot(G[0,0])
+#-----------------------------
+sns.distplot(leledf,ax=ax, hist = True, kde = True,
+    kde_kws = {'linewidth': 1,'linestyle':'-'},bins=50,
+    label = "dist to mouth", color="xkcd:coral",norm_hist=True)
+ax.set_xlim(xmin=-20.2,xmax=0.2)
+ax.set_ylabel("density", color='k',fontsize=8)
+ax.set_xlabel('elevation differnece $(m)$', color='k',fontsize=8)
+plt.savefig("./fig/criteria/distribution_elediff.png",dpi=500)
+print ("Mean: ",np.mean(leledf),"Median: ",np.median(leledf))

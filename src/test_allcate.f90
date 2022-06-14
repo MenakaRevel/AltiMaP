@@ -445,7 +445,7 @@ program SET_MAP
     !     ! goto 1000
     !     print*, kx,ky
     ! end if
-    ! print*, kx, ky, kx2, ky2
+    ! print*, ix, iy, kx, ky, kx2, ky2, flag 
     !===========
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
@@ -1815,12 +1815,15 @@ program SET_MAP
     integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
     integer                       ::  iix, iiy, x0, y0
     integer                       ::  nn, flag
+    integer                       ::  flag1, flag2
     real                          ::  lag, lag_now!, upa
     real                          ::  uparea_max !, dist
     ! find the nearst main river which has upper unit catchment mouth uparea of the larges river.
+    kx=-9999
+    ky=-9999
     iix=ix
     iiy=iy
-    nn=60
+    nn=30 !2*6*20 ! 6min * 3 min ! 5km * 5km area
     ! print*, iix, iiy
     lag=1.0e20
     lag_now=1.0e20
@@ -1891,19 +1894,25 @@ program SET_MAP
             ! lat2=north1 - csize/2.0 - (jy-1)*(1/dble(hres))
             ! lon2=west1 + csize/2.0 + (jx-1)*(1/dble(hres))
             ! lag_now=hubeny_real(lat1, lon1, lat2, lon2)
-            call until_mouth_flag(ix,iy,jx,jy,nx,ny,flwdir,visual,flag)
-            if ( flag == 1 ) cycle
+            ! call until_unit_catchment_mouth_flag(ix,iy,nx,ny,flwdir,visual,2,flag1)
+            ! if ( upa1m(jx,jy) > uparea_max ) print*, jx, jy, upa1m(jx,jy), uparea_max, upa1m(ix,iy)
+            call until_unit_catchment_mouth_flag(ix,iy,nx,ny,flwdir,visual,2,flag1)
+            call until_mouth_flag(ix,iy,jx,jy,nx,ny,flwdir,visual,flag2)
+            if ( flag1 == 1 ) cycle
+            if ( flag2 == 1 ) cycle
             if ( lag_now == -9999.0 ) cycle
+            if ( upa1m(jx,jy) < upa1m(ix,iy)) cycle
             if ( upa1m(jx,jy) < uparea_max) cycle
+            if ( ix == jx .and. iy == jy) cycle ! same location
             ! print*, lag, lag_now
             if ( lag_now < lag ) then
                 ! if( riv1m(jx,jy)/=-9999 .and. riv1m(jx,jy)/=0 )then
-                if ( visual(jx,jy) == 10 ) then
+                if ( visual(jx,jy) == 10 .or. visual(jx,jy) == 20 ) then
                     kx=jx
                     ky=jy
                     lag=lag_now
                     ! print*, visual(kx,ky)
-                    ! print*, "Found new location: ",flag, kx, ky, lag, visual(kx,ky)
+                    ! print*, "Found new location: ",flag1, flag2, kx, ky, lag, visual(kx,ky)
                 end if
             end if
         end do
@@ -1925,7 +1934,7 @@ program SET_MAP
     ! find the nearst river channel.
     kx=ix 
     ky=iy
-    nn=60
+    nn=30
     lag=1.0e20
     lag_now=1.0e20
     do dy=-nn,nn
@@ -2008,11 +2017,11 @@ program SET_MAP
     else
         dval=D8(dx,dy)
     end if
-    ! print*, "perpendicular_grid: ", dval, D8(dx,dy)
+    ! print*, "perpendicular_grid: ", dval, D8(dx,dy),flwdir(ix,iy), dx, dy
     ! dval=flwdir(ix,iy)
     ! k=30*6
-    k=int(riv1m(ix,iy)/90.0)+100
-    k=max(k,100)
+    k=int(riv1m(ix,iy)/90.0)+10
+    k=max(k,30)
     !=========================
     xlist=-9
     ylist=-9
@@ -2078,6 +2087,7 @@ program SET_MAP
         end do
     end if
     k=j-1
+    ! print*, k, xlist(1:k), ylist(1:k)
     return
     end subroutine perpendicular_grid
     !*****************************************************************
@@ -2124,8 +2134,9 @@ program SET_MAP
         !-----
         ! pixel in the same river not selected
         call until_mouth_flag(ix,iy,jx,jy,nx,ny,flwdir,visual,flag)
+        ! print*, jx, jy, flag
         if ( flag == 1 ) cycle
-        if ( visual(jx,jy) /= 10) cycle
+        ! if ( visual(jx,jy) /= 10) cycle
         if ( visual(jx,jy) < 10) cycle
         ! if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
         if ( ix == jx .and. iy == jy) cycle
@@ -2142,6 +2153,7 @@ program SET_MAP
         end if
     end do
     lag=lag_now
+    ! print*, kx, ky, lag
     return
     end subroutine find_nearest_main_river_ppend
     !*****************************************************************
@@ -2174,6 +2186,10 @@ program SET_MAP
     ! print*, "Start do-loop:" ,iix,iiy, visual0(iix,iiy)
     do while (visual(iix,iiy)==10)
         ! print* ,iix,iiy, visual0(iix,iiy)
+        dval=flwdir(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy 
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
             ! west0=west+csize/2.0
@@ -2183,10 +2199,6 @@ program SET_MAP
             ! flag=-9
             exit
         end if
-        dval=flwdir(iix,iiy)
-        call next_D8(dval,dx,dy)
-        iix = iix + dx 
-        iiy = iiy + dy 
         ! river mouth
         if (flwdir(iix,iiy) == -9 ) then
             ! print*, "River mouth", visual(iix,iiy)
@@ -2298,89 +2310,166 @@ program SET_MAP
     return
     end subroutine unit_catchment_mouth
     !*****************************************************************
-    ! subroutine up_until_mouth(ix,iy,flwdir,uparea,visual,nx,ny,x,y)
-    ! implicit none
-    ! ! find the upstream unit catchment mouth 
-    ! !--
-    ! integer,intent(IN)                        :: ix,iy,nx,ny
-    ! integer*1,dimension(nx,ny),intent(IN)     :: flwdir, visual !,rivseq
-    ! real,dimension(nx,ny),intent(IN)          :: uparea
-    ! integer,intent(OUT)                       :: x,y
-    ! !--
-    ! !real                                      :: dA ! area differnce nextdst,
-    ! integer                                   :: iix,iiy,x0,y0 !,tx,ty,ud,d
-    ! !real                                      :: length,rl
-    ! !------------
-    ! x=-9999
-    ! y=-9999
-    ! iix=ix
-    ! iiy=iy 
-    ! ! print*, iix, iiy, visual(iix,iiy)
-    ! do while (visual(iix,iiy)==10)
-    !     ! print*, "upstream", iix, iiy, visual(iix,iiy)
-    !     call upstream_up(iix,iiy,nx,ny,flwdir,uparea,visual,x0,y0)
-    !     iix=x0
-    !     iiy=y0
-    !     ! print*, "L252: ",iix, iiy
-    !     if (iix == -9999 .or. iiy == -9999) then
-    !         x=-9999
-    !         y=-9999
-    !         exit
-    !     end if
-    !     ! print*, "at upstream:",visual(iix,iiy)
-    !     if (visual(iix,iiy) == 20) then ! upstream unit-catchment mouth found
-    !         x=x0
-    !         y=y0
-    !         exit
-    !     end if
-    ! end do
-    ! return
-    ! end subroutine up_until_mouth
-    ! !*****************************************************************
-    ! subroutine upstream_up(i,j,nx,ny,flwdir,uparea,visual,x,y)
-    ! implicit none 
-    ! ! find the upstream pixel with closest upstream area to the i,j
-    ! !--
-    ! integer,intent(IN)                        :: i,j,nx,ny
-    ! integer*1,dimension(nx,ny),intent(IN)     :: flwdir, visual !,rivseq
-    ! real,dimension(nx,ny),intent(IN)          :: uparea
-    ! integer,intent(OUT)                       :: x,y
-    ! !--
-    ! real                                      :: dA ! area differnce nextdst,
-    ! integer                                   :: ix,iy,tx,ty,d !,iix,iiy,ud
-    ! !real                                      :: length,rl
-    ! !--
-    ! x=-9999
-    ! y=-9999
-    ! d=3 ! look at 3*3 box
-    ! dA=1.0e20 ! area differnce
-    ! !--
-    ! !write(*,*)i,j
-    ! do tx=i-d,i+d
-    !     do ty=j-d,j+d
-    !     ! print*, "L192: ",tx, ty
-    !     if (tx<=0 .or. ty<=0) cycle
-    !     if (tx>nx .or. ty>ny) cycle
-    !     if (tx==i .and. ty==j) cycle
-    !     if (visual(tx,ty) ==10 .or. visual(tx,ty) ==20 ) then
-    !     !write(*,*)tx,ty
-    !     ! call ixy2iixy(tx,ty, nx, ny, ix, iy)
-    !     !write(*,*)nextX(ix,iy),nextY(ix,iy),ix,iy,uparea(ix,iy),rivseq(ix,iy)
-    !         call next_pixel(tx,ty,flwdir,nx,ny,ix,iy)
-    !         if (ix == i .and. iy == j) then
-    !             ! print*, tx, ty
-    !             if (abs(uparea(i,j)-uparea(tx,ty)) < dA) then
-    !                 dA=abs(uparea(i,j)-uparea(tx,ty))
-    !                 x=tx
-    !                 y=ty
-    !                 ! print*, x,y
-    !             end if
-    !             ! end if
-    !         end if
-    !     end if
-    !     end do
-    ! end do
-    ! ! print*, "L211: upstream ->",x,y
-    ! return
-    ! end subroutine upstream_up
-    ! !*****************************************************************
+    subroutine until_unit_catchment_mouth_flag(ix,iy,nx,ny,flwdir,visual,num,flag)
+    implicit none
+    ! check pixels until the unit-catchment mouth
+    integer                                   :: ix,iy,nx,ny
+    ! real                                      :: west,south,csize
+    integer*1,dimension(nx,ny)                :: flwdir, visual !,rivseq
+    ! real,dimension(nx,ny)                     :: uparea, elevtn
+    ! real,dimension(1000)                      :: len, ele
+    integer                                   :: flag !k,
+    !- for clculations
+    ! character*128                             :: rfile1
+    ! character*7                               :: cname
+    ! integer                                   :: ios
+    ! integer,parameter                         :: nx=1200, ny=1200
+    integer                                   :: iix,iiy,x0,y0!,x,y !,tx,ty,ud,d
+    integer                                   :: dval, dx,dy
+    integer                                   :: num !, nu ! number of unit catchments down stream
+    ! real                                      :: down_dist
+    ! real                                      :: west0, south0, north0 !, tval
+    ! real                                      :: lon1, lat1, lon2, lat2
+    ! integer*1,dimension(nx,ny)                :: flwdir0, visual0
+    ! real,dimension(nx,ny)                     :: uparea0, elevtn0
+    ! real                                      :: hubeny_real
+    !--
+    iix=ix
+    iiy=iy
+    flag=0
+    ! nu=0
+    call unit_catchment_mouth_loc(ix,iy,nx,ny,flwdir,visual,num,x0,y0)
+    ! print*, "Start do-loop:" ,iix,iiy, visual0(iix,iiy)
+    do while (visual(iix,iiy)==10)
+        ! print* ,iix,iiy, visual0(iix,iiy)
+        dval=flwdir(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy 
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! west0=west+csize/2.0
+            ! south0=south+csize/2.0
+            ! north0=south+10.0+csize/2.0
+            ! print*, "go to next tile", west0,south0
+            ! flag=-9
+            exit
+        end if
+        ! river mouth
+        if (flwdir(iix,iiy) == -9 ) then
+            ! print*, "River mouth", visual(iix,iiy)
+            exit
+        end if
+        ! land
+        if (visual(iix,iiy) == 2 ) then
+            ! print*, "Not in the river channel", visual(iix,iiy)
+            exit
+        end if
+        ! outlet pixel
+        if (visual(iix,iiy) == 20 ) then
+            ! print*, "Outlet pixel", visual(iix,iiy)
+            ! exit
+            ! nu=nu+1
+            dval=flwdir(iix,iiy)
+            call next_D8(dval,dx,dy)
+            iix = iix + dx 
+            iiy = iiy + dy
+        end if
+        if (visual(iix,iiy) == 25 ) then
+            ! print*, "Outlet pixel", visual(iix,iiy)
+            exit
+        end if
+
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! iix0 = iix
+            ! iiy0 = iiy 
+            ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! replace west0, south0, flwdir0, visual0
+            ! west0=west0+csize/2.0
+            ! south0=south0+csize/2.0
+            ! north0=south0+10.0+csize/2.0
+            ! print*, west, south, "to ",west0, south0
+            ! print*, iix0, iiy0, "to ", iix, iiy
+            exit
+        end if
+        if ( iix == x0 .and. iiy == y0 ) then
+            flag=1
+            exit
+        end if
+    end do
+    return
+    end subroutine until_unit_catchment_mouth_flag
+    !*****************************************************************
+    subroutine unit_catchment_mouth_loc(ix,iy,nx,ny,flwdir,visual,num,x0,y0)
+    implicit none
+    ! check pixels until num number of unit-catchments
+    integer                                   :: ix,iy,nx,ny
+    integer*1,dimension(nx,ny)                :: flwdir, visual !,rivseq
+    integer                                   :: num,x0,y0
+    !- for calculation
+    integer                                   :: iix,iiy !,x,y !,tx,ty,ud,d
+    integer                                   :: dval, dx,dy, nu
+    !--
+    iix=ix
+    iiy=iy
+    x0=ix
+    y0=iy
+    nu=0
+    ! print*, "Start do-loop:" ,iix,iiy, visual0(iix,iiy)
+    do while (visual(iix,iiy)==10)
+        ! print* ,iix,iiy, visual0(iix,iiy)
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! west0=west+csize/2.0
+            ! south0=south+csize/2.0
+            ! north0=south+10.0+csize/2.0
+            ! print*, "go to next tile", west0,south0
+            ! flag=-9
+            exit
+        end if
+        dval=flwdir(iix,iiy)
+        call next_D8(dval,dx,dy)
+        iix = iix + dx 
+        iiy = iiy + dy
+        x0  = iix
+        y0  = iiy
+        ! print*, "unit_catchment_mouth: ",x0, y0
+        ! river mouth
+        if (flwdir(iix,iiy) == -9 ) then
+            ! print*, "River mouth", visual(iix,iiy)
+            exit
+        end if
+        ! land
+        if (visual(iix,iiy) == 2 ) then
+            ! print*, "Not in the river channel", visual(iix,iiy)
+            exit
+        end if
+        ! outlet pixel
+        if (visual(iix,iiy) == 20 ) then
+            ! print*, "Outlet pixel", visual(iix,iiy)
+            nu=nu+1
+            if ( nu == num ) then
+                exit
+            end if
+            dval=flwdir(iix,iiy)
+            call next_D8(dval,dx,dy)
+            x0=iix
+            y0=iiy
+        end if
+        
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! iix0 = iix
+            ! iiy0 = iiy 
+            ! call got_to_next_tile(iix0,iiy0,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! replace west0, south0, flwdir0, visual0
+            ! west0=west0+csize/2.0
+            ! south0=south0+csize/2.0
+            ! north0=south0+10.0+csize/2.0
+            ! print*, west, south, "to ",west0, south0
+            ! print*, iix0, iiy0, "to ", iix, iiy
+            exit
+        end if
+    end do
+    return
+    end subroutine unit_catchment_mouth_loc
+    !*****************************************************************

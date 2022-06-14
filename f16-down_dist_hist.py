@@ -131,7 +131,8 @@ ldistd=[]
 l_lons=[]
 l_lats=[]
 #=============================
-fname="./out/altimetry_"+mapname+"_test.txt"
+# fname="./out/altimetry_"+mapname+"_test.txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -180,7 +181,7 @@ G  = gridspec.GridSpec(1,1)
 ax = fig.add_subplot(G[0,0])
 #-----------------------------  
 # pdf graph
-bins=1000
+bins=500
 xmin=0.0
 xmax=50.0
 ax = fig.add_subplot(G[0,0])

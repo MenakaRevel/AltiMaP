@@ -55,7 +55,8 @@ outdir="/cluster/data6/menaka/Altimetry/fig"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210714.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210808.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210817.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210909.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210909.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210920.txt"
 
 mkdir -p ${outdir}/${dataname}/high_res
 

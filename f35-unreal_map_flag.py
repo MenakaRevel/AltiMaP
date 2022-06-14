@@ -15,7 +15,7 @@ import os
 import math
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib.colors import LogNorm,Normalize,ListedColormap
+from matplotlib.colors import LogNorm,Normalize,ListedColormap,BoundaryNorm
 import matplotlib.cm as cm
 from matplotlib.backends.backend_pdf import PdfPages
 import warnings;warnings.filterwarnings('ignore')
@@ -174,12 +174,21 @@ epix=(180+east)*4
 #cmap=mbar.colormap("H02")
 # cmap=cm.seismic
 #cmap.set_under("w",alpha=0)
-cmap=cm.get_cmap("rainbow_r")
-cmapL=cmap #cm.get_cmap("rainbow_r")
-vmin=0.0
-vmax=2000.0
-norm=Normalize(vmin=vmin,vmax=vmax)
+# cmap=cm.get_cmap("rainbow_r")
+# cmapL=cmap #cm.get_cmap("rainbow_r")
+# vmin=0.0
+# vmax=2000.0
+# norm=Normalize(vmin=vmin,vmax=vmax)
+bounds=np.arange(0.0,8.0,1.0)
+marlist={10:'o', 20:'d', 30:'+', 31:'*', 32:'^', 40:'X', 50:'1'}
+corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 32:'xkcd:lavender', 40:'red',50:'xkcd:deep teal'}
+cmapL = matplotlib.colors.ListedColormap(['green', 'blue', 'purple', 'yellow','xkcd:lavender', 'red', 'xkcd:deep teal'])
+norml=BoundaryNorm(bounds,cmapL.N)
+vmin=1.0
+vmax=8.0
+# norm=Normalize(vmin=vmin,vmax=vmax)
 
+bounds=np.arange(0.0,8.0,1.0)
 hgt=11.69*(1.0/3.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
@@ -191,20 +200,25 @@ ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor
 #
 pnum=len(nums)
 for point in np.arange(pnum):
+    flag=lflag[point]
     eled=leled[point]
     lon =lons[point]
     lat =lats[point]
-    c=cmapL(norm(eled))
+    # c=cmapL(norml(flag))
     #print lon,lat,pname[point][0],mean_bias
+    print (pname[point], flag)
+    c=corlist[flag]
+    m=marlist[flag]
     ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=c, facecolors=c,transform=ccrs.PlateCarree())
 #--
-im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norm)#
+im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml)#
 im.set_visible(False)
 #cbar=M.colorbar(im,"right",size="2%")
 ax.outline_patch.set_linewidth(0.0)
 #colorbar
 cax=fig.add_axes([0.40,0.10,0.4,.01])
-cbar=plt.colorbar(im,orientation="horizontal",ticks=np.arange(vmin,vmax+0.1,500.0),cax=cax) #,extend='both',extend='both',ticks=np.arange(0.0,1.0+0.001,0.1)
+cbar=plt.colorbar(im,orientation="horizontal",ticks=np.arange(0.5,8.0+1.0,1.0),cax=cax) #,extend='both',extend='both',ticks=np.arange(0.0,1.0+0.001,0.1)
+cbar.set_ticklabels(['10', '20', '30', '31', '32', '40', '50'])
 cbar.ax.tick_params(labelsize=6)
-cbar.set_label("Elevation $(m)$",fontsize=8)
-plt.savefig("./fig/criteria/unrealstic_VS_map.png",dpi=500)
+cbar.set_label("Allocation Flag",fontsize=8)
+plt.savefig("./fig/criteria/unrealstic_VS_map_flag.png",dpi=500)

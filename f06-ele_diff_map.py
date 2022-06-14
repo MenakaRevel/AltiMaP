@@ -130,7 +130,8 @@ leledf=[]
 l_lons=[]
 l_lats=[]
 #=============================
-fname="./out/altimetry_"+mapname+".txt"
+# fname="./out/altimetry_"+mapname+".txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -143,13 +144,14 @@ with open(fname, "r") as f:
         lat  = float(line[4])
         ix0  = int(line[5]) 
         iy0  = int(line[6])
-        eled = float(line[7])
+        eled = float(line[7]) 
         egm08= float(line[8])
         egm96= float(line[9])
         sat  = line[10].strip()
-        flag = int(line[11])
+        flag = int(line[12])
         ix   = ix0 - 1
         iy   = iy0 - 1
+        eled = eled - elevtn[iy,ix]
         #---------------------------
         if flag == 1:
             lnames.append(name)

@@ -133,9 +133,10 @@ mapname=sys.argv[2] #"glb_06min" #sys.argv[4] #"glb_06min"
 CaMa_dir=sys.argv[3] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514" #sys.argv[5] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 restag=sys.argv[4] #"3sec" #sys.argv[6] #"3sec"
 obstxt=sys.argv[5] #"./out/altimetry_"+mapname+"_test.txt"#sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
+thr=float(sys.argv[6])
 stream0="AMAZONAS"
-upthr = 10.0
-dwthr = 10.0
+upthr = thr #10.0
+dwthr = thr #10.0
 #=============================
 TAG=dataname
 res=1.0/1200.0

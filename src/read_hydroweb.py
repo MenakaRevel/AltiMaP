@@ -22,9 +22,7 @@ def hydroweb_river_name(mapname="glb_15min"):
         river.append(riv)
     return river
 ################################
-def get_hydroweb(mapname="glb_15min"):
-    # directory
-    hydroweb="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_"+mapname+".txt"
+def get_hydroweb(mapname="glb_15min",fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_15min.txt"):
     #--
     river=[]
     pname=[]
@@ -50,9 +48,9 @@ def get_hydroweb(mapname="glb_15min"):
         egm_d.append(EGM96-EGM08)
     return river,pname,xlist,ylist,egm_d
 ##################################
-def get_hydroweb_loc(rivername,mapname="glb_15min"):
+def get_hydroweb_loc(rivername,mapname="glb_15min",fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_15min.txt"):
     # directory
-    fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_"+mapname+".txt"
+    # fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_"+mapname+".txt"
     #--
     #river=[]
     pname=[]
@@ -81,10 +79,10 @@ def get_hydroweb_loc(rivername,mapname="glb_15min"):
             egm96.append(EGM96)
     return pname,xlist,ylist,egm08,egm96
 ##################################
-def get_hydroweb_locs(mapname="glb_15min"):
+def get_hydroweb_locs(mapname="glb_15min",fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_15min.txt"):
     # directory
     # fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_"+mapname+".txt"
-    fname="./out/altimetry_"+mapname+"_test.txt"
+    # fname="./out/altimetry_"+mapname+"_test.txt"
     #--
     nums=[]
     river=[]
@@ -134,7 +132,7 @@ def get_hydroweb_locs(mapname="glb_15min"):
         lflag.append(flag)
     return nums,river,pname,lons,lats,xlist,ylist,egm08,egm96,llsat,leled,ldtom,lflag
 ################################
-def HydroWeb_WSE(station,syear,eyear,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm96=0.0):
+def HydroWeb_WSE(station,syear,eyear,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm96=0.0,fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_15min.txt"):
     #
     start=datetime.date(syear,smon,sday)
     end=datetime.date(eyear,emon,eday)
@@ -142,7 +140,7 @@ def HydroWeb_WSE(station,syear,eyear,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm
     #station="R_con_con_env_0429_01"
     #satellite=station.split("_")[2]
     #fname="/home/yamadai/data/Altimetry/HydroWeb_LEGOS/River/R_"+station
-    fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
+    # fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
     f=open(fname,"r")
     lines=f.readlines()
     f.close()
@@ -169,7 +167,7 @@ def HydroWeb_WSE(station,syear,eyear,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm
         time.append(lag)
     return time, data
 #####################################
-def HydroWeb_continous_WSE(station,syear=2002,smon=10,sday=1,eyear=2020,emon=12,eday=31,egm08=0.0,egm96=0.0):
+def HydroWeb_continous_WSE(station,syear=2002,smon=10,sday=1,eyear=2020,emon=12,eday=31,egm08=0.0,egm96=0.0,dir0="/cluster/data6/menaka/HydroWeb/data"):
     #
     start=datetime.date(syear,smon,sday)
     end=datetime.date(eyear,emon,eday)
@@ -177,7 +175,8 @@ def HydroWeb_continous_WSE(station,syear=2002,smon=10,sday=1,eyear=2020,emon=12,
     #station="R_con_con_env_0429_01"
     #satellite=station.split("_")[2]
     #fname="/home/yamadai/data/Altimetry/HydroWeb_LEGOS/River/R_"+station
-    fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
+    # fname="/cluster/data6/menaka/HydroWeb/data/"hydroprd_"+station+".txt"
+    fname=dir0+"/hydroprd_"+station+".txt"
     f=open(fname,"r")
     lines=f.readlines()
     f.close()
@@ -203,11 +202,11 @@ def HydroWeb_continous_WSE(station,syear=2002,smon=10,sday=1,eyear=2020,emon=12,
             data[nowtime]=wse+egm08-egm96
     return data
 #####################################
-def altimetry(name,mapname="glb_15min"):
+def altimetry(name,mapname="glb_15min",fname="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_15min.txt"):
     # directory
     hydroweb="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_"+mapname+".txt"
     #--
-    f=open(hydroweb,"r")
+    f=open(fname,"r")
     lines=f.readlines()
     for line in lines[1::]:
         line    = filter(None,re.split(" ",line))

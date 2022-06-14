@@ -1,8 +1,8 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q F20
-#PBS -l select=1:ncpus=20:mem=100gb
+#PBS -q E40
+#PBS -l select=1:ncpus=40:mem=100gb
 #PBS -l place=scatter
 #PBS -j oe
 #PBS -m ea
@@ -12,7 +12,7 @@
 
 #source ~/.bashrc
 
-NCPUS=20
+NCPUS=40
 export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
@@ -20,8 +20,8 @@ export OMP_NUM_THREADS=$NCPUS
 cd "/cluster/data6/menaka/Altimetry"
 
 #CaMA-Flood directory
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 
 # map name
 map="glb_06min"
@@ -58,7 +58,7 @@ do
     CNAME=`./src/set_name $WEST $SOUTH`
     # echo $CNAME #${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
     if [ -s ${CaMa_dir}"/map/"${map}/${TAG}/${CNAME}".catmxy.bin" ]; then
-        for data in "HydroWeb"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
+        for data in "Dahiti"; #"HydroWeb"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
         do
             flag=`python ./src/avalability_data.py $data $WEST $SOUTH`
             # echo $flag

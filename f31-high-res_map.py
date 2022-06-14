@@ -146,9 +146,22 @@ stream0="CONGO" #
 # station0="R_LENA_LENA_KM2195"
 # station0="R_LENA_LENA_KM2501"
 # station0="R_AMAZONAS_MADEIRA_KM2310"
-# station0="R_AMAZONAS_MADEIRA_KM2053"
-station0="R_AMAZONAS_AMAZONAS_KM0343"
+station0="R_AMAZONAS_MADEIRA_KM2053"
+# station0="R_AMAZONAS_AMAZONAS_KM0343"
 # station0="R_PARAIBA-DO-SOL_URURAI-TRIB-01_KM0109"
+# station0="R_CONGO_LOMAMI_KM2608"
+# station0="R_CUVO-QUEVE_CUVO-QUEVE_KM0001"
+# station0="R_AMAZONAS_APAPORIS_KM2843"
+# station0="R_AMAZONAS_BIA_KM2611"
+# station0="R_AMAZONAS_AMAZONAS_KM0421"
+# station0="R_AMAZONAS_AMAZONAS_KM1685"
+# station0="R_AMAZONAS_AMAZONAS_KM0755"
+# station0="R_AMAZONAS_SOLIMOES_KM1339"
+# station0="R_AMAZONAS_SOLIMOES_KM1340"
+# station0="R_AMAZONAS_SOLIMOES_KM1553"
+# station0="R_AMAZONAS_SOLIMOES_KM1692"
+# station0="R_AMAZONAS_SOLIMOES_KM1976"
+# station0="R_AMAZONAS_SOLIMOES_KM2033"
 dataname="HydroWeb"
 odir="/cluster/data6/menaka/Altimetry/results"
 mapname="glb_06min"
@@ -161,7 +174,9 @@ restag="3sec"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210807.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210808.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210812.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210817.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210817.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210909.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
 # stream0=["AMAZONAS","CONGO"]
 #=============================
 TAG=dataname
@@ -213,8 +228,8 @@ ky2lt=[]
 # fname="./out/altimetry_"+mapname+"_20210518.txt"
 fname=obstxt
 #--
-f=open(fname,"r")
-lines=f.readlines()
+with open(fname,"r") as f:
+    lines=f.readlines()
 for line in lines[1::]:
     line    = filter(None,re.split(" ",line))
     #print line
@@ -381,20 +396,20 @@ data = ma.masked_less_equal(visual[npix:spix,wpix:epix],2)
 im=m.imshow(data,interpolation="nearest",origin="upper",cmap=cmapL,norm=norml,zorder=110) # interpolation="nearest",origin="upper",
 # print (lon,lat)
 # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
-ax0.plot(lon ,lat ,color="g",marker="o",markersize=7,zorder=111) #fillstyle="none",
+ax0.plot(lon ,lat ,color="g",marker="o",label="intitial",markersize=7,zorder=111) #fillstyle="none",
 #================
 kx1= kx1lt[point]
 ky1= ky1lt[point]
 lat1 = south + 10.0 - res/2.0 - ky1*res  
 lon1 = west + res/2.0 + kx1*res
-ax0.plot(lon1 ,lat1 ,color="r",marker="o",markersize=7,zorder=112) #fillstyle="none",
+ax0.plot(lon1 ,lat1 ,color="r",marker="o",label="best-loc",markersize=7,zorder=112) #fillstyle="none",
 #================
 kx2= kx2lt[point]
 ky2= ky2lt[point]
 if kx2 != -9999 and ky2 != -9999:
     lat2 = south + 10.0 - res/2.0 - ky2*res  
     lon2 = west + res/2.0 + kx2*res
-    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",markersize=7,zorder=112)
+    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="secondary",markersize=7,zorder=112)
 # print (kx,ky,lon0,lat0)
 # # #========================================================
 # # ax1 = fig.add_subplot(G[0,1])
@@ -435,6 +450,8 @@ if kx2 != -9999 and ky2 != -9999:
 # # ax2.set_xticklabels(xxlab,fontsize=8)
 # # ax2.set_xlabel("Year")
 # # ax2.set_ylabel("WSE $(m EGM96)$")
+#========================================================
+plt.legend()
 #========================================================
 # plt.show()
 plt.savefig("./fig/high_res_map/"+station0+".png",dpi=500)

@@ -122,7 +122,8 @@ days=(end-start).days + 1
 lnames=[]
 leledf=[]
 #=============================
-fname="./out/altimetry_"+mapname+".txt"
+# fname="./out/altimetry_"+mapname+".txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -139,11 +140,12 @@ with open(fname, "r") as f:
         egm08= float(line[8])
         egm96= float(line[9])
         sat  = line[10].strip()
-        flag = int(line[11])
+        flag = int(line[12])
         ix   = ix0 - 1
         iy   = iy0 - 1
+        eled = eled - elevtn[iy,ix]
         #---------------------------
-        if flag == 1:
+        if flag != -9:
             lnames.append(name)
             leledf.append(eled)
         else:
@@ -163,7 +165,7 @@ G  = gridspec.GridSpec(1,1)
 ax = fig.add_subplot(G[0,0])
 #-----------------------------  
 # pdf graph
-bins=1000
+bins=500
 xmin=0.0
 xmax=20.0
 ax = fig.add_subplot(G[0,0])

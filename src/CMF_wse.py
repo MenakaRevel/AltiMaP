@@ -2,6 +2,7 @@
 # coding=utf-8
 # Extract CMF WSE at corresponding virtual stations and store them into a separate file
 #
+from math import *
 import os, sys
 import numpy as np
 from netCDF4 import * #Dataset
@@ -30,8 +31,10 @@ TAG='HydroWeb'
 #runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_ecmwf_correct/'
 # runoff_folder = '/cluster/data6/x.zhou/CaMa_v396b/glb_06min/out/e2o_ecmwf_1050/'
 # runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_cnrs/'
-#runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC001/'
-runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC_USED/'
+runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC001/'
+# runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC_USED/'
+
+obstxt="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_06min.txt"
 
 TAG=sys.argv[1]
 syear=int(sys.argv[2])
@@ -40,7 +43,8 @@ runoff_folder=sys.argv[4]
 CaMa_dir=sys.argv[5]
 curr_pwd=sys.argv[6]
 out_pwd =sys.argv[7]
-
+obstxt =sys.argv[8]
+ordinary = True
 csize = 0.1
 
 # out_pwd = curr_pwd+'/results/'+ TAG +'/'
@@ -173,17 +177,30 @@ def read_wse(ix, iy, syear, eyear, number, lat, lon):
         #print lon, lat, lon_global[ix1], lat_global[iy1]
     return wse, wse_max, wse_min, wse_max_loc, wse_min_loc
 #-------------------------------------
-def slope(ix,iy,nextxy,uparea,elevtn,nxtdst,rivseq):
+def slope(ix,iy,nextxy,uparea,elevtn,rivlen,rivseq):
     if rivseq[iy,ix]>1:
         nextX=nextxy[0]
         nextY=nextxy[1]
         uXX, uYY = upstream(ix+1,iy+1,nextX.T,nextY.T,uparea.T)
         uXX = uXX - 1
         uYY = uYY - 1
-        slp=(elevtn[uYY,uXX]-elevtn[iy,ix])
+        slp=abs(elevtn[uYY,uXX]-elevtn[iy,ix])/(rivlen[iy,ix]*1e-6)
     else:
         slp=0
     return slp
+# =============================
+def covert_lonlat(llon, llat, west=-180.0, north=90.0, gsize=0.1):
+    '''
+    Convert lat lon to x, y coordinate
+    '''
+    xlist=[]; ylist=[]
+    for lon, lat in zip(llon,llat):
+        ix = int((lon - west)*(1/gsize))
+        iy = int((-lat + north)*(1/gsize))
+        xlist.append(ix)
+        ylist.append(iy)
+    return xlist, ylist
+# =============================
 # =============================
 # Read the GRDC daily data(only selected gauges)
 # name = []
@@ -237,7 +254,7 @@ rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 #-----
 if TAG=="HydroWeb":
     # read HydroWeb data
-    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,leled,ldist,lflag=hweb.get_hydroweb_locs(mapname)
+    numbers,rivers,pname,lons,lats,xlist,ylist,legm08,legm96,lsat,leled,ldist,lflag=hweb.get_hydroweb_locs(mapname,fname=obstxt)
     hwb_metadata=hweb.metadata()
 elif TAG=="CGLS":
     # read CGLS data
@@ -259,7 +276,8 @@ elif TAG=="HydroSat":
 #     data = np.loadtxt('../shared/GRDC_alloc_06min.txt', skiprows=1)
 lat_global = np.arange( 90 - csize / 2., -90, -csize)
 lon_global = np.arange( -180 + csize / 2. , 180, csize)
-
+if ordinary:
+    xlist,ylist=covert_lonlat(lons,lats, west=-180.0, north=90.0, gsize=0.1)
 # number_cmf = map(int, data[:,0])
 # lat_cmf = data[:,1]
 # lon_cmf = data[:,2]
@@ -301,6 +319,7 @@ coll_satellite = []
 coll_duration = []
 coll_status = []
 coll_elediff = []
+coll_slope = []
 coll_disttomouth = []
 coll_flag = []
 
@@ -369,17 +388,17 @@ for i in range(len(numbers)):
     ################
     # condtion for mainstream
     ################
-    if uparea[ylist[i],xlist[i]] < area_min:
-        # print ("smaller river: ",pname[i], uparea[ylist[i],xlist[i]])
-        continue
+    # # if uparea[ylist[i],xlist[i]] < area_min:
+    # #     # print ("smaller river: ",pname[i], uparea[ylist[i],xlist[i]])
+    # #     continue
     
     ################
     # condition for slope
     ################
-    slp=slope(xlist[i],ylist[i],nextxy,uparea,elevtn,nxtdst,rivseq)
-    if slp > slope_threshold:
-        # print ("high slope:", pname[i], slp)
-        continue
+    # # slp=slope(xlist[i],ylist[i],nextxy,uparea,elevtn,nxtdst,rivseq)
+    # # if slp > slope_threshold:
+    # #     # print ("high slope:", pname[i], slp)
+    # #     continue
 
     # print (hwb_metadata[pname[i]][0])
     
@@ -449,6 +468,8 @@ for i in range(len(numbers)):
 
     # print ("Included : ",num ,pname[i])
 
+    # unit-catchment slope
+    slp=slope(xlist[i],ylist[i],nextxy,uparea,elevtn,rivlen,rivseq)
     ###########
     # append data
     ###########
@@ -475,6 +496,7 @@ for i in range(len(numbers)):
     coll_duration.append(hwb_metadata[pname[i]][4]+"-"+hwb_metadata[pname[i]][5])
     coll_status.append(hwb_metadata[pname[i]][6])
     coll_elediff.append(leled[i])
+    coll_slope.append(slp)
     coll_disttomouth.append(ldist[i])
     coll_flag.append(lflag[i])
 
@@ -532,6 +554,9 @@ print (count)
 
 if TAG=="HydroWeb":
     fname='hydroweb_cmf_daily_wse_VIC_BC.nc'
+    if ordinary:
+        fname='hydroweb_cmf_daily_wse_VIC_BC_ordinary.nc'
+    # fname='hydroweb-hydroda_cmf_daily_wse_VIC_BC.nc'
 if TAG=="CGLS":
     fname='cgls_cmf_daily_wse_VIC_BC.nc'
 if TAG=="ICESat":
@@ -648,6 +673,10 @@ v[:] = coll_subbasin[:]
 v=o.createVariable('elediff', 'f', ('stations',))
 v.longname='elevation differnce between VS and unit-catchment outlet [m]'
 v[:] = coll_elediff[:]
+
+v=o.createVariable('slope', 'f', ('stations',))
+v.longname='average slope of unit-catchment [m/km]'
+v[:] = coll_slope[:]
 
 v=o.createVariable('disttomouth', 'f', ('stations',))
 v.longname='distance to unit-catchment outlet from VS [km]'

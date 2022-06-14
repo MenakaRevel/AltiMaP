@@ -301,12 +301,12 @@ program SET_MAP
     !================================================================
     ! flag identity
     ! 10 = location was directly found
-    ! 20 = location was on the unit-catchment outlet
-    ! 30 = found the nearest river
-    ! 31 = found the nearest perpendicular main river
-    ! 32 = found the nearest main river
+    ! 11 = location was on the unit-catchment outlet
+    ! 20 = found the nearest river
+    ! 21 = found the nearest main river
+    ! 30 = found the nearest perpendicular main river
+    ! 31 = bifurcation location
     ! 40 = correction for ocean grids
-    ! 50 = bifurcation location
     !================================================================
     flag=-9
     ! print*, trim(station), " ix:", ix, "iy:",iy
@@ -339,7 +339,7 @@ program SET_MAP
         kx2=-9999
         ky2=-9999
         flag=10
-    else if (visual(ix,iy) == 20) then  !! unit-catchment mouth
+    else if (visual(ix,iy) == 11) then  !! unit-catchment mouth
         ! print*, "flag: 2  ","unit-catchment mouth"
         kx1=ix
         ky1=iy
@@ -363,13 +363,13 @@ program SET_MAP
         if ( kx1 == -9999 .or. ky1 == -9999 ) then
             call find_nearest_main_river(kx2,ky2,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,kx3,ky3,lag3)
             if ( kx3 == -9999 .or. ky3 == -9999 ) then
-                flag=30
+                flag=20
                 kx1=kx2
                 ky1=ky2
                 kx2=-9999
                 ky2=-9999
             else 
-                flag=32
+                flag=21
                 kx1=kx3
                 ky1=ky3
             end if
@@ -403,14 +403,14 @@ program SET_MAP
             ! ky2=-9999
             if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
                 if (lag2 < lag1) then
-                    flag=31
-                else
                     flag=30
+                else
+                    flag=20
                     kx2=-9999
                     ky2=-9999
                 end if
             else
-                flag=30
+                flag=20
                 kx2=-9999
                 ky2=-9999
             end if
@@ -463,7 +463,7 @@ program SET_MAP
         if ( kx2 /= -9999 .or. ky2 /= -9999 ) then
             if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
                 ! print*, "burification location", ibx, iby
-                flag=50
+                flag=31
             end if
         end if
     end if
@@ -1806,6 +1806,8 @@ program SET_MAP
     real                          ::  lag, lag_now!, upa
     real                          ::  uparea_max !, dist
     ! find the nearst main river which has upper unit catchment mouth uparea of the larges river.
+    kx=-9999
+    ky=-9999
     iix=ix
     iiy=iy
     nn=60
@@ -1879,9 +1881,12 @@ program SET_MAP
             ! lat2=north1 - csize/2.0 - (jy-1)*(1/dble(hres))
             ! lon2=west1 + csize/2.0 + (jx-1)*(1/dble(hres))
             ! lag_now=hubeny_real(lat1, lon1, lat2, lon2)
+            ! call until_unit_catchment_mouth_flag(ix,iy,nx,ny,flwdir,visual,2,flag1)
             call until_mouth_flag(ix,iy,jx,jy,nx,ny,flwdir,visual,flag)
             if ( flag == 1 ) cycle
+            if ( ix == jx .and. iy == jy) cycle ! same location
             if ( lag_now == -9999.0 ) cycle
+            if ( upa1m(jx,jy) < upa1m(ix,iy)) cycle
             if ( upa1m(jx,jy) < uparea_max) cycle
             ! print*, lag, lag_now
             if ( lag_now < lag ) then
@@ -2112,12 +2117,12 @@ program SET_MAP
         ! pixel in the same river not selected
         call until_mouth_flag(ix,iy,jx,jy,nx,ny,flwdir,visual,flag)
         if ( flag == 1 ) cycle
-        if ( visual(jx,jy) /= 10) cycle
-        if ( visual(jx,jy) < 10) cycle
+        ! if ( visual(jx,jy) /= 10) cycle
+        if ( visual(jx,jy) < 10) cycle ! non-water grids
         ! if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
-        if ( ix == jx .and. iy == jy) cycle
+        if ( ix == jx .and. iy == jy) cycle ! same location
         if ( (catmXX(jx,jy)<=0) .or. (catmYY(jx,jy)<=0) ) cycle
-        if ( upa1m(jx,jy) < upa1m(ix,iy)) cycle
+        if ( upa1m(jx,jy) < upa1m(ix,iy)) cycle ! larger uparea unit-catchment
         if ( upa1m(jx,jy) > uparea_max) then
             dx=ix-jx
             dy=iy-jy

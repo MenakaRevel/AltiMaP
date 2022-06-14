@@ -63,6 +63,32 @@ def get_data(station, tag):
         time,data=grt.GRRATS_WSE(station,syear=1992)
     return time, data
 #=============================
+def cname(lat,lon):
+    if lat < 0.0:
+        ns="s" 
+    else:
+        ns="n" 
+    #-------
+    if lon < 0.0:
+        we="w" 
+    else:
+        we="e" 
+    #############
+    south="%02d"%(abs(int(math.floor(lat/10.0)*10)))
+    west="%03d"%(abs(int(math.floor(lon/10.0)*10)))
+    return ns+south+we+west
+#=========================================
+def westsouth(lat,lon):
+    return float(int(math.floor(lon/10.0)*10)), float(int(math.floor(lat/10.0)*10))
+#=========================================
+def round_half_up(n, decimals=0):
+    multiplier = 10 ** decimals
+    return math.floor(n*multiplier + 0.5) / multiplier
+#=============================
+def round_half_down(n, decimals=0):
+    multiplier = 10 ** decimals
+    return math.ceil(n*multiplier - 0.5) / multiplier
+#=============================
 def flag_diff(flag):
     if flag == 10 or flag == 20:
         return 10
@@ -122,20 +148,6 @@ CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 # mapname=sys.argv[1]
 # CaMa_dir=sys.argv[2]
 # ncpus=int(sys.argv[3])
-#----
-fname=CaMa_dir+"/map/"+mapname+"/params.txt"
-with open(fname,"r") as f:
-    lines=f.readlines()
-#-------
-nx     = int(filter(None, re.split(" ",lines[0]))[0])
-ny     = int(filter(None, re.split(" ",lines[1]))[0])
-gsize  = float(filter(None, re.split(" ",lines[3]))[0])
-lon0   = float(filter(None, re.split(" ",lines[4]))[0])
-lat0   = float(filter(None, re.split(" ",lines[7]))[0])
-west   = float(filter(None, re.split(" ",lines[4]))[0])
-east   = float(filter(None, re.split(" ",lines[5]))[0])
-south  = float(filter(None, re.split(" ",lines[6]))[0])
-north  = float(filter(None, re.split(" ",lines[7]))[0])
 #=============================
 # Read the CMF variables
 if mapname == 'glb_15min':
@@ -169,7 +181,6 @@ rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 #---
 nextX=nextxy[0]
 nextY=nextxy[1]
-rivermap=(nextxy[0]>0)*1.0
 #=====================================
 markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
 colors={"HydroWeb":"xkcd:reddy brown","CGLS":"xkcd:dark pink","ICESat":"xkcd:pinkish","HydroSat":"xkcd:light urple","GRRATS":"xkcd:tangerine"} 
@@ -194,57 +205,131 @@ start=datetime.date(syear,1,1)
 end=datetime.date(eyear,12,31)
 days=(end-start).days + 1
 #=============================
-lnames=[]
-lflags=[]
-# leledf=[]
-l_lons=[]
-l_lats=[]
-#=============================
+nums=[]
+river=[]
+pname=[]
+lons =[]
+lats =[]
+xlist=[]
+ylist=[]
+leled=[]
+egm08=[]
+egm96=[]
+llsat=[]
+ldtom=[]
+lflag=[]
+kx1lt=[]
+ky1lt=[]
+kx2lt=[]
+ky2lt=[]
+#-------------------------------------------
 # fname="./out/altimetry_"+mapname+"_test.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210618.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210706.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210909.txt"
 fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_glb_06min_20210920.txt"
-with open(fname, "r") as f:
-    lines=f.readlines()
-    for line in lines[1::]:
-        line = filter(None,re.split(" ", line))
-        # print line
-        Id   = line[0].strip()
-        name = line[1].strip()
-        dname= line[2].strip()
-        lon  = float(line[3])
-        lat  = float(line[4])
-        ix0  = int(line[5]) 
-        iy0  = int(line[6])
-        eled = float(line[7])
-        egm08= float(line[8])
-        egm96= float(line[9])
-        sat  = line[10].strip()
-        flag = int(line[12])
-        ix   = ix0 - 1
-        iy   = iy0 - 1
-        #---
-        print (name, flag)
-        #---------------------------
-        lnames.append(name)
-        l_lons.append(lon)
-        l_lats.append(lat)
-        lflags.append(flag)
+############################################################
+f=open(fname,"r")
+lines=f.readlines()
+for line in lines[1::]:
+    line    = filter(None,re.split(" ",line))
+    #print line
+    num     = line[0]
+    station = line[1].strip()
+    line2   = re.split("_",station)
+    # print num, line2
+    riv     = line2[1]
+    stream  = line2[2]
+    lon     = float(line[3])
+    lat     = float(line[4])
+    ix      = int(line[5])-1
+    iy      = int(line[6])-1
+    eled    = float(line[7])
+    EGM08   = float(line[8])
+    EGM96   = float(line[9])
+    sat     = line[10].strip()
+    dist    = float(line[11])
+    flag    = int(line[12])
+    kx1     = int(line[13])
+    ky1     = int(line[14])
+    kx2     = int(line[15])
+    ky2     = int(line[16])
+    #---
+    # print (riv, flag)
+    #---------------------------
+    nums.append(num)
+    river.append(riv)
+    pname.append(station)
+    lons.append(lon)
+    lats.append(lat)
+    xlist.append(ix)
+    ylist.append(iy)
+    leled.append(eled)
+    egm08.append(EGM08)
+    egm96.append(EGM96)
+    llsat.append(sat)
+    ldtom.append(dist)
+    lflag.append(flag)
+    kx1lt.append(kx1)
+    ky1lt.append(ky1)
+    kx2lt.append(kx2)
+    ky2lt.append(ky2)
 #=============================      
-lnames=np.array(lnames)
-l_lons=np.array(l_lons)
-l_lats=np.array(l_lats)
-lflags=np.array(lflags)
+lnames=np.array(pname)
+l_lons=np.array(lons)
+l_lats=np.array(lats)
+lflags=np.array(lflag)
 # leledf=np.array(leledf)
 # l_lons=np.array(l_lons)
 # l_lats=np.array(l_lats)
 N=float(len(lnames))
 #=============================
+flag_fig={}
+fflag=[]
+fsta=[]
+flon=[]
+flat=[]
+fkx1=[]
+fky1=[]
+fkx2=[]
+fky2=[]
+# fpox=[0,0,0,0,1,2,3]
+# fpoy=[0,1,2,3,3,3,3]
+fpox=[0,1,2,3]
+fpoy=[3,3,3,3]
+fname="/cluster/data6/menaka/Altimetry/out/flag_fig.txt"
+with open(fname,"r") as f:
+    lines=f.readlines()
+for line in lines:
+    line    = filter(None,re.split(" ",line))
+    flag    = line[0]
+    station = line[1].strip()
+    fflag.append(flag)
+    fsta.append(station)
+    # pname
+    index = [i for i,x in enumerate(pname) if x == station][0]
+    # print (station, "index: ",index)
+    flon.append(lons[index])
+    flat.append(lats[index])
+    fkx1.append(kx1lt[index])
+    fky1.append(ky1lt[index])
+    fkx2.append(kx2lt[index])
+    fky2.append(ky2lt[index])
+    # fpox.append()
+    # fpoy.append()
+#=============================
 mkdir("./fig")
 mkdir("./fig/criteria")
+dataname="HydroWeb"
+odir="/cluster/data6/menaka/Altimetry/results"
+mapname="glb_06min"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+restag="3sec"
+res=1.0/1200.0
+nx =12000
+ny =12000
+hiresmap=CaMa_dir+"/map/"+mapname+"/"+restag+"/"
 #=============================
 # river width
 sup=2
@@ -285,6 +370,7 @@ norm=Normalize(vmin=vmin,vmax=vmax)
 
 # bounds=np.arange(0.0,8.0,1.0)
 # bounds=np.arange(0.0,6.0,1.0)
+bounds=np.arange(0.0,5.0,1.0)
 #-----------
 # flag identity
 # 10 = location was directly found
@@ -301,6 +387,7 @@ norm=Normalize(vmin=vmin,vmax=vmax)
 # marlist={10:'o', 20:'d', 30:'+', 31:'*', 32:'^', 40:'X', 50:'1'}
 # corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 32:'xkcd:lavender', 40:'red',50:'xkcd:deep teal'}
 # cmapL = matplotlib.colors.ListedColormap(['green', 'blue', 'purple', 'yellow','xkcd:lavender', 'red', 'xkcd:deep teal'])
+
 marlist={10:'o', 20:'d', 30:'s',40:'^', 50:'P'}
 corlist={10:'green', 20:'red', 30:'blue',  40:'yellow'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
 cmapL = matplotlib.colors.ListedColormap(['green','red', 'blue', 'yellow'])
@@ -308,14 +395,23 @@ cmapL = matplotlib.colors.ListedColormap(['green','red', 'blue', 'yellow'])
 # cmapL.set_under("none") #"#000000",alpha=0)
 # cmapL.set_over("none")
 # cmapL.colorbar_extend="neither"
-bounds=np.arange(0.0,5.0,1.0)
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
-
-hgt= 11.69*(1.0/3.0)
+############################################################
+vmin=1.0
+vmax=26.0
+normM=Normalize(vmin=1,vmax=26)
+boundsM=np.arange(-0.5,26,1.0)
+cmapM = matplotlib.colors.ListedColormap(['w','w','grey','k','w','k','w','y','w','w','blue','w','w','w','w','w','w','w','w','w','red', 'w','w','w','w','red'])
+cmapM.set_under("none") #"#000000",alpha=0)
+cmapM.set_over("none")
+cmapM.colorbar_extend="neither"
+normm=BoundaryNorm(boundsM,cmapM.N) #len(bounds)-1)
+############################################################
+hgt= 11.69*(1.0/2.0)
 wdt= 8.27
 fig= plt.figure(figsize=(wdt, hgt))
-G  = gridspec.GridSpec(1,1)
-ax = fig.add_subplot(G[0,0],projection=ccrs.Robinson())
+G  = gridspec.GridSpec(4,4)
+ax = fig.add_subplot(G[0:3,:],projection=ccrs.Robinson())
 #-----------------------------  
 ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
 ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
@@ -325,6 +421,7 @@ box="%f %f %f %f"%(west,east,north,south)
 os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > tmp1.txt") 
 # map(vec_par,np.arange(5,10+1,1))
 map(vec_par,np.arange(2,10+1,1))
+#
 pnum=len(lnames)
 for point in np.arange(pnum):
     # eled=leledf[point]
@@ -332,23 +429,110 @@ for point in np.arange(pnum):
     lon  = l_lons[point]
     lat  = l_lats[point]
     flag = lflags[point]
-    flag = flag_diff(flag)
     # c=cmapL(norml(flag))
-    print (name,lon,lat,flag)
+    # print (name,lon,lat,flag)
+    flag=flag_diff(flag)
     c=corlist[flag]
     m=marlist[flag]
-    ax.scatter(lon,lat,s=5,marker=m,zorder=110,edgecolors="k", facecolors=c, linewidth=0.1,transform=ccrs.PlateCarree()) #, 
+    ax.scatter(lon,lat,s=0.1,marker=m,zorder=110,edgecolors="k", facecolors=c,linewidth=0.3,transform=ccrs.PlateCarree()) #, 
 #--
-im=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
-im.set_visible(False)
+imL=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
+imL.set_visible(False)
 #cbar=M.colorbar(im,"right",size="2%")
 ax.outline_patch.set_linewidth(0.0)
+# Add suppmetary figures
+for point in np.arange(len(fflag)):
+    flag= fflag[point]
+    lon = flon[point]
+    lat = flat[point]
+    pox = fpox[point]
+    poy = fpoy[point]
+    west, south = westsouth(lat,lon)
+    north = south + 10.0
+    east  = west + 10.0
+    cname0 = cname(lat,lon)
+    # get the dimesion of the map
+    dec=2
+    val=0.10
+    lllat = round_half_down(lat-val,dec)
+    urlat = round_half_up(lat+val,dec)
+    lllon = round_half_down(lon-val,dec)
+    urlon = round_half_up(lon+val,dec)
+    if abs(lllat-urlat) < val:
+        urlat=round_half_up(urlat+val,dec)
+        lllat=round_half_down(lllat-val,dec)
+    if abs(lllon-urlon) < val:
+        urlon=round_half_up(urlon+val,dec)
+        lllon=round_half_down(lllon-val,dec)
+    #---------------------
+    lllat=max(lllat,south)
+    urlat=min(urlat,north)
+    lllon=max(lllon,west)
+    urlon=min(urlon,east)
+    # print (lllat, lllon, urlat, urlon)
+    #=====================================
+    # londiff=int((east-west)*1200)
+    # latdiff=int((north-south)*1200)
+    npix= int((north-urlat)*1200)
+    spix= int((north-lllat)*1200)
+    wpix= int((lllon-west)*1200)
+    epix= int((urlon-west)*1200)
+    print (npix,":",spix,",",wpix,":",epix)
+    #=====================================
+    # high-resolution data
+    # print (cname0)
+    visual=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".visual.bin"
+    # print (visual)
+    visual=np.fromfile(visual,np.int8).reshape(12000,12000)
+    #-----------------------------
+    ax0 = fig.add_subplot(G[poy,pox])
+    # ax0.text(0.0,1.1,pname[point],va="center",ha="center",transform=ax0.transAxes,fontsize=14)
+    flag_ch="Flag: %d"%(int(flag)) #lflag[point])
+    ax0.text(0.5,0.05,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=6,color="w",zorder=113)
+    m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
+    try:
+        m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
+        print ("ArcGIS map")
+    except:
+        # Draw some map elements on the map
+        m.drawcoastlines()
+        m.drawstates()
+        m.drawcountries()
+        m.drawrivers(color='blue')
+        print ("Normal map")
+    #m.drawcoastlines( linewidth=0.1, color='k' )
+    # m.fillcontinents(color=land,lake_color=water,zorder=99)  
+    # ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
+    # ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
+    # #
+    m.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=4,linewidth=0,zorder=102)
+    m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=4,linewidth=0,zorder=102)
+    data = ma.masked_less_equal(visual[npix:spix,wpix:epix],2)
+    im=m.imshow(data,interpolation="nearest",origin="upper",cmap=cmapM,norm=normm,zorder=110) # interpolation="nearest",origin="upper",
+    # print (lon,lat)
+    # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
+    ax0.plot(lon ,lat ,color="g",marker="o",markersize=2,zorder=111) #fillstyle="none",
+    #================
+    kx1= fkx1[point]
+    ky1= fky1[point]
+    lat1 = south + 10.0 - res/2.0 - ky1*res  
+    lon1 = west + res/2.0 + kx1*res
+    ax0.plot(lon1 ,lat1 ,color="r",marker="o",markersize=2,zorder=112) #fillstyle="none",
+    #================
+    kx2= fkx2[point]
+    ky2= fky2[point]
+    if kx2 != -9999 and ky2 != -9999:
+        lat2 = south + 10.0 - res/2.0 - ky2*res  
+        lon2 = west + res/2.0 + kx2*res
+        ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",markersize=2,zorder=112)
 # colorbar
-cax=fig.add_axes([0.40,0.10,0.35,.01])
-cbar=plt.colorbar(im,orientation="horizontal",ticks=np.arange(0.5,8.0+1.0,1.0),cax=cax) #[10,20,30,31,40,50],extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
+cax=fig.add_axes([0.4,0.38,0.45,.01])
+cbar=plt.colorbar(imL,orientation="horizontal",ticks=np.arange(0.5,5.0+1.0,1.0),cax=cax) #[10,20,30,31,40,50],extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
 cbar.set_ticklabels(['10', '20', '30', '40'])
+# cbar.set_ticklabels(['10', '20', '30', '31', '32', '40', '50'])
 # cbar.ax.set_ticklabels(['10', '20', '30', '31', '40', '50'])  # vertically oriented colorbar
 cbar.ax.tick_params(labelsize=6)
 cbar.set_label("Allocation Flags",fontsize=8)
-plt.savefig("./fig/criteria/allocation_flag_map.png",dpi=500)
-os.system("rm -r tmp*")
+plt.savefig("./fig/criteria/allocation_flag_map_example.png",dpi=500)
+plt.savefig("./fig/criteria/allocation_flag_map_example.pdf",dpi=500)
+plt.savefig("./fig/criteria/allocation_flag_map_example.jpg",dpi=500)

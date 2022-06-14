@@ -131,9 +131,10 @@ mkdir("./fig/criteria")
 #=============================
 # fname="./out/altimetry_"+mapname+"_test.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210618.txt"
-fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
+# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
 # np.arange(1,5+1)
-flags=[10,20,30,31,40,50]
+flags=[10,20,30,31,32,40,50]
 for fnum in flags:
     lnames=[]
     lflags=[]
@@ -214,16 +215,16 @@ for fnum in flags:
     # #cmap.set_under("w",alpha=0)
     # cmapL=cmap #cm.get_cmap("rainbow_r")
     vmin=1.0
-    vmax=6.0
+    vmax=7.0
     norm=Normalize(vmin=vmin,vmax=vmax)
 
-    bounds=np.arange(0.5,6.0,1.0)
+    bounds=np.arange(0.5,7.0,1.0)
     #cmap=colors.ListedColormap(['grey',"xkcd:ultramarine",'xkcd:clear blue','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
     #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
     #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:greeny blue","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
     # cmap=colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
-    corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 40:'red',50:'xkcd:deep teal'}
-    cmapL = matplotlib.colors.ListedColormap(['green', 'blue','purple', 'yellow', 'red'])
+    corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 32:'xkcd:chartreuse', 40:'red',50:'xkcd:deep teal'}
+    cmapL = matplotlib.colors.ListedColormap(['green', 'blue','purple', 'yellow', 'xkcd:chartreuse', 'red'])
     # cmapL=matplotlib.colors.ListedColormap(['grey',"xkcd:dark seafoam",'xkcd:deep teal',"xkcd:saffron","xkcd:purpleish",'xkcd:royal',"xkcd:peacock blue","xkcd:carmine","xkcd:black"])
     cmapL.set_under("none") #"#000000",alpha=0)
     cmapL.set_over("none")

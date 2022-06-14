@@ -26,15 +26,15 @@ export OMP_NUM_THREADS=$NCPUS
 cd "/cluster/data6/menaka/Altimetry"
 
 #CaMA-Flood directory
-# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 
 # gigh resolution tag
 TAG="15sec"
 
 # map name
-# map="glb_06min"
-map="amz_06min"
+map="glb_06min"
+# map="amz_06min"
 
 # date name
 dataname="HydroWeb"
@@ -47,11 +47,16 @@ dataname="HydroWeb"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210709.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210807.txt"
 # obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210817.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210826.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210826.txt"
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210909.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20210920.txt"
 
 # out dir
 outdir="./out"
 mkdir -p $outdir
+
+# threshold for find outliers
+threshold=10.0 #m
 
 # # out put figure directory
 # figdir="./fig"
@@ -59,7 +64,7 @@ mkdir -p $outdir
 # mkdir -p $figdir
 day=$(date +"%Y%m%d")
 
-python src/unreal_obs.py $dataname $map $CaMa_dir $TAG $obstxt > "$outdir/unreal_obs_${day}.txt" #& #> /dev/null 2>&1 & 
+python src/unreal_obs.py $dataname $map $CaMa_dir $TAG $obstxt $threshold > "$outdir/unreal_obs_${day}.txt" #& #> /dev/null 2>&1 & 
 
 wait
 
