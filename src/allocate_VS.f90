@@ -305,8 +305,9 @@ program SET_MAP
     ! 12 = location was on the unit-catchment outlet
     ! 20 = found the nearest river
     ! 21 = found the nearest main river
-    ! 30 = found the nearest perpendicular main river
+    ! 30 = found the nearest parallel main river
     ! 31 = bifurcation location
+    ! 32 = bifurication with parallel river
     ! 40 = correction for ocean grids
     !================================================================
     flag=-9
@@ -474,6 +475,8 @@ program SET_MAP
                 ! print*, "burification location", ibx, iby
                 flag=31
             end if
+        else
+            flag=32
         end if
     end if
     ! print*, flag
@@ -516,26 +519,11 @@ program SET_MAP
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
     !============
-    ! call itime(tarray3) 
-    
-    ! print*, trim(station), visual(kx,ky), visual(ix,iy), diffdist
-    ! print*, "up to find another locations: ",tarray1 - tarray0
-    ! print*, "up to down dist: ",tarray2 - tarray1
-    ! print*, "down dist to now: ", tarray3 - tarray2
-    ! print*, trim(station), lon0, lat0, elevtn(iXX,iYY), ele1m(kx,ky), visual(kx,ky), visual(ix,iy)!, tarray1 - tarray0 !, flag, diffdist*1e-3
-    ! print*, trim(station), lon0, lat0, ix, iy, flag, dist1, dist2
-    ! print*, "================================================"
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2)',& 
-        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
-        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2       ! elevtn(iXX,iYY)-
-    ! else
-    !     print*, "no data"
+        print '(a30,2x,a65,2x,2f10.2,2x,a15,2x,i4.0,2x,f13.2,2x,f10.2,2x,4i8.0,2f12.2,2x,2i8.0,2x,2f10.2)',& 
+        &trim(adjustl(id)), trim(station), lon0, lat0, trim(sat), flag, diffdist*1e-3, ele1m(kx,ky), &
+        &kx1, ky1, kx2, ky2, dist1, dist2, iXX, iYY, egm08, egm96
     end if
-        ! write(27,'(a14,2x,a40,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)') trim(adjustl(id)),& 
-        ! &trim(station),trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
-        ! &egm08, egm96, trim(sat)
-
     goto 1000
 1090 continue
     close(11)
