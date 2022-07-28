@@ -145,7 +145,7 @@ def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None):
     return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,zorder=105,alpha=alpha)
 #==================================
 mapname="glb_06min"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 # print sys.argv
 # mapname=sys.argv[1]
 # CaMa_dir=sys.argv[2]
@@ -326,7 +326,7 @@ mkdir("./fig")
 dataname="HydroWeb"
 odir="/cluster/data6/menaka/Altimetry/results"
 mapname="glb_06min"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 restag="3sec"
 res=1.0/1200.0
 nx =12000
@@ -494,7 +494,8 @@ for point in np.arange(len(fflag)):
     ax0.text(0.5,0.05,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=6,color="w",zorder=113)
     m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
     try:
-        m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
+        # m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
+        m.arcgisimage(server='http://server.arcgisonline.com/ArcGIS', service='World_Imagery', xpixels=1000, ypixels=None, dpi=1200)
         print ("ArcGIS map")
     except:
         # Draw some map elements on the map

@@ -177,8 +177,11 @@ def mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=None):
         ,meanline=True, width=0.8, linewidth=0.3, dodge=True\
         ,meanprops=meanprops,capprops=capprops,medianprops=medianprops) #"Paired"
     ax.set_xticklabels(["expert","ordinary"])
+    ax.set_ylabel('RMSE $(m)$', color='k',fontsize=8)
     # ax.set_xlabel(["expert","ordinary"])
-    ax.set_ylim(ymin=-0.2,ymax=60.2)
+    ax.set_ylim(ymin=-1.2,ymax=80.2)
+    print "1, mean, median", np.mean(sfcelv_rmse1), np.median(sfcelv_rmse1)
+    print "2, mean, median", np.mean(sfcelv_rmse2), np.median(sfcelv_rmse2)
     return 0
 #====
 # sfcelv
@@ -233,27 +236,33 @@ print sfcelv_rmse2[0:10]
 os.system("mkdir -p ./fig")
 
 
-hgt=11.69#*(4.0/15.0)
-wdt=8.27
+hgt=11.69*(1.0/3.0)
+wdt=8.27*(1.0/2.0)
 fig=plt.figure(figsize=(wdt, hgt))
-G  = gridspec.GridSpec(3,4)
-# boxplot
-ax1=fig.add_subplot(G[0,1:3])
-#-----------------------------
-# for i in sfcelv_rmse:
-#     print i
-# ax.hist(sfcelv_rmse, bins=10)
-box=sns.boxplot(ax=ax1,data=[sfcelv_rmse1,sfcelv_rmse2], fliersize=0.0, palette=["xkcd:coral","xkcd:teal"], whis=1.5\
-    ,meanline=True, width=0.8, linewidth=0.3, dodge=True\
-    ,meanprops=meanprops,capprops=capprops,medianprops=medianprops) #"Paired"
-# sns.boxplot(sfcelv_rmse)
-print np.mean(sfcelv_rmse1), np.median(sfcelv_rmse1)
-print np.mean(sfcelv_rmse2), np.median(sfcelv_rmse2)
-# sns.histplot(sfcelv_rmse)
-# sns.distplot(ma.masked_greater(sfcelv_rmse,100.0),ax=ax, hist = True, kde = False,
-#     kde_kws = {'linewidth': 1,'linestyle':'-'},bins=500,
-#     label = "RMSE", color="xkcd:coral",norm_hist=True)
-# ax.set_xlim(xmin=-0.2,xmax=500.2)
-ax1.set_xticklabels(["expert","ordinary"])
-ax1.set_xlabel(["expert","ordinary"])
-ax1.set_ylim(ymin=-0.2,ymax=60.2)
+G  = gridspec.GridSpec(1,1)
+# overall
+ax0=fig.add_subplot(G[0,0])
+mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=ax0)
+# ax0.text(-0.05,1.05,"%s) All"%(string.ascii_lowercase[0]),ha="left",va="center",transform=ax0.transAxes,fontsize=10)
+# print np.shape(sfcelv_rmse1), np.shape(flags1)
+# print sfcelv_rmse1[np.logical_or(flags1==10,flags1==20)]
+# # Flag 10
+# ax1=fig.add_subplot(G[1,0:2])
+# mk_boxplot(sfcelv_rmse1[np.logical_or(flags1==10,flags1==20)],sfcelv_rmse2[np.logical_or(flags2==10,flags2==20)],ax=ax1)
+# ax1.text(-0.05,1.05,"%s) Flag 10"%(string.ascii_lowercase[1]),ha="left",va="center",transform=ax1.transAxes,fontsize=10)
+# # Flag 20
+# ax2=fig.add_subplot(G[1,2::])
+# mk_boxplot(sfcelv_rmse1[np.logical_or(flags1==30,flags1==32)],sfcelv_rmse2[np.logical_or(flags2==30,flags2==32)],ax=ax2)
+# ax2.text(-0.05,1.05,"%s) Flag 20"%(string.ascii_lowercase[2]),ha="left",va="center",transform=ax2.transAxes,fontsize=10)
+# # Flag 30
+# ax3=fig.add_subplot(G[2,0:2])
+# mk_boxplot(sfcelv_rmse1[np.logical_or(flags1==31,flags1==50)],sfcelv_rmse2[np.logical_or(flags2==31,flags2==50)],ax=ax3)
+# ax3.text(-0.05,1.05,"%s) Flag 30"%(string.ascii_lowercase[3]),ha="left",va="center",transform=ax3.transAxes,fontsize=10)
+# # Flag 40
+# ax4=fig.add_subplot(G[2,2::])
+# mk_boxplot(sfcelv_rmse1[np.where(flags1==40)],sfcelv_rmse2[np.where(flags2==40)],ax=ax4)
+# ax4.text(-0.05,1.05,"%s) Flag 40"%(string.ascii_lowercase[4]),ha="left",va="center",transform=ax4.transAxes,fontsize=10)
+# plt.show()
+plt.savefig("./fig/f08-boxplot_expert_ordinary_flag.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f08-boxplot_expert_ordinary_flag.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f08-boxplot_expert_ordinary_flag.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)

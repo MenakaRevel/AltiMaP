@@ -468,7 +468,7 @@ for j in np.arange(len(rivernames)):
             axins.plot(rvlen00[point],mean_WSE[point],color="r",linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=10)
         
     # sub region of the original image
-    x_1, x_2 = 2200, 1750
+    x_1, x_2 = 2200, 1900 #1750
     x1, x2, y1, y2 = rvlen00[-1]-x_1, rvlen00[-1]-x_2, 320, 400
     rect = patches.Rectangle((x1, y1), x2-x1, y2-y1, linewidth=3, edgecolor='r', facecolor='none')
     axins.set_xlim(x1, x2)

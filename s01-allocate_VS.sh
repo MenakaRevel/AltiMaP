@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q E40
+#PBS -q F40
 #PBS -l select=1:ncpus=40:mem=100gb
 #PBS -l place=scatter
 #PBS -j oe
@@ -27,8 +27,10 @@ CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 map="glb_06min"
 # map="amz_06min"
 # map="glb_01min"
+# map="glb_15min"
 
 glb_map="glb_06min"  # need to change according to map
+# glb_map="glb_15min"
 
 # Higher resolution data
 TAG="3sec"
@@ -58,7 +60,7 @@ do
     CNAME=`./src/set_name $WEST $SOUTH`
     # echo $CNAME #${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
     if [ -s ${CaMa_dir}"/map/"${map}/${TAG}/${CNAME}".catmxy.bin" ]; then
-        for data in "Dahiti"; #"HydroWeb"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
+        for data in "HydroWeb"; # "Dahiti"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
         do
             flag=`python ./src/avalability_data.py $data $WEST $SOUTH`
             # echo $flag
@@ -76,6 +78,8 @@ do
                 done
             fi
         done
+    else
+        echo "No file :" ${CaMa_dir}"/map/"${map}/${TAG}/${CNAME}".catmxy.bin"
     fi
   WEST=$(( $WEST + 10 ))
   done

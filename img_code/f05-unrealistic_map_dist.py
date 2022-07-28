@@ -274,7 +274,7 @@ pnum=len(nums)
 #=============================
 # river width
 sup=2
-w=0.02
+w=0.01
 alpha=1
 width=0.5
 
@@ -334,8 +334,8 @@ ax1.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolo
 #--
 box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
 os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
-map(vec_par,np.arange(2,10+1,1))
-# map(vec_par,np.arange(7,10+1,1))
+# map(vec_par,np.arange(2,10+1,1))
+map(vec_par,np.arange(5,10+1,1))
 #
 pnum=len(nums)
 for point in np.arange(pnum):
@@ -360,7 +360,7 @@ ax1.outline_patch.set_linewidth(0.0)
 # cbar.set_ticklabels(['10', '20', '30', '31', '32', '40', '50'])
 # cbar.ax.tick_params(labelsize=6)
 # cbar.set_label("Allocation Flag",fontsize=8)
-ax1.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[0]),ha="left",va="center",transform=ax1.transAxes,fontsize=10)
+ax1.text(0.00,1.00,"%s)"%(string.ascii_lowercase[0]),ha="left",va="center",transform=ax1.transAxes,fontsize=10)
 features=[]
 for i,flag in enumerate([10,20,30,40]):
     features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
@@ -370,11 +370,13 @@ legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower center",font
            bbox_transform=fig.transFigure, ncol=4,  borderaxespad=0.0, frameon=False)#
 #====
 ax2=fig.add_subplot(G[2,0])
-mk_hist(np.log(upare),color="red",label="$log(catchment area)$ $(km^2)$",ax=ax2)
+mk_hist(np.log10(upare),color="red",label="$log(catchment$ $area)$ $(km^2)$",ax=ax2)
+print np.median(upare)
 ax2.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[1]),ha="left",va="center",transform=ax2.transAxes,fontsize=10)
 #====
 ax3=fig.add_subplot(G[2,1])
 mk_hist(leled,color="green",label="$elevation$ $(m)$",ax=ax3)
+print np.median(leled)
 ax3.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[2]),ha="left",va="center",transform=ax3.transAxes,fontsize=10)
 #=====
 plt.savefig("./fig/f05-unrealstic_VS_map_flag.png",dpi=800,bbox_inches="tight", pad_inches=0.0)

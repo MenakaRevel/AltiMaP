@@ -1,6 +1,8 @@
 # bin txt files
 *.bin
 *.txt
+*.kml
+*.kmz
 
 # figures
 *.png

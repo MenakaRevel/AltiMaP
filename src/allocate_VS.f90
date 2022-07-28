@@ -300,8 +300,9 @@ program SET_MAP
     ! print*, trim(station), lon0, lat0, ix, iy
     !================================================================
     ! flag identity
-    ! 10 = location was directly found
-    ! 11 = location was on the unit-catchment outlet
+    ! 10 = on the river centerline
+    ! 11 = on the river channel
+    ! 12 = location was on the unit-catchment outlet
     ! 20 = found the nearest river
     ! 21 = found the nearest main river
     ! 30 = found the nearest perpendicular main river
@@ -332,22 +333,30 @@ program SET_MAP
     ! print*, trim(station)
     ! print*, "Initial allocation: ",kx, ky, visual(kx,ky), tarray0
     ! if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
-    if (visual(ix,iy) == 10) then  !! river channel
+    if (visual(ix,iy) == 10) then  !! river center line
         ! print*, "flag: 1  ","river channel"
         kx1=ix
         ky1=iy
         kx2=-9999
         ky2=-9999
         flag=10
-    else if (visual(ix,iy) == 11) then  !! unit-catchment mouth
+    else if (riv1m(ix,iy) == -1) then !! river channel
+        ! find the nearest river centerline
+        call find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx1,ky1,lag1)
+        ! kx1=ix
+        ! ky1=iy
+        kx2=-9999
+        ky2=-9999
+        flag=11
+    else if (visual(ix,iy) == 20) then  !! unit-catchment mouth
         ! print*, "flag: 2  ","unit-catchment mouth"
         kx1=ix
         ky1=iy
         kx2=-9999
         ky2=-9999
-        flag=20
+        flag=12
     ! first find the max uparea 
-    ! 80% of uparea max with colsest
+    ! 80% of uparea max with closest
     else if (visual(ix,iy) == 2 .or. visual(ix,iy) == 3 .or. visual(ix,iy) == 5 .or. visual(ix,iy) == 7) then   !! correction for land/grid box, boundry to channel
         ! print*, "flag: 3  ","correction for land to channel"
         ! print*, "ix, iy :", ix, iy
@@ -363,15 +372,15 @@ program SET_MAP
         if ( kx1 == -9999 .or. ky1 == -9999 ) then
             call find_nearest_main_river(kx2,ky2,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,kx3,ky3,lag3)
             if ( kx3 == -9999 .or. ky3 == -9999 ) then
-                flag=20
                 kx1=kx2
                 ky1=ky2
                 kx2=-9999
                 ky2=-9999
+                flag=20
             else 
-                flag=21
                 kx1=kx3
                 ky1=ky3
+                flag=21
             end if
             ! flag=30
             ! kx1=kx2
@@ -405,14 +414,14 @@ program SET_MAP
                 if (lag2 < lag1) then
                     flag=30
                 else
-                    flag=20
                     kx2=-9999
                     ky2=-9999
+                    flag=20
                 end if
             else
-                flag=20
                 kx2=-9999
                 ky2=-9999
+                flag=20
             end if
         end if
     else if ( visual(ix,iy)==0 .or. visual(ix,iy)==1 .or. visual(ix,iy)==25 ) then !! correction for ocean grids
@@ -423,7 +432,7 @@ program SET_MAP
             ky2=-9999
             flag=40
         else
-            flag=10
+            flag=90
         end if
     else
         flag=90

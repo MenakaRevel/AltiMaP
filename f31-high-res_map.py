@@ -143,10 +143,10 @@ stream0="CONGO" #
 # station0="R_CONGO_BUSIRA_KM1444"
 # station0="R_CONGO_CONGO_KM0309"
 # station0="R_AMAZONAS_AMAZONAS_KM3491"
-# station0="R_LENA_LENA_KM2195"
+station0="R_LENA_LENA_KM2195"
 # station0="R_LENA_LENA_KM2501"
 # station0="R_AMAZONAS_MADEIRA_KM2310"
-station0="R_AMAZONAS_MADEIRA_KM2053"
+# station0="R_AMAZONAS_MADEIRA_KM2053"
 # station0="R_AMAZONAS_AMAZONAS_KM0343"
 # station0="R_PARAIBA-DO-SOL_URURAI-TRIB-01_KM0109"
 # station0="R_CONGO_LOMAMI_KM2608"
@@ -200,11 +200,13 @@ vmax=26.0
 norm=Normalize(vmin=vmin,vmax=vmax)
 bounds=np.arange(-0.5,26,1.0)
 ############################################################
-cmapL = matplotlib.colors.ListedColormap(['w','w','grey','k','w','k','w','y','w','w','blue','w','w','w','w','w','w','w','w','w','red', 'w','w','w','w','red'])
+# cmapL = matplotlib.colors.ListedColormap(['w','w','grey','k','w','k','w','y','w','w','blue','w','w','w','w','w','w','w','w','w','red', 'w','w','w','w','red'])
+cmapL = matplotlib.colors.ListedColormap(['w','grey','grey','k','y','k','y','y','y','y','b','b','y','y','y','y','y','y','y','y','red', 'y','y','y','y','red'])
 cmapL.set_under("none") #"#000000",alpha=0)
 cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
+cmapR = matplotlib.colors.ListedColormap(['b'])
 ############################################################
 nums=[]
 river=[]
@@ -365,10 +367,26 @@ epix= int((urlon-west)*1200)
 print (npix,":",spix,",",wpix,":",epix)
 #=====================================
 # high-resolution data
+# visualization: 
+# visual
+# 0  - sea
+# 1  - land(undefied)
+# 2  - land(defined in CaMa)
+# 3  - grid box
+# 5  - catchment boundry
+# 10 - channel
+# 20 - outlet pixel
+# 25 - river mouth
+#==============
 # print (cname0)
+# visual
 visual=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".visual.bin"
 # print (visual)
 visual=np.fromfile(visual,np.int8).reshape(12000,12000)
+# rivwidth
+rivwth=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".rivwth.bin"
+# print (rivwth)
+rivwth=np.fromfile(rivwth,np.float32).reshape(12000,12000)
 #-----------------------------
 ax0 = fig.add_subplot(G[0,0])
 ax0.text(0.0,1.1,pname[point],va="center",ha="center",transform=ax0.transAxes,fontsize=14)
@@ -376,14 +394,14 @@ flag_ch="flag: %d"%(lflag[point])
 ax0.text(0.8,1.1,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=14)
 m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
 try:
-    m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
+    m.arcgisimage(service=maps[1], xpixels=1500, verbose=False)
     print ("ArcGIS map")
 except:
     # Draw some map elements on the map
     m.drawcoastlines()
     m.drawstates()
     m.drawcountries()
-    m.drawrivers(color='blue')
+    # m.drawrivers(color='blue')
     print ("Normal map")
 #m.drawcoastlines( linewidth=0.1, color='k' )
 # m.fillcontinents(color=land,lake_color=water,zorder=99)  
@@ -392,24 +410,26 @@ except:
 # #
 m.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=10,linewidth=0,zorder=102)
 m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0,zorder=102)
-data = ma.masked_less_equal(visual[npix:spix,wpix:epix],2)
-im=m.imshow(data,interpolation="nearest",origin="upper",cmap=cmapL,norm=norml,zorder=110) # interpolation="nearest",origin="upper",
+data0 = ma.masked_less_equal(visual[npix:spix,wpix:epix],-9999)
+im0=m.imshow(data0,interpolation="nearest",origin="upper",cmap=cmapL,norm=norml,zorder=110) # interpolation="nearest",origin="upper",
+data1 = ma.masked_greater_equal(rivwth[npix:spix,wpix:epix],0.0)
+im1=m.imshow(data1,interpolation="nearest",origin="upper",cmap=cmapR,norm=norml,zorder=110) # interpolation="nearest",origin="upper",
 # print (lon,lat)
 # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
-ax0.plot(lon ,lat ,color="g",marker="o",label="intitial",markersize=7,zorder=111) #fillstyle="none",
+ax0.plot(lon ,lat ,color="g",marker="o",label="intitial",markersize=7,linewidth=0,zorder=111) #fillstyle="none",
 #================
 kx1= kx1lt[point]
 ky1= ky1lt[point]
 lat1 = south + 10.0 - res/2.0 - ky1*res  
 lon1 = west + res/2.0 + kx1*res
-ax0.plot(lon1 ,lat1 ,color="r",marker="o",label="best-loc",markersize=7,zorder=112) #fillstyle="none",
+ax0.plot(lon1 ,lat1 ,color="r",marker="o",label="best-loc",markersize=7,linewidth=0,zorder=112) #fillstyle="none",
 #================
 kx2= kx2lt[point]
 ky2= ky2lt[point]
 if kx2 != -9999 and ky2 != -9999:
     lat2 = south + 10.0 - res/2.0 - ky2*res  
     lon2 = west + res/2.0 + kx2*res
-    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="secondary",markersize=7,zorder=112)
+    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="secondary",markersize=7,linewidth=0,zorder=112)
 # print (kx,ky,lon0,lat0)
 # # #========================================================
 # # ax1 = fig.add_subplot(G[0,1])
@@ -451,7 +471,7 @@ if kx2 != -9999 and ky2 != -9999:
 # # ax2.set_xlabel("Year")
 # # ax2.set_ylabel("WSE $(m EGM96)$")
 #========================================================
-plt.legend()
+plt.legend(loc="upper center", bbox_to_anchor=(0.5,0.0), ncol=3)
 #========================================================
 # plt.show()
 plt.savefig("./fig/high_res_map/"+station0+".png",dpi=500)

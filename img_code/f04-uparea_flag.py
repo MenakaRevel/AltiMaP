@@ -260,7 +260,7 @@ ax = fig.add_subplot(G[0,0])
 labels=["Flag 10","Flag 20","Flag 30","Flag 40"]
 for i in np.arange(0,4,1):
     print labels[i], np.median(upas[(i+1)*10])
-    sns.distplot(np.log(upas[(i+1)*10]),ax=ax, hist = False, kde = True,
+    sns.distplot(np.log10(upas[(i+1)*10]),ax=ax, hist = False, kde = True,
             kde_kws = {'linewidth': 1,'linestyle':'-'},
             label = labels[i],color=colors[i],norm_hist=True) 
 ax.set_ylabel('density', color='k',fontsize=8)

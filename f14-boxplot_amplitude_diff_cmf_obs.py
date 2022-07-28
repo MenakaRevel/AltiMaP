@@ -29,7 +29,7 @@ TAG="HydroWeb"
 # fname = odir+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
 odir="/cluster/data6/menaka/Altimetry/results"
 if TAG=="HydroWeb":
-    fname=odir+"/HydroWeb/hydroweb_cmf_daily_wse_VIC_BC.nc"
+    fname=odir+"/HydroWeb/hydroweb_cmf_daily_wse_VIC_BC.nc" # "/hydroweb_cmf_daily_wse_VIC_BC.nc"
 if TAG=="CGLS":
     fname=odir+"/CGLS/cgls_cmf_daily_wse_VIC_BC.nc"
 if TAG=="ICESat":

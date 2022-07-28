@@ -284,6 +284,9 @@ ax3 = fig.add_subplot(G[2,0],projection=ccrs.Robinson())
 mk_fig_div(sfcelv_rmse1-sfcelv_rmse2,pnum1,lons1,lats1,cmap,ax=ax3)
 ax3.text(-0.05,0.90,"%s)"%(string.ascii_lowercase[2]),ha="left",va="center",transform=ax3.transAxes,fontsize=10)
 # ax4 = fig.add_subplot(G[1,1])
+print np.shape(np.where((sfcelv_rmse1-sfcelv_rmse2)>0.01))
+print np.shape(np.where((sfcelv_rmse1-sfcelv_rmse2)<-0.01))
+print np.shape(np.logical_and((sfcelv_rmse1-sfcelv_rmse2)<=0.01,(sfcelv_rmse1-sfcelv_rmse2)>=-0.01))
 #===
 # colorbar
 im=plt.scatter([],[],c=[],cmap=cmap,s=0.1,vmin=vmin,vmax=vmax,norm=norm)#
