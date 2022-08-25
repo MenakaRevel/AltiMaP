@@ -50,7 +50,7 @@ fi
 
 echo "starting calculations........"
 # echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
-printf '%30s%67s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s%8s%8s%12s%12s\n' ID station dataname lon lat ix iy elevation EGM08 EGM96 satellite dist_to_mouth flag kx1 ky1 kx2 ky2 dist1 dist2 > tmp.txt
+printf '%30s%67s%12s%10s%10s%8s%12s%10s%17s%6s%15s%12s%10s%8s%8s%8s%12s%12s%10s%8s%12s%10s\n' ID station dataname lon lat ix iy elevation EGM08 EGM96 flag satellite dist_to_mouth kx1 ky1 kx2 ky2 dist1 dist2 rivwth > tmp.txt
 SOUTH=-60
 while [ $SOUTH -lt 90 ];
 do

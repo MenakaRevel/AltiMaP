@@ -44,8 +44,7 @@ runoff_folder='/home/yamadai/data/CaMa_v400_simulations/VIC_BC_3h_06min/'
 TAG='HydroWeb'
 
 #observation station list
-# obstxt="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_06min.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_glb_06min_20210920.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_glb_06min_20220730.txt"
 
 out_pwd=${curr_pwd}"/results/"${TAG}
 

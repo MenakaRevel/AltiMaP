@@ -44,7 +44,7 @@ mapname= "glb_06min"
 def vec_par(LEVEL,ax=None):
     # river width
     sup=2
-    w=0.02
+    w=0.005
     width=0.5
     ax=ax or plt.gca()
     txt="tmp_%02d.txt"%(LEVEL)
@@ -93,8 +93,8 @@ def mk_fig(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
     #####
     #--
     box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
-    # os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
-    # #map(vec_par,np.arange(1,10+1,1))
+    os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
+    map(vec_par,np.arange(2,10+1,1))
     # map(vec_par,np.arange(7,10+1,1))
     # M = Basemap(projection='cyl',llcrnrlat=south,urcrnrlat=north,llcrnrlon=west,urcrnrlon=east, lat_ts=0,resolution='c',ax1=ax1)
     # #m.drawcoastlines( linewidth=0.1, color='k' )
@@ -135,8 +135,8 @@ def mk_fig_div(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
     #####
     #--
     box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
-    # os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
-    #map(vec_par,np.arange(1,10+1,1))
+    os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
+    map(vec_par,np.arange(2,10+1,1))
     # map(vec_par,np.arange(7,10+1,1))
     # M = Basemap(projection='cyl',llcrnrlat=south,urcrnrlat=north,llcrnrlon=west,urcrnrlon=east, lat_ts=0,resolution='c',ax1=ax1)
     # #m.drawcoastlines( linewidth=0.1, color='k' )
@@ -296,6 +296,6 @@ cbar=plt.colorbar(im,orientation="vertical",extend='both',ticks=np.arange(vmin,v
 cbar.ax.tick_params(labelsize=6)
 cbar.set_label("$\Delta$$RMSE$ $(m)$",fontsize=8)
 #==============
-plt.savefig("./fig/f06-compare_expert_ordinary_map.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
-plt.savefig("./fig/f06-compare_expert_ordinary_map.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
-plt.savefig("./fig/f06-compare_expert_ordinary_map.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f08-compare_expert_ordinary_map.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f08-compare_expert_ordinary_map.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f08-compare_expert_ordinary_map.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)

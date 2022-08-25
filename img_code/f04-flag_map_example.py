@@ -33,7 +33,8 @@ import cartopy
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import cartopy.feature as cfeature
 
-sys.path.append("./src")
+sys.path.append("../src")
+
 # import read_hydroweb as hweb
 import read_cgls as cgls
 import read_hydrosat as hsat
@@ -92,22 +93,32 @@ def round_half_down(n, decimals=0):
     return math.ceil(n*multiplier - 0.5) / multiplier
 #=============================
 def flag_diff(flag):
-    if flag == 10 or flag == 20:
+    # flag identity
+    # 10 = on the river centerline
+    # 11 = on the river channel
+    # 12 = location was on the unit-catchment outlet
+    # 20 = found the nearest river
+    # 21 = found the nearest main river
+    # 30 = found the nearest perpendicular main river
+    # 31 = bifurcation location
+    # 40 = correction for ocean grids
+    if flag == 10 or flag == 11 or flag == 12:
         return 10
-    if flag == 30 or flag == 32:
+    if flag == 20 or flag == 21:
         return 20
-    if flag == 31 or flag == 50:
+    if flag == 30 or flag == 31 or flag == 32:
         return 30
     if flag == 40:
         return 40
 #==================================
-def vec_par(LEVEL,ax=None,sup=2,w=0.005,width=0.5):
+def vec_par(LEVEL):
     '''
     Plotting the river network
     '''
+    ax=None;sup=2;w=0.005;width=0.5
     ax=ax or plt.gca()
-    txt="tmp_%02d.txt"%(LEVEL)
-    os.system("./bin/print_rivvec tmp1.txt 1 "+str(LEVEL)+" > "+txt)
+    txt=prename+"%02d.txt"%(LEVEL)
+    os.system("./bin/print_rivvec "+prename+"00.txt 1 "+str(LEVEL)+" > "+txt)
     width=(float(LEVEL)**sup)*w
     #print LEVEL, width#, lon1,lat1,lon2-lon1,lat2-lat1#x1[0],y1[0],x1[1]-x1[0],y1[1]-y1[0]
     # open tmp2.txt
@@ -137,15 +148,17 @@ def vec_par(LEVEL,ax=None,sup=2,w=0.005,width=0.5):
             lon2=-180.0
         #--------
         colorVal="w" #"grey"#
-        #print (lon1,lon2,lat1,lat2,width)
+        print (lon1,lon2,lat1,lat2,width)
         plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax)
 #==================================
 def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None):
     ax=ax or plt.gca()
-    return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,zorder=105,alpha=alpha)
+    alpha=1.0
+    return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,transform=ccrs.PlateCarree(),zorder=105,alpha=alpha)
 #==================================
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+prename=re.split("-",sys.argv[0])[0]
 # print sys.argv
 # mapname=sys.argv[1]
 # CaMa_dir=sys.argv[2]
@@ -155,12 +168,15 @@ CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 if mapname == 'glb_15min':
     nx      = 1440
     ny      = 720
+    gsize   = 0.25
 elif mapname == 'glb_06min':
     nx      = 3600
     ny      = 1800
+    gsize   = 0.1
 elif mapname == 'glb_01min':
     nx      = 21600
     ny      = 10800
+    gsize   = 1/60.
 #=============================
 nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
 rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
@@ -183,6 +199,8 @@ rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 #---
 nextX=nextxy[0]
 nextY=nextxy[1]
+#---
+rivermap=(nextX>0)*1.0
 #=====================================
 markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
 colors={"HydroWeb":"xkcd:reddy brown","CGLS":"xkcd:dark pink","ICESat":"xkcd:pinkish","HydroSat":"xkcd:light urple","GRRATS":"xkcd:tangerine"} 
@@ -230,7 +248,8 @@ ky2lt=[]
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210706.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210909.txt"
-fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
+# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20220725.txt"
 ############################################################
 f=open(fname,"r")
 lines=f.readlines()
@@ -257,6 +276,7 @@ for line in lines[1::]:
     ky1     = int(line[14])
     kx2     = int(line[15])
     ky2     = int(line[16])
+    flag    = flag_diff(flag)
     #---
     # print (riv, flag)
     #---------------------------
@@ -375,12 +395,15 @@ norm=Normalize(vmin=vmin,vmax=vmax)
 bounds=np.arange(0.0,4.0,1.0)
 #-----------
 # flag identity
-# 10 = location was directly found
-# 20 = location was on the unit-catchment outlet
-# 30 = found the nearest river
-# 31 = found the nearest main river
+# 10 = on the river centerline
+# 11 = on the river channel
+# 12 = location was on the unit-catchment outlet
+# 20 = found the nearest river
+# 21 = found the nearest main river
+# 30 = found the nearest perpendicular main river
+# 31 = bifurcation location
 # 40 = correction for ocean grids
-# 50 = bifurcation location
+
 #cmap=colors.ListedColormap(['grey',"xkcd:ultramarine",'xkcd:clear blue','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:electric green","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
 #cmap=colors.ListedColormap(['grey','xkcd:jungle green',"xkcd:shamrock","xkcd:greeny blue","xkcd:ultramarine",'xkcd:clear blue',"xkcd:sunny yellow","xkcd:neon red","xkcd:black"])
@@ -390,11 +413,14 @@ bounds=np.arange(0.0,4.0,1.0)
 # corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 32:'xkcd:lavender', 40:'red',50:'xkcd:deep teal'}
 # cmapL = matplotlib.colors.ListedColormap(['green', 'blue', 'purple', 'yellow','xkcd:lavender', 'red', 'xkcd:deep teal'])
 
-marlist={10:'o', 20:'d', 30:'s',40:'^', 50:'P'}
-colors=["#4c72b0","#de8452","#55a868","#c54e51"]
-corlist={10:'#4c72b0', 20:'#de8452', 30:'#55a868', 40:'#c54e51'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
+marlist={10:'o', 20:'d', 30:'s',40:'^'}
+marsize={10:2, 20:2, 30:2.2,40:2.5}
+# colors=["#fcb17c","#dfc5fe","#218833","#fb020e"]
+# corlist={10:'#fcb17c', 20:'#dfc5fe', 30:'#218833', 40:'#fb020e'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
+colors=["#e0fbfb","#97c1d9","#3c5a80","#ef6c4d"]
+corlist={10:'#e0fbfb', 20:'#97c1d9', 30:'#3c5a80', 40:'#ef6c4d'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
 cmapL = matplotlib.colors.ListedColormap(colors)
-
+zorder = {10:110, 20:111, 30:112, 40:115}
 # cmapL.set_under("none") #"#000000",alpha=0)
 # cmapL.set_over("none")
 # cmapL.colorbar_extend="neither"
@@ -410,18 +436,19 @@ cmapM.set_over("none")
 cmapM.colorbar_extend="neither"
 normm=BoundaryNorm(boundsM,cmapM.N) #len(bounds)-1)
 ############################################################
-hgt= 11.69*(1.0/2.0)
+hgt= 11.69*(1.0/3.0)
 wdt= 8.27
 fig= plt.figure(figsize=(wdt, hgt))
-G  = gridspec.GridSpec(4,4)
-ax = fig.add_subplot(G[0:3,:],projection=ccrs.Robinson())
+G  = gridspec.GridSpec(1,1)
+ax = fig.add_subplot(G[0,0],projection=ccrs.Robinson())
 #-----------------------------  
 ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
 ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
 #
 ## Draw the river network ##
 box="%f %f %f %f"%(west,east,north,south) 
-os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > tmp1.txt") 
+os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+" > "+prename+"00.txt") 
+# map(vec_par,np.arange(8,10+1,1))
 # map(vec_par,np.arange(5,10+1,1))
 map(vec_par,np.arange(2,10+1,1))
 #
@@ -434,118 +461,127 @@ for point in np.arange(pnum):
     flag = lflags[point]
     # c=cmapL(norml(flag))
     # print (name,lon,lat,flag)
-    flag=flag_diff(flag)
+    # flag=flag_diff(flag)
     c=corlist[flag]
     m=marlist[flag]
-    ax.scatter(lon,lat,s=0.1,marker=m,zorder=110,edgecolors="k", facecolors=c,linewidth=0.3,transform=ccrs.PlateCarree()) #, 
+    if flag==40:
+        print (name, lon, lat)
+    ax.scatter(lon,lat,s=marsize[flag],marker=m,zorder=zorder[flag],edgecolors="k", facecolors=c,linewidth=0.05,transform=ccrs.PlateCarree()) #, 
 #--
-imL=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
-imL.set_visible(False)
+# imL=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
+# imL.set_visible(False)
 #cbar=M.colorbar(im,"right",size="2%")
 ax.outline_patch.set_linewidth(0.0)
-# Add suppmetary figures
-for point in np.arange(len(fflag)):
-    flag= fflag[point]
-    lon = flon[point]
-    lat = flat[point]
-    pox = fpox[point]
-    poy = fpoy[point]
-    west, south = westsouth(lat,lon)
-    north = south + 10.0
-    east  = west + 10.0
-    cname0 = cname(lat,lon)
-    # get the dimesion of the map
-    dec=2
-    val=0.10
-    lllat = round_half_down(lat-val,dec)
-    urlat = round_half_up(lat+val,dec)
-    lllon = round_half_down(lon-val,dec)
-    urlon = round_half_up(lon+val,dec)
-    if abs(lllat-urlat) < val:
-        urlat=round_half_up(urlat+val,dec)
-        lllat=round_half_down(lllat-val,dec)
-    if abs(lllon-urlon) < val:
-        urlon=round_half_up(urlon+val,dec)
-        lllon=round_half_down(lllon-val,dec)
-    #---------------------
-    lllat=max(lllat,south)
-    urlat=min(urlat,north)
-    lllon=max(lllon,west)
-    urlon=min(urlon,east)
-    # print (lllat, lllon, urlat, urlon)
-    #=====================================
-    # londiff=int((east-west)*1200)
-    # latdiff=int((north-south)*1200)
-    npix= int((north-urlat)*1200)
-    spix= int((north-lllat)*1200)
-    wpix= int((lllon-west)*1200)
-    epix= int((urlon-west)*1200)
-    print (npix,":",spix,",",wpix,":",epix)
-    #=====================================
-    # high-resolution data
-    # print (cname0)
-    visual=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".visual.bin"
-    # print (visual)
-    visual=np.fromfile(visual,np.int8).reshape(12000,12000)
-    #-----------------------------
-    ax0 = fig.add_subplot(G[poy,pox])
-    # ax0.text(0.0,1.1,pname[point],va="center",ha="center",transform=ax0.transAxes,fontsize=14)
-    flag_ch="Flag: %d"%(int(flag)) #lflag[point])
-    ax0.text(0.5,0.05,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=6,color="w",zorder=113)
-    m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
-    try:
-        # m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
-        m.arcgisimage(server='http://server.arcgisonline.com/ArcGIS', service='World_Imagery', xpixels=1000, ypixels=None, dpi=1200)
-        print ("ArcGIS map")
-    except:
-        # Draw some map elements on the map
-        m.drawcoastlines()
-        m.drawstates()
-        m.drawcountries()
-        m.drawrivers(color='blue')
-        print ("Normal map")
-    #m.drawcoastlines( linewidth=0.1, color='k' )
-    # m.fillcontinents(color=land,lake_color=water,zorder=99)  
-    # ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
-    # ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
-    # #
-    m.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=4,linewidth=0,zorder=102)
-    m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=4,linewidth=0,zorder=102)
-    data = ma.masked_less_equal(visual[npix:spix,wpix:epix],2)
-    im=m.imshow(data,interpolation="nearest",origin="upper",cmap=cmapM,norm=normm,zorder=110) # interpolation="nearest",origin="upper",
-    # print (lon,lat)
-    # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
-    ax0.plot(lon ,lat ,color="g",marker="o",markersize=2,zorder=111) #fillstyle="none",
-    #================
-    kx1= fkx1[point]
-    ky1= fky1[point]
-    lat1 = south + 10.0 - res/2.0 - ky1*res  
-    lon1 = west + res/2.0 + kx1*res
-    ax0.plot(lon1 ,lat1 ,color="r",marker="o",markersize=2,zorder=112) #fillstyle="none",
-    #================
-    kx2= fkx2[point]
-    ky2= fky2[point]
-    if kx2 != -9999 and ky2 != -9999:
-        lat2 = south + 10.0 - res/2.0 - ky2*res  
-        lon2 = west + res/2.0 + kx2*res
-        ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",markersize=2,zorder=112)
-# colorbar
-# cax=fig.add_axes([0.4,0.38,0.45,.01])
-# cbar=plt.colorbar(imL,orientation="horizontal",ticks=np.arange(0.5,5.0+1.0,1.0),cax=cax) #[10,20,30,31,40,50],extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
-# cbar.set_ticklabels(['10', '20', '30', '40'])
-# # cbar.set_ticklabels(['10', '20', '30', '31', '32', '40', '50'])
-# # cbar.ax.set_ticklabels(['10', '20', '30', '31', '40', '50'])  # vertically oriented colorbar
-# cbar.ax.tick_params(labelsize=6)
-# cbar.set_label("Allocation Flags",fontsize=8)
+# # # Add suppmetary figures
+# # for point in np.arange(len(fflag)):
+# #     flag= fflag[point]
+# #     lon = flon[point]
+# #     lat = flat[point]
+# #     pox = fpox[point]
+# #     poy = fpoy[point]
+# #     west, south = westsouth(lat,lon)
+# #     north = south + 10.0
+# #     east  = west + 10.0
+# #     cname0 = cname(lat,lon)
+# #     # get the dimesion of the map
+# #     dec=2
+# #     val=0.10
+# #     lllat = round_half_down(lat-val,dec)
+# #     urlat = round_half_up(lat+val,dec)
+# #     lllon = round_half_down(lon-val,dec)
+# #     urlon = round_half_up(lon+val,dec)
+# #     if abs(lllat-urlat) < val:
+# #         urlat=round_half_up(urlat+val,dec)
+# #         lllat=round_half_down(lllat-val,dec)
+# #     if abs(lllon-urlon) < val:
+# #         urlon=round_half_up(urlon+val,dec)
+# #         lllon=round_half_down(lllon-val,dec)
+# #     #---------------------
+# #     lllat=max(lllat,south)
+# #     urlat=min(urlat,north)
+# #     lllon=max(lllon,west)
+# #     urlon=min(urlon,east)
+# #     # print (lllat, lllon, urlat, urlon)
+# #     #=====================================
+# #     # londiff=int((east-west)*1200)
+# #     # latdiff=int((north-south)*1200)
+# #     npix= int((north-urlat)*1200)
+# #     spix= int((north-lllat)*1200)
+# #     wpix= int((lllon-west)*1200)
+# #     epix= int((urlon-west)*1200)
+# #     print (npix,":",spix,",",wpix,":",epix)
+# #     #=====================================
+# #     # high-resolution data
+# #     # print (cname0)
+# #     visual=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".visual.bin"
+# #     # print (visual)
+# #     visual=np.fromfile(visual,np.int8).reshape(12000,12000)
+# #     #-----------------------------
+# #     ax0 = fig.add_subplot(G[poy,pox])
+# #     # ax0.text(0.0,1.1,pname[point],va="center",ha="center",transform=ax0.transAxes,fontsize=14)
+# #     flag_ch="Flag: %d"%(int(flag)) #lflag[point])
+# #     ax0.text(0.5,0.05,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=6,color="w",zorder=113)
+# #     m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
+# #     try:
+# #         # m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
+# #         m.arcgisimage(server='http://server.arcgisonline.com/ArcGIS', service='World_Imagery', xpixels=1000, ypixels=None, dpi=1200)
+# #         print ("ArcGIS map")
+# #     except:
+# #         # Draw some map elements on the map
+# #         m.drawcoastlines()
+# #         m.drawstates()
+# #         m.drawcountries()
+# #         m.drawrivers(color='blue')
+# #         print ("Normal map")
+# #     #m.drawcoastlines( linewidth=0.1, color='k' )
+# #     # m.fillcontinents(color=land,lake_color=water,zorder=99)  
+# #     # ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
+# #     # ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
+# #     # #
+# #     m.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=4,linewidth=0,zorder=102)
+# #     m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=4,linewidth=0,zorder=102)
+# #     data = ma.masked_less_equal(visual[npix:spix,wpix:epix],2)
+# #     im=m.imshow(data,interpolation="nearest",origin="upper",cmap=cmapM,norm=normm,zorder=110) # interpolation="nearest",origin="upper",
+# #     # print (lon,lat)
+# #     # m.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors="g", facecolors="g")#,transform=ccrs.PlateCarree()) #, 
+# #     ax0.plot(lon ,lat ,color="g",marker="o",markersize=2,zorder=111) #fillstyle="none",
+# #     #================
+# #     kx1= fkx1[point]
+# #     ky1= fky1[point]
+# #     lat1 = south + 10.0 - res/2.0 - ky1*res  
+# #     lon1 = west + res/2.0 + kx1*res
+# #     ax0.plot(lon1 ,lat1 ,color="r",marker="o",markersize=2,zorder=112) #fillstyle="none",
+# #     #================
+# #     kx2= fkx2[point]
+# #     ky2= fky2[point]
+# #     if kx2 != -9999 and ky2 != -9999:
+# #         lat2 = south + 10.0 - res/2.0 - ky2*res  
+# #         lon2 = west + res/2.0 + kx2*res
+# #         ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",markersize=2,zorder=112)
+# # # colorbar
+# # # cax=fig.add_axes([0.4,0.38,0.45,.01])
+# # # cbar=plt.colorbar(imL,orientation="horizontal",ticks=np.arange(0.5,5.0+1.0,1.0),cax=cax) #[10,20,30,31,40,50],extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
+# # # cbar.set_ticklabels(['10', '20', '30', '40'])
+# # # # cbar.set_ticklabels(['10', '20', '30', '31', '32', '40', '50'])
+# # # # cbar.ax.set_ticklabels(['10', '20', '30', '31', '40', '50'])  # vertically oriented colorbar
+# # # cbar.ax.tick_params(labelsize=6)
+# # # cbar.set_label("Allocation Flags",fontsize=8)
 # legend
 features=[]
 for i,flag in enumerate([10,20,30,40]):
     features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
-                          markersize=5, label='%d'%(flag),linewidth=0.0))
-l,b,w,h=0.4,0.38,0.45,0.01
-legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower right",
-           bbox_transform=fig.transFigure, ncol=1,  borderaxespad=0.0, frameon=False)#
+                    markeredgecolor="k",markeredgewidth=0.5,markersize=3,label='%d'%(flag),linewidth=0.0))
+l,b,w,h=0.4,0.1,0.45,0.01
+legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower left",
+           bbox_transform=fig.transFigure, ncol=4,  borderaxespad=0.0, frameon=False)#
 
-plt.savefig("./fig/f03-allocation_flag_map_example.png",dpi=800)
-plt.savefig("./fig/f03-allocation_flag_map_example.pdf",dpi=800)
-plt.savefig("./fig/f03-allocation_flag_map_example.jpg",dpi=800)
+plt.savefig("./fig/f04-allocation_flag_map.png",dpi=800)
+plt.savefig("./fig/f04-allocation_flag_map.pdf",dpi=800)
+plt.savefig("./fig/f04-allocation_flag_map.jpg",dpi=800)
+
+os.system("rm -r "+prename+"*.txt")
+
+print (len(lflags))
+for flag in [10,20,30,40]:
+    flag_count=sum((lflags==flag)*1.0)
+    print (flag, flag_count,(flag_count/len(lflags))*100.0)

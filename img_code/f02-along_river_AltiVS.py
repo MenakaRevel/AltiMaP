@@ -185,6 +185,7 @@ tag="3sec"
 res=1.0/1200.0
 upthr=10.0
 dwthr=10.0
+thrs=15.0
 #=============================
 # Read the CMF variables
 if mapname == 'glb_15min':
@@ -274,7 +275,8 @@ for j in np.arange(len(rivernames)):
     # fname="./out/altimetry_"+mapname+"_20210602.txt"
     # fname="./out/altimetry_"+mapname+"_20210531.txt"
     # fname="./out/altimetry_"+mapname+"_20210617.txt"
-    fname="../out/altimetry_"+mapname+"_20210920.txt"
+    # fname="../out/altimetry_"+mapname+"_20210920.txt"
+    fname="../out/altimetry_"+mapname+"_20220730.txt"
     # fname="./tmp.txt"
     #--
     f=open(fname,"r")
@@ -459,8 +461,8 @@ for j in np.arange(len(rivernames)):
     axins.errorbar(rvlen00,mean_WSE,yerr=range_WSE,color="k",label=TAG,linestyle='none',linewidth=0.3,marker="o",fillstyle="none",markersize=2,
                 ecolor="r",elinewidth=0.3,capsize=1.0)
     axins.plot(rvlen00,mean_elevation,color="grey",label="MERIT elevation",linestyle='-',linewidth=0.5)
-    axins.plot(rvlen00,mean_elevation + 10.0,color="grey",label="Upper limit",linestyle='--',linewidth=0.3)
-    axins.plot(rvlen00,mean_elevation - 10.0,color="grey",label="Lower limit",linestyle='--',linewidth=0.3)
+    axins.plot(rvlen00,mean_elevation + thrs,color="grey",label="Upper limit",linestyle='--',linewidth=0.3)
+    axins.plot(rvlen00,mean_elevation - thrs,color="grey",label="Lower limit",linestyle='--',linewidth=0.3)
     # ax.plot(rvlen00,mean_elevation - riv_hgt,color="purple",label="CaMa-Flood",linestyle='--',linewidth=0.5) #"xkcd:bluish green"
     axins.plot(rvlen00,cmf_WSE,color="blue",label="Mean simulated WSE",linestyle='-',linewidth=0.5) #xkcd:bright blue
     for point in range(pnum):

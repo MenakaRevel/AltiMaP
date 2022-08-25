@@ -65,11 +65,20 @@ def get_data(station, tag):
     return time, data
 #=============================
 def flag_diff(flag):
-    if flag == 10 or flag == 20:
+    # flag identity
+    # 10 = on the river centerline
+    # 11 = on the river channel
+    # 12 = location was on the unit-catchment outlet
+    # 20 = found the nearest river
+    # 21 = found the nearest main river
+    # 30 = found the nearest perpendicular main river
+    # 31 = bifurcation location
+    # 40 = correction for ocean grids
+    if flag == 10 or flag == 11 or flag == 12:
         return 10
-    if flag == 30 or flag == 32:
+    if flag == 20 or flag == 21:
         return 20
-    if flag == 31 or flag == 50:
+    if flag == 30 or flag == 31 or flag == 32:
         return 30
     if flag == 40:
         return 40
@@ -206,7 +215,8 @@ l_lats=[]
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210706.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210909.txt"
-fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
+# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
+fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20220725.txt"
 # fname="/cluster/data6/menaka/Altimetry/out/altimetry_glb_06min_20210920.txt"
 upas={}
 with open(fname, "r") as f:
@@ -237,7 +247,10 @@ with open(fname, "r") as f:
             upas[flag].append(uparea[iy,ix]*1e-6)
 #----
 # colors=["xkcd:reddy brown","xkcd:dark pink","xkcd:pinkish","xkcd:light urple","xkcd:tangerine"]
-colors=["#4c72b0","#de8452","#55a868","#c54e51"]
+# colors=["#4c72b0","#de8452","#55a868","#c54e51"]
+# colors=["#55a868","#f4adae","#aa23ff","#4c72b0"]
+# colors=["#fcb17c","#069af3","#218833","#fb020e"]
+colors=["#e0fbfb","#97c1d9","#3c5a80","#ef6c4d"]
 # plt.clf()  
 # plt.close() 
 # figure in A4 size
@@ -264,9 +277,11 @@ for i in np.arange(0,4,1):
             kde_kws = {'linewidth': 1,'linestyle':'-'},
             label = labels[i],color=colors[i],norm_hist=True) 
 ax.set_ylabel('density', color='k',fontsize=8)
-ax.set_xlabel('$log(upstream catchment area)$ $(km)$', color='k',fontsize=8)
+ax.set_xlabel('$upstream$ $catchment$ $area$ $(km^2)$', color='k',fontsize=8)
 ax.tick_params('y',labelsize=6, colors='k')
 ax.tick_params('x',labelsize=6, colors='k')#,labelrotation=45)
-plt.savefig("./fig/f04-uparea_flag.png",dpi=800)
-plt.savefig("./fig/f04-uparea_flag.pdf",dpi=800)
-plt.savefig("./fig/f04-uparea_flag.jpg",dpi=800)
+ax.set_xticks(np.arange(1,9+1,1))
+ax.set_xticklabels([r"$10^{%d}$"%(i) for i in np.arange(1,9+1,1)])
+plt.savefig("./fig/f05-uparea_flag.png",dpi=800)
+plt.savefig("./fig/f05-uparea_flag.pdf",dpi=800)
+plt.savefig("./fig/f05-uparea_flag.jpg",dpi=800)

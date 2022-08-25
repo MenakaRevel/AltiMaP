@@ -41,6 +41,7 @@ MK_netCDF_elediff.o*
 Alloc_VS.e*
 Alloc_VS.o*
 Unreal_VS.o*
+*/mk_fig.o*
 
 # VScode
 *.vscode

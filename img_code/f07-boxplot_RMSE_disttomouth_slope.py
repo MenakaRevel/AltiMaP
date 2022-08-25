@@ -126,6 +126,7 @@ for point in np.arange(pnum):
     # print (cmf_mean,obs_mean,BIAS)
     if disttomouth[point] <= 1.0e-5:
         data0.append(RMSE1)
+        print ("=0km",pname[point], RMSE1, disttomouth[point])
     if disttomouth[point] <= 0.5:
         data1.append(RMSE1)
         print ("<=0.5km",pname[point], RMSE1, disttomouth[point])
@@ -185,6 +186,7 @@ for point in np.arange(pnum):
     # print (cmf_mean,obs_mean,BIAS)
     if slope[point] <= 1.0:
         data0.append(RMSE1)
+        print ("<=1m/km",pname[point], RMSE1, slope[point])
     if slope[point] <= 10.0:
         data1.append(RMSE1)
         print ("<=10m/km",pname[point], RMSE1, slope[point])
@@ -226,7 +228,7 @@ ax2.tick_params('x',labelsize=6, colors='k')#,labelrotation=45)
 ax2.set_xticklabels(labels,rotation=0)
 ax2.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[1]),ha="left",va="center",transform=ax2.transAxes,fontsize=10)
 #=================
-figname="f04-boxplot_RMSE_disttomouth_slope"
+figname="f07-boxplot_RMSE_disttomouth_slope"
 os.system("mkdir -p ./fig/")
 #--
 print ("./fig/"+figname+".png")

@@ -176,12 +176,18 @@ def mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=None):
     box=sns.boxplot(ax=ax,data=[sfcelv_rmse1,sfcelv_rmse2], fliersize=0.0, palette=["xkcd:coral","xkcd:teal"], whis=1.5\
         ,meanline=True, width=0.8, linewidth=0.3, dodge=True\
         ,meanprops=meanprops,capprops=capprops,medianprops=medianprops) #"Paired"
-    ax.set_xticklabels(["expert","ordinary"])
+    ax.set_xticklabels(["AltiMaP","ordinary"])
     ax.set_ylabel('RMSE $(m)$', color='k',fontsize=8)
     # ax.set_xlabel(["expert","ordinary"])
     ax.set_ylim(ymin=-1.2,ymax=80.2)
     print "1, mean, median", np.mean(sfcelv_rmse1), np.median(sfcelv_rmse1)
     print "2, mean, median", np.mean(sfcelv_rmse2), np.median(sfcelv_rmse2)
+    return 0
+#====
+def print_stat(sfcelv_rmse1,sfcelv_rmse2):
+    print ("***************************************************************")
+    print ("1, mean, median", np.mean(sfcelv_rmse1), np.median(sfcelv_rmse1))
+    print ("2, mean, median", np.mean(sfcelv_rmse2), np.median(sfcelv_rmse2))
     return 0
 #====
 # sfcelv
@@ -243,6 +249,14 @@ G  = gridspec.GridSpec(1,1)
 # overall
 ax0=fig.add_subplot(G[0,0])
 mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=ax0)
+print ("Flag 10")
+print_stat(sfcelv_rmse1[np.logical_or(flags1==10,flags1==11,flags1==12)],sfcelv_rmse2[np.logical_or(flags2==10,flags2==11,flags2==12)])
+print ("Flag 20")
+print_stat(sfcelv_rmse1[np.logical_or(flags1==20,flags1==21)],sfcelv_rmse2[np.logical_or(flags2==20,flags2==21)])
+print ("Flag 30")
+print_stat(sfcelv_rmse1[np.logical_or(flags1==30,flags1==31)],sfcelv_rmse2[np.logical_or(flags2==30,flags2==31)])
+print ("Flag 40")
+print_stat(sfcelv_rmse1[np.where(flags1==40)],sfcelv_rmse2[np.where(flags2==40)])
 # ax0.text(-0.05,1.05,"%s) All"%(string.ascii_lowercase[0]),ha="left",va="center",transform=ax0.transAxes,fontsize=10)
 # print np.shape(sfcelv_rmse1), np.shape(flags1)
 # print sfcelv_rmse1[np.logical_or(flags1==10,flags1==20)]
@@ -263,6 +277,6 @@ mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=ax0)
 # mk_boxplot(sfcelv_rmse1[np.where(flags1==40)],sfcelv_rmse2[np.where(flags2==40)],ax=ax4)
 # ax4.text(-0.05,1.05,"%s) Flag 40"%(string.ascii_lowercase[4]),ha="left",va="center",transform=ax4.transAxes,fontsize=10)
 # plt.show()
-plt.savefig("./fig/f08-boxplot_expert_ordinary_flag.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
-plt.savefig("./fig/f08-boxplot_expert_ordinary_flag.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
-plt.savefig("./fig/f08-boxplot_expert_ordinary_flag.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f09-boxplot_expert_ordinary_flag.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f09-boxplot_expert_ordinary_flag.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f09-boxplot_expert_ordinary_flag.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)

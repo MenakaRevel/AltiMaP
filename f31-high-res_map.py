@@ -143,7 +143,7 @@ stream0="CONGO" #
 # station0="R_CONGO_BUSIRA_KM1444"
 # station0="R_CONGO_CONGO_KM0309"
 # station0="R_AMAZONAS_AMAZONAS_KM3491"
-station0="R_LENA_LENA_KM2195"
+# station0="R_LENA_LENA_KM2195"
 # station0="R_LENA_LENA_KM2501"
 # station0="R_AMAZONAS_MADEIRA_KM2310"
 # station0="R_AMAZONAS_MADEIRA_KM2053"
@@ -162,6 +162,7 @@ station0="R_LENA_LENA_KM2195"
 # station0="R_AMAZONAS_SOLIMOES_KM1692"
 # station0="R_AMAZONAS_SOLIMOES_KM1976"
 # station0="R_AMAZONAS_SOLIMOES_KM2033"
+station0="R_GARONNE_GARONNE_KM0192"
 dataname="HydroWeb"
 odir="/cluster/data6/menaka/Altimetry/results"
 mapname="glb_06min"
@@ -394,7 +395,8 @@ flag_ch="flag: %d"%(lflag[point])
 ax0.text(0.8,1.1,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=14)
 m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
 try:
-    m.arcgisimage(service=maps[1], xpixels=1500, verbose=False)
+    # m.arcgisimage(service=maps[1], xpixels=1500, verbose=False)
+    m.arcgisimage(server='http://server.arcgisonline.com/ArcGIS', service='World_Imagery', xpixels=1000, ypixels=None, dpi=1200)
     print ("ArcGIS map")
 except:
     # Draw some map elements on the map

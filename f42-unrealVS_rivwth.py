@@ -20,6 +20,8 @@ import math
 import seaborn as sns
 import re
 import sys
+import os
+import errno
 from scipy import stats
 from sklearn.metrics import r2_score
 
@@ -130,13 +132,13 @@ TAG="HydroWeb"
 #=========================================
 ############################################################
 # rivername0=sys.argv[1] #"CONGO" #"AMAZONAS"
-dataname=sys.argv[1] #"HydroWeb" #sys.argv[2]
+dataname="HydroWeb" #sys.argv[2]
 # odir=sys.argv[2] #"/cluster/data6/menaka/Altimetry/results" #sys.argv[3] #"/cluster/data6/menaka/Altimetry/results"
-mapname=sys.argv[2] #"glb_06min" #sys.argv[4] #"glb_06min"
-CaMa_dir=sys.argv[3] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514" #sys.argv[5] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-restag=sys.argv[4] #"3sec" #sys.argv[6] #"3sec"
-obstxt=sys.argv[5] #"./out/altimetry_"+mapname+"_test.txt"#sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
-thr=float(sys.argv[6])
+mapname="glb_06min" #sys.argv[4] #"glb_06min"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4" #sys.argv[5] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+restag="3sec" #sys.argv[6] #"3sec"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20220729.txt" #sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
+thr=10 #float(sys.argv[6])
 stream0="AMAZONAS"
 upthr = thr #10.0
 dwthr = thr #10.0
@@ -151,8 +153,6 @@ if restag == "3sec":
     nx =12000
     ny =12000
     hiresmap=CaMa_dir+"/map/"+mapname+"/"+restag+"/"
-
-
 #=============================
 # Read the CMF variables
 if mapname == 'glb_15min':
@@ -221,6 +221,18 @@ cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
 ############################################################
+noobs="/cluster/data6/menaka/Altimetry/out/unreal_obs_20220729.txt"
+noVS=[]
+with open(noobs,"r") as f:
+    lines=f.readlines()
+    for line in lines:
+        line    = filter(None,re.split(" ",line))
+        station = line[0].strip()
+        noVS.append(station)
+#======================================================================
+eldiff=[]
+lrivwt=[]
+urivwt=[]
 nums=[]
 river=[]
 pname=[]
@@ -245,7 +257,7 @@ f=open(fname,"r")
 lines=f.readlines()
 for line in lines[1::]:
     line    = filter(None,re.split(" ",line))
-    #print line
+    # print line
     num     = line[0]
     station = line[1]
     line2   = re.split("_",station)
@@ -263,38 +275,60 @@ for line in lines[1::]:
     flag    = int(line[12])
     kx      = int(line[13])
     ky      = int(line[14])
-    # rivwth  = float(line[19])
+    rivwth  = float(line[19])
     #-----------------------
+    # meanW, stdW = meanHydroWeb(station,egm96=EGM96,egm08=EGM08)
+    # eldiff.append(meanW - elev)
+    # west, south = westsouth(lat,lon)
+    # north = south + 10.0
+    # east  = west + 10.0
+    # cname0 = cname(lat,lon)
+    # # rivwidth
+    # rivwth=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".rivwth.bin"
+    # # print (rivwth)
+    # rivwth=np.fromfile(rivwth,np.float32).reshape(12000,12000)
+    lrivwt.append(rivwth)
+    if station in noVS:
+        urivwt.append(rivwth)
     # print (riv,station,kx,ky)
     # if riv != rivername0:
     #     continue
     # if stream != stream0:
     #     continue
-    nums.append(num)
-    river.append(riv)
-    pname.append(station)
-    lons.append(lon)
-    lats.append(lat)
-    xlist.append(ix)
-    ylist.append(iy)
-    lelev.append(elev)
-    egm08.append(EGM08)
-    egm96.append(EGM96)
-    llsat.append(sat)
-    ldtom.append(dist)
-    lflag.append(flag)
-    kxlst.append(kx)
-    kylst.append(ky)
-    # print (riv,station)
+    # nums.append(num)
+    # river.append(riv)
+    # pname.append(station)
+    # lons.append(lon)
+    # lats.append(lat)
+    # xlist.append(ix)
+    # ylist.append(iy)
+    # lelev.append(elev)
+    # egm08.append(EGM08)
+    # egm96.append(EGM96)
+    # llsat.append(sat)
+    # ldtom.append(dist)
+    # lflag.append(flag)
+    # kxlst.append(kx)
+    # kylst.append(ky)
 #=============================
-pnum=len(pname)
-#=====================================
-for point in np.arange(pnum):
-    meanW, stdW = meanHydroWeb(pname[point],egm96=egm96[point],egm08=egm08[point])
-    iXX = xlist[point]
-    iYY = ylist[point]
-    elev= lelev[point]
-    sat = llsat[point]
-    # if meanW > elevtn[iYY,iXX] + upthr or meanW < elevtn[iYY,iXX] - dwthr:
-    if meanW > elev + upthr or meanW < elev - dwthr:
-        print ("%69s%4d%12.3f%12.3f%12.3f%15s%12.3f")%(pname[point],lflag[point],elev,meanW,meanWSE_VICBC[iYY+dYY,iXX+dXX],sat,meanW - elev)
+mkdir("./fig")
+mkdir("./fig/criteria")
+#=============================
+hgt=11.69*(1.0/3.0)
+wdt=8.27
+fig=plt.figure(figsize=(wdt, hgt))
+G  = gridspec.GridSpec(1,1)
+ax = fig.add_subplot(G[0,0])
+#-----------------------------
+sns.distplot(lrivwt,ax=ax, hist = True, kde = True,
+    kde_kws = {'linewidth': 1,'linestyle':'-'},bins=50,
+    label = "$River Width_{All}$", color="xkcd:coral",norm_hist=True)
+sns.distplot(urivwt,ax=ax, hist = True, kde = True,
+    kde_kws = {'linewidth': 1,'linestyle':'-'},bins=50,
+    label = "$River Width_{unreal}$", color="xkcd:teal green",norm_hist=True)
+# ax.set_xlim(xmin=-20.2,xmax=0.2)
+ax.set_ylabel("density", color='k',fontsize=8)
+ax.set_xlabel('River Width $(m)$', color='k',fontsize=8)
+plt.savefig("./fig/criteria/unrealVS_rivwth.png",dpi=500)
+print ("Mean: ",np.mean(lrivwt),"Median: ",np.median(lrivwt), "std: ",np.std(lrivwt) )    
+print ("Mean: ",np.mean(urivwt),"Median: ",np.median(urivwt), "std: ",np.std(urivwt) )

@@ -99,13 +99,15 @@ def meanHydroWeb(station,egm08=0.0,egm96=0.0):
         mm   = int(date[1])
         dd   = int(date[2])
         wse  = float(line[2]) #+egm08-egm96
+        if wse >= 9999.0:
+            continue
         data.append(wse)
     data=np.array(data)
     return np.mean(data), np.std(data)
 #=============================
 # sfcelv
 syear=2002
-eyear=2013
+eyear=2020
 #=========================================
 #TAG="CGLS"
 TAG="HydroWeb"
@@ -241,8 +243,8 @@ cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
 ############################################################
-rivernames=["AMAZONAS","CONGO","AMAZONAS","LENA","GANGES-BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
-streams=["XINGU","CONGO","AMAZONAS","LENA","BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
+rivernames=["AMAZONAS"]#["BALKHASH"]#["CONGO"]#["GARONNE"]#["CONGO"]#["AMAZONAS","CONGO","AMAZONAS","LENA","GANGES-BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
+streams=["ARIPUANA"]#["ILI"]#["SANKURU"]#["GARONNE"]#["MFIMI"]#["XINGU","CONGO","AMAZONAS","LENA","BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
 for j in np.arange(len(rivernames)):
     rivername0 = rivernames[j]
     stream0 = streams[j]
@@ -268,11 +270,12 @@ for j in np.arange(len(rivernames)):
     # fname="./out/altimetry_"+mapname+"_20210602.txt"
     # fname="./out/altimetry_"+mapname+"_20210531.txt"
     # fname="./out/altimetry_"+mapname+"_20210617.txt"
-    fname="./out/altimetry_"+mapname+"_20210920.txt"
+    # fname="./out/altimetry_"+mapname+"_20210920.txt"
+    fname="./out/altimetry_"+mapname+"_20220725.txt"
     # fname="./tmp.txt"
     #--
-    f=open(fname,"r")
-    lines=f.readlines()
+    with open(fname,"r") as f:
+        lines=f.readlines()
     for line in lines[1::]:
         line    = filter(None,re.split(" ",line))
         #print line
@@ -346,6 +349,7 @@ for j in np.arange(len(rivernames)):
         # print (pname00[point], rvlen00[point], meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point]), elevtn[ylist00[point],xlist00[point]], 
         #         rivseq[ylist00[point],xlist00[point]], meanWSE_VICBC[ylist00[point],xlist00[point]])
         meanW, stdW = meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point])
+        print meanW, stdW
         mean_WSE.append(meanW)
         std_WSE.append(stdW)
         mean_elevation.append(elevtn[ylist00[point],xlist00[point]])
