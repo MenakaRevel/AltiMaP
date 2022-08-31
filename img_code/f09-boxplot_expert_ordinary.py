@@ -179,7 +179,7 @@ def mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=None):
     ax.set_xticklabels(["AltiMaP","ordinary"])
     ax.set_ylabel('RMSE $(m)$', color='k',fontsize=8)
     # ax.set_xlabel(["expert","ordinary"])
-    ax.set_ylim(ymin=-1.2,ymax=80.2)
+    ax.set_ylim(ymin=-1.2,ymax=12.2)
     print "1, mean, median", np.mean(sfcelv_rmse1), np.median(sfcelv_rmse1)
     print "2, mean, median", np.mean(sfcelv_rmse2), np.median(sfcelv_rmse2)
     return 0
@@ -208,6 +208,7 @@ sfcelv_cmf1=ma.masked_where(sfcelv_hydroweb1==-9999.0,sfcelv_cmf1).filled(-9999.
 #sfcelv_hydroweb=ma.masked_where(sfcelv_hydroweb==-9999.0,sfcelv_hydroweb)
 sfcelv_diff1=ma.masked_where(sfcelv_hydroweb1==-9999.0,(sfcelv_cmf1-sfcelv_hydroweb1)**2).filled(-9999.0)
 sfcelv_rmse1=np.mean(ma.masked_less_equal(sfcelv_diff1,0.0),axis=0)#.compressed()#
+sfcelv_rmse1=np.sqrt(sfcelv_rmse1)
 sfcelv_rmse1=sfcelv_rmse1.filled()
 print np.shape(sfcelv_rmse1), type(sfcelv_rmse1)
 print sfcelv_rmse1#[0:10]
@@ -233,6 +234,7 @@ sfcelv_cmf2=ma.masked_where(sfcelv_hydroweb2==-9999.0,sfcelv_cmf2).filled(-9999.
 #sfcelv_hydroweb=ma.masked_where(sfcelv_hydroweb==-9999.0,sfcelv_hydroweb)
 sfcelv_diff2=ma.masked_where(sfcelv_hydroweb2==-9999.0,(sfcelv_cmf2-sfcelv_hydroweb2)**2).filled(-9999.0)
 sfcelv_rmse2=np.mean(ma.masked_equal(sfcelv_diff2,-9999.0),axis=0)#.compressed()#
+sfcelv_rmse2=np.sqrt(sfcelv_rmse2)
 sfcelv_rmse2=sfcelv_rmse2.filled()
 print np.shape(sfcelv_rmse2)
 print sfcelv_rmse2[0:10]

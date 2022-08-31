@@ -1,8 +1,8 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q F10
-#PBS -l select=1:ncpus=10:mem=100gb
+#PBS -q F40
+#PBS -l select=1:ncpus=40:mem=180gb
 #PBS -l place=scatter
 #PBS -j oe
 #PBS -m ea
@@ -19,7 +19,7 @@ source activate pydef
 
 which python
 
-NCPUS=10
+NCPUS=40
 export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
@@ -33,7 +33,7 @@ mkdir -p fig
 
 # python f06-unrealistic_map_dist.py &
 
-python f08-comapre_expert_ordinary_map.py &
+python f08-comapre_expert_ordinary_map.py
 
 wait
 
