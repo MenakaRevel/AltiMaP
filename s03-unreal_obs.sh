@@ -24,7 +24,7 @@ export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
 # cd $PBS_O_WORKDIR
-cd "/cluster/data6/menaka/Altimetry"
+cd "/cluster/data6/menaka/AltiMaP"
 
 #CaMA-Flood directory
 # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
@@ -42,11 +42,13 @@ map="glb_06min"
 dataname="HydroWeb"
 
 # observation list
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"$map"_20220725.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20221205.txt"
 
 # out dir
 outdir="./out"
 mkdir -p $outdir
+
+outname="biased_removed_altimetry_"$map"_"${day}".txt"
 
 # threshold for finding outliers
 threshold=10.0 #m
@@ -57,7 +59,10 @@ threshold=10.0 #m
 # mkdir -p $figdir
 day=$(date +"%Y%m%d")
 
-python src/unreal_obs.py $dataname $map $CaMa_dir $TAG $obstxt $threshold > "$outdir/unreal_obs_${day}.txt" #& #> /dev/null 2>&1 & 
+printf '%13s%64s%12s%12s%10s%17s%6s%12s%15s%10s%8s%8s%8s%14s%12s%12s%10s%8s%12s%10s\n' ID station dataname lon lat satellite flag elevation dist_to_mouth kx1 ky1 kx2 ky2 dist1 dist2 rivwth ix iy EGM08 EGM96 > tmp.txt
+python src/unreal_obs.py $dataname $map $CaMa_dir $TAG $obstxt $threshold >> tmp.txt  #& #> /dev/null 2>&1 & 
+
+mv tmp.txt "$outdir/$outname"
 
 wait
 

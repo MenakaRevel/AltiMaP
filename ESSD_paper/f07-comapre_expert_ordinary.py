@@ -37,7 +37,7 @@ import seaborn as sns
 #
 # from read_patchMS import upstream
 #==============================
-CaMa_dir = "/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+CaMa_dir = "/cluster/data6/menaka/CaMa-Flood_v4"
 mapname= "glb_06min"
 #==============================
 #=================================

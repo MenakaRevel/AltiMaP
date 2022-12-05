@@ -24,7 +24,7 @@ export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
 # cd $PBS_O_WORKDIR
-cd "/cluster/data6/menaka/AltiMaP/img_code"
+cd "/cluster/data6/menaka/AltiMaP/ESSD_paper"
 
 
 mkdir -p fig

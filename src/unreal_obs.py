@@ -1,6 +1,8 @@
 #!/opt/local/bin/python
 # -*- coding: utf-8 -*-
-
+'''
+Located biased VS
+'''
 import datetime
 import numpy as np
 from numpy import ma
@@ -251,50 +253,49 @@ for line in lines[1::]:
     line2   = re.split("_",station)
     riv     = line2[1]
     stream  = line2[2]
+    dataname= line[2]
     lon     = float(line[3])
     lat     = float(line[4])
-    ix      = int(line[5])-1
-    iy      = int(line[6])-1
+    sat     = line[5]
+    #--
+    flag    = int(line[6])
     elev    = float(line[7])
-    EGM08   = float(line[8])
-    EGM96   = float(line[9])
-    sat     = line[10].strip()
-    dist    = float(line[11])
-    flag    = int(line[12])
-    kx      = int(line[13])
-    ky      = int(line[14])
-    # rivwth  = float(line[19])
-    #-----------------------
-    # print (riv,station,kx,ky)
-    # if riv != rivername0:
-    #     continue
-    # if stream != stream0:
-    #     continue
-    nums.append(num)
-    river.append(riv)
-    pname.append(station)
-    lons.append(lon)
-    lats.append(lat)
-    xlist.append(ix)
-    ylist.append(iy)
-    lelev.append(elev)
-    egm08.append(EGM08)
-    egm96.append(EGM96)
-    llsat.append(sat)
-    ldtom.append(dist)
-    lflag.append(flag)
-    kxlst.append(kx)
-    kylst.append(ky)
-    # print (riv,station)
-#=============================
-pnum=len(pname)
-#=====================================
-for point in np.arange(pnum):
-    meanW, stdW = meanHydroWeb(pname[point],egm96=egm96[point],egm08=egm08[point])
-    iXX = xlist[point]
-    iYY = ylist[point]
-    elev= lelev[point]
-    sat = llsat[point]
+    dist    = float(line[8])
+    kx1     = int(line[9])
+    ky1     = int(line[10])
+    kx2     = int(line[11])
+    ky2     = int(line[12])
+    dist1   = float(line[13])
+    dist2   = float(line[14])
+    rivwth  = float(line[15])
+    #--
+    ix      = int(line[16])
+    iy      = int(line[17])
+    EGM08   = float(line[18])
+    EGM96   = float(line[19])
+
+    # nums.append(num)
+    # river.append(riv)
+    # pname.append(station)
+    # lons.append(lon)
+    # lats.append(lat)
+    # xlist.append(ix)
+    # ylist.append(iy)
+    # lelev.append(elev)
+    # egm08.append(EGM08)
+    # egm96.append(EGM96)
+    # llsat.append(sat)
+    # ldtom.append(dist)
+    # lflag.append(flag)
+    # kxlst.append(kx)
+    # kylst.append(ky)
+    meanW, stdW = meanHydroWeb(station,egm96=EGM96,egm08=EGM08)
+    # iXX = xlist[point]
+    # iYY = ylist[point]
+    # elev= lelev[point]
+    # sat = llsat[point]
     # if meanW > elevtn[iYY,iXX] + upthr or meanW < elevtn[iYY,iXX] - dwthr:
     if meanW > elev + upthr or meanW < elev - dwthr:
-        print ("%69s%4d%12.3f%12.3f%12.3f%15s%12.3f")%(pname[point],lflag[point],elev,meanW,meanWSE_VICBC[iYY+dYY,iXX+dXX],sat,meanW - elev)
+        flag=flag+100
+        # print ("%69s%4d%12.3f%12.3f%12.3f%15s%12.3f")%(pname[point],lflag[point],elev,meanW,meanWSE_VICBC[iYY+dYY,iXX+dXX],sat,meanW - elev)
+    print ("%13s%64s%12s%12.2f%12.2f%17s%6d%12.2f%15.2f%10d%8d%8d%8d%14.2f%12.2f%12.2f%10d%8d%12.2f%10.2f")%(num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96)

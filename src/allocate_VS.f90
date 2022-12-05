@@ -526,11 +526,14 @@ program SET_MAP
     ! print*, trim(station), lon0, lat0, ix, iy, flag, dist1, dist2
     ! print*, "================================================"
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2,2x,f13.2)',& 
-        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
-        &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky)       ! elevtn(iXX,iYY)-
-    ! else
-    !     print*, "no data"
+        ! print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2,2x,f13.2)',& 
+        ! &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
+        ! &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky)       ! elevtn(iXX,iYY)-
+    
+        print '(a13,4x,a60,2x,a10,2x,2f10.2,2x,a15,2x,i4.0,2x,f10.2,2x,f13.2,2x,4i8.0,2x,3f12.2,2x,2i8.0,2x,2f10.2)',& 
+        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, trim(sat),& 
+        &flag, ele1m(kx,ky),diffdist*1e-3, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky),&
+        &iXX, iYY, egm08, egm96
     end if
         ! write(27,'(a14,2x,a40,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)') trim(adjustl(id)),& 
         ! &trim(station),trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
