@@ -82,7 +82,7 @@ TAG="HydroWeb"
 #=========================================
 # odir = "/cluster/data6/menaka/CaMaVal/results_daily/camavali"
 # fname = odir+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
-odir="/cluster/data6/menaka/Altimetry/results"
+odir="/cluster/data6/menaka/AltiMaP/results"
 if TAG=="HydroWeb":
     fname0=odir+"/HydroWeb/hydroweb_cmf_daily_wse_VIC_BC.nc"
     fname1=odir+"/HydroWeb/hydroweb_cmf_linear_daily_wse_VIC_BC.nc"

@@ -148,7 +148,7 @@ def vec_par(LEVEL):
             lon2=-180.0
         #--------
         colorVal="w" #"grey"#
-        print (lon1,lon2,lat1,lat2,width)
+        # print (lon1,lon2,lat1,lat2,width)
         plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax)
 #==================================
 def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None):
@@ -244,12 +244,12 @@ kx2lt=[]
 ky2lt=[]
 #-------------------------------------------
 # fname="./out/altimetry_"+mapname+"_test.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210618.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210706.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210909.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
-fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20220725.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210618.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210701.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210706.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210909.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210920.txt"
+fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20220725.txt"
 ############################################################
 f=open(fname,"r")
 lines=f.readlines()
@@ -320,7 +320,7 @@ fky2=[]
 # fpoy=[0,1,2,3,3,3,3]
 fpox=[0,1,2,3]
 fpoy=[3,3,3,3]
-fname="/cluster/data6/menaka/Altimetry/out/flag_fig.txt"
+fname="/cluster/data6/menaka/AltiMaP/out/flag_fig.txt"
 with open(fname,"r") as f:
     lines=f.readlines()
 for line in lines:
@@ -344,7 +344,7 @@ for line in lines:
 mkdir("./fig")
 # mkdir("./fig/criteria")
 dataname="HydroWeb"
-odir="/cluster/data6/menaka/Altimetry/results"
+odir="/cluster/data6/menaka/AltiMaP/results"
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 restag="3sec"
@@ -412,9 +412,51 @@ bounds=np.arange(0.0,4.0,1.0)
 # marlist={10:'o', 20:'d', 30:'+', 31:'*', 32:'^', 40:'X', 50:'1'}
 # corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 32:'xkcd:lavender', 40:'red',50:'xkcd:deep teal'}
 # cmapL = matplotlib.colors.ListedColormap(['green', 'blue', 'purple', 'yellow','xkcd:lavender', 'red', 'xkcd:deep teal'])
-
+#=============================
+# lnames=[]
+# lflags=[]
+# # leledf=[]
+# l_lons=[]
+# l_lats=[]
+#=============================
+# fname="./out/AltiMaP_"+mapname+"_test.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210618.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210701.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210706.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210909.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210920.txt"
+fname="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20220725.txt"
+# fname="/cluster/data6/menaka/AltiMaP/out/altimetry_glb_06min_20210920.txt"
+upas={}
+with open(fname, "r") as f:
+    lines=f.readlines()
+    for line in lines[1::]:
+        line = filter(None,re.split(" ", line))
+        # print line
+        Id   = line[0].strip()
+        name = line[1].strip()
+        dname= line[2].strip()
+        lon  = float(line[3])
+        lat  = float(line[4])
+        ix0  = int(line[5]) 
+        iy0  = int(line[6])
+        eled = float(line[7])
+        egm08= float(line[8])
+        egm96= float(line[9])
+        sat  = line[10].strip()
+        flag = int(line[12])
+        flag = flag_diff(flag)
+        ix   = ix0 - 1
+        iy   = iy0 - 1
+        #---
+        print (name, flag)
+        if flag not in upas.keys():
+            upas[flag]=[uparea[iy,ix]*1e-6]
+        else:
+            upas[flag].append(uparea[iy,ix]*1e-6)
+#======================================
 marlist={10:'o', 20:'d', 30:'s',40:'^'}
-marsize={10:2, 20:2, 30:2.2,40:2.5}
+marsize={10:2, 20:2, 30:2.5,40:3.5}
 # colors=["#fcb17c","#dfc5fe","#218833","#fb020e"]
 # corlist={10:'#fcb17c', 20:'#dfc5fe', 30:'#218833', 40:'#fb020e'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
 colors=["#e0fbfb","#97c1d9","#3c5a80","#ef6c4d"]
@@ -436,7 +478,7 @@ cmapM.set_over("none")
 cmapM.colorbar_extend="neither"
 normm=BoundaryNorm(boundsM,cmapM.N) #len(bounds)-1)
 ############################################################
-hgt= 11.69*(1.0/3.0)
+hgt= 11.69*(2.0/5.0)
 wdt= 8.27
 fig= plt.figure(figsize=(wdt, hgt))
 G  = gridspec.GridSpec(1,1)
@@ -464,14 +506,36 @@ for point in np.arange(pnum):
     # flag=flag_diff(flag)
     c=corlist[flag]
     m=marlist[flag]
-    if flag==40:
-        print (name, lon, lat)
+    print (name, lon, lat)
+    # if flag==40:
+        # print (name, lon, lat)
     ax.scatter(lon,lat,s=marsize[flag],marker=m,zorder=zorder[flag],edgecolors="k", facecolors=c,linewidth=0.05,transform=ccrs.PlateCarree()) #, 
 #--
 # imL=ax.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml) # cmap=cmap, norm=norml
 # imL.set_visible(False)
 #cbar=M.colorbar(im,"right",size="2%")
 ax.outline_patch.set_linewidth(0.0)
+
+#================
+# add a historam
+l,b,w,h=ax.get_position().bounds
+ax_hist=fig.add_axes([l,b+0.05,w*(1.0/4.0),h*(1.0/3.0)])
+labels=["Flag 10","Flag 20","Flag 30","Flag 40"]
+for i in np.arange(0,4,1):
+    # print (labels[i], np.median(upas[(i+1)*10]))
+    sns.distplot(np.log10(upas[(i+1)*10]),ax=ax_hist, hist = False, kde = True,
+            kde_kws = {'linewidth': 1,'linestyle':'-'},
+            label = labels[i],color=colors[i],norm_hist=True) 
+ax_hist.set_ylabel('density', color='k',fontsize=8)
+ax_hist.set_xlabel('$upstream$ $catchment$ $area$ $(km^2)$', color='k',fontsize=8)
+ax_hist.tick_params('y',labelsize=6, colors='k')
+ax_hist.tick_params('x',labelsize=6, colors='k')#,labelrotation=45)
+ax_hist.set_xticks(np.arange(1,9+1,1))
+ax_hist.set_xticklabels([r"$10^{%d}$"%(i) for i in np.arange(1,9+1,1)])
+ax_hist.spines['top'].set_visible(False)
+ax_hist.spines['right'].set_visible(False)
+ax_hist.set_facecolor(color="None")
+
 # # # Add suppmetary figures
 # # for point in np.arange(len(fflag)):
 # #     flag= fflag[point]
@@ -570,7 +634,7 @@ ax.outline_patch.set_linewidth(0.0)
 features=[]
 for i,flag in enumerate([10,20,30,40]):
     features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
-                    markeredgecolor="k",markeredgewidth=0.5,markersize=3,label='%d'%(flag),linewidth=0.0))
+                    markeredgecolor="k",markeredgewidth=0.5,markersize=4,label='%d'%(flag),linewidth=0.0))
 l,b,w,h=0.4,0.1,0.45,0.01
 legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower left",
            bbox_transform=fig.transFigure, ncol=4,  borderaxespad=0.0, frameon=False)#
@@ -582,6 +646,6 @@ plt.savefig("./fig/f04-allocation_flag_map.jpg",dpi=800)
 os.system("rm -r "+prename+"*.txt")
 
 print (len(lflags))
-for flag in [10,20,30,40]:
+for flag in np.arange(10,40+1,10):
     flag_count=sum((lflags==flag)*1.0)
     print (flag, flag_count,(flag_count/len(lflags))*100.0)

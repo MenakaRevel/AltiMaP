@@ -24,16 +24,16 @@ export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
 # cd $PBS_O_WORKDIR
-cd "/cluster/data6/menaka/Altimetry/img_code"
+cd "/cluster/data6/menaka/AltiMaP/img_code"
 
 
 mkdir -p fig
 
-# python f04-flag_map_example.py & 
+# python f04-flag_map_uparea.py & 
 
 # python f06-unrealistic_map_dist.py &
 
-python f08-comapre_expert_ordinary_map.py
+python f07-comapre_expert_ordinary.py
 
 wait
 

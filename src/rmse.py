@@ -57,7 +57,7 @@ TAG="HydroWeb"
 #=========================================
 # odir = "/cluster/data6/menaka/CaMaVal/results_daily/camavali"
 # fname = odir+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
-odir="/cluster/data6/menaka/Altimetry/results"
+odir="/cluster/data6/menaka/AltiMaP/results"
 if TAG=="HydroWeb":
     fname=odir+"/HydroWeb/hydroweb-hydroda_cmf_daily_wse_VIC_BC.nc"
 if TAG=="CGLS":
@@ -67,6 +67,7 @@ if TAG=="ICESat":
 if TAG=="HydroSat":
     fname=odir+"/HydroSat/hydrosat_cmf_daily_wse_VIC_BC.nc"
 #==========================
+fname="/cluster/data6/menaka/CaMaVal/results/HydroWeb/hydroweb_cmf_daily_wse_VIC_BC_glb_15min.nc"
 nc = xr.open_dataset(fname)
 sfcelv_hydroweb=nc.sfcelv_hydroweb.values
 sfcelv_cmf=nc.sfcelv_cmf.values
@@ -80,8 +81,8 @@ sfcelv_hydroweb_max=nc.sfcelv_hydroweb_max.values
 sfcelv_hydroweb_min=nc.sfcelv_hydroweb_min.values
 sfcelv_cmf_max=nc.sfcelv_cmf_max.values
 sfcelv_cmf_min=nc.sfcelv_cmf_min.values
-disttomouth=nc.disttomouth.values
-elediff=nc.elediff.values
+# disttomouth=nc.disttomouth.values
+# elediff=nc.elediff.values
 nc.close()
 #===========================
 pnum=len(pname)

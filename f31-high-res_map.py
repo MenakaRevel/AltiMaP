@@ -25,7 +25,7 @@ from scipy import stats
 from sklearn.metrics import r2_score
 
 sys.path.append("./src")
-from read_patchMS import upstream
+# from read_patchMS import upstream
 from river_function import river_profile
 import read_hydroweb as hweb
 import read_cgls as cgls
@@ -107,6 +107,15 @@ def mkdir(path):
         else:
             raise
 #=============================
+def covert_lonlat(lon, lat, west=-180.0, north=90.0, gsize=0.1):
+    '''
+    Convert lat lon to x, y coordinate
+    '''
+    ix = int((lon - west)*(1/gsize))
+    iy = int((-lat + north)*(1/gsize))
+
+    return ix, iy
+#=============================
 mkdir("./fig")
 mkdir("./fig/high_res_map")
 #============================= 
@@ -126,7 +135,7 @@ TAG="HydroWeb"
 # # rivername0=sys.argv[1] #"CONGO" #"AMAZONAS"
 # # stream0=sys.argv[2]
 # # dataname=sys.argv[3]
-# # odir=sys.argv[4] #"/cluster/data6/menaka/Altimetry/results"
+# # odir=sys.argv[4] #"/cluster/data6/menaka/AltiMaP/results"
 # # mapname=sys.argv[5] #"glb_06min"
 # # CaMa_dir=sys.argv[6] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 # # restag=sys.argv[7] #"3sec"
@@ -162,22 +171,25 @@ stream0="CONGO" #
 # station0="R_AMAZONAS_SOLIMOES_KM1692"
 # station0="R_AMAZONAS_SOLIMOES_KM1976"
 # station0="R_AMAZONAS_SOLIMOES_KM2033"
-station0="R_GARONNE_GARONNE_KM0192"
+# station0="R_GARONNE_GARONNE_KM0192"
+# station0="R_VOLGA_UFA_KM3232"
+# station0="R_VOLGA_OKA_KM3076"
+station0="R_AMAZONAS_CONONACO_KM4357"
 dataname="HydroWeb"
-odir="/cluster/data6/menaka/Altimetry/results"
+odir="/cluster/data6/menaka/AltiMaP/results"
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 restag="3sec"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210709.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210714.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210715.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210806.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210807.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210808.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210812.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210817.txt"
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210909.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210709.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210714.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210715.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210806.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210807.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210808.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210812.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210817.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210909.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210920.txt"
 # stream0=["AMAZONAS","CONGO"]
 #=============================
 TAG=dataname
@@ -432,6 +444,17 @@ if kx2 != -9999 and ky2 != -9999:
     lat2 = south + 10.0 - res/2.0 - ky2*res  
     lon2 = west + res/2.0 + kx2*res
     ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="secondary",markersize=7,linewidth=0,zorder=112)
+#================
+# if ordinary allocation used
+gsize=0.1 # glb_06min
+west0=-180.0
+north0=90.0
+# kx3=int((lon1 - west0)/gsize)
+# ky3=int((north0 - lat1)/gsize)
+kx3, ky3 = covert_lonlat(lon1, lat1)
+lat3=north0 - ky3*gsize
+lon3=west0 + kx3*gsize
+ax0.plot(lon3 ,lat3 ,color="xkcd:hot pink",marker="D",label="ordinary",markersize=7,linewidth=0,zorder=112)
 # print (kx,ky,lon0,lat0)
 # # #========================================================
 # # ax1 = fig.add_subplot(G[0,1])
@@ -473,7 +496,7 @@ if kx2 != -9999 and ky2 != -9999:
 # # ax2.set_xlabel("Year")
 # # ax2.set_ylabel("WSE $(m EGM96)$")
 #========================================================
-plt.legend(loc="upper center", bbox_to_anchor=(0.5,0.0), ncol=3)
+plt.legend(loc="upper center", bbox_to_anchor=(0.5,0.0), ncol=4)
 #========================================================
 # plt.show()
 plt.savefig("./fig/high_res_map/"+station0+".png",dpi=500)

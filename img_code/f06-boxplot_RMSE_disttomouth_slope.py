@@ -228,7 +228,7 @@ ax2.tick_params('x',labelsize=6, colors='k')#,labelrotation=45)
 ax2.set_xticklabels(labels,rotation=0)
 ax2.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[1]),ha="left",va="center",transform=ax2.transAxes,fontsize=10)
 #=================
-figname="f07-boxplot_RMSE_disttomouth_slope"
+figname="f06-boxplot_RMSE_disttomouth_slope"
 os.system("mkdir -p ./fig/")
 #--
 print ("./fig/"+figname+".png")
