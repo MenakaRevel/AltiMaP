@@ -45,3 +45,8 @@ s03-along_river_plot.sh
 
 ### Figure Codes
 1. 
+
+### Input file
+name={dataname}Station_list.txt
+
+#### Inputfile
