@@ -540,6 +540,7 @@ program SET_MAP
         if (delv1 < delv0) then
             iXX=uXX
             iYY=uYY
+            flag=flag+100
         end if
         print '(a13,4x,a60,2x,a10,2x,2f10.2,2x,a15,2x,i4.0,2x,f10.2,2x,f13.2,2x,4i8.0,2x,3f12.2,2x,2i8.0,2x,2f10.2)',& 
         &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, trim(sat),& 

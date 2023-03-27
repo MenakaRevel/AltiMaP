@@ -42,7 +42,8 @@ map="glb_06min"
 dataname="HydroWeb"
 
 # observation list
-obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20221205.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20221205.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20230327.txt"
 
 # out dir
 outdir="./out"

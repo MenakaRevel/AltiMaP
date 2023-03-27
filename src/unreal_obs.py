@@ -139,7 +139,7 @@ CaMa_dir=sys.argv[3] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514" #sys.arg
 restag=sys.argv[4] #"3sec" #sys.argv[6] #"3sec"
 obstxt=sys.argv[5] #"./out/altimetry_"+mapname+"_test.txt"#sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
 thr=float(sys.argv[6])
-stream0="AMAZONAS"
+# stream0="AMAZONAS"
 upthr = thr #10.0
 dwthr = thr #10.0
 #=============================
@@ -153,8 +153,6 @@ if restag == "3sec":
     nx =12000
     ny =12000
     hiresmap=CaMa_dir+"/map/"+mapname+"/"+restag+"/"
-
-
 #=============================
 # Read the CMF variables
 if mapname == 'glb_15min':
@@ -179,6 +177,12 @@ elif mapname == 'amz_06min':
     nXX     = 350
     nYY     = 250
     nY_     = 250
+    dXX     = 1000
+    dYY     = 85
+elif mapname == 'conus_06min':
+    nXX     = 700
+    nYY     = 350
+    nY_     = 350
     dXX     = 1000
     dYY     = 85
 #=============================
@@ -239,8 +243,6 @@ lflag=[]
 kxlst=[]
 kylst=[]
 #-------------------------------------------
-# fname="./out/altimetry_"+mapname+"_test.txt"
-# fname="./out/altimetry_"+mapname+"_20210518.txt"
 fname=obstxt
 #--
 f=open(fname,"r")
@@ -273,29 +275,9 @@ for line in lines[1::]:
     iy      = int(line[17])
     EGM08   = float(line[18])
     EGM96   = float(line[19])
-
-    # nums.append(num)
-    # river.append(riv)
-    # pname.append(station)
-    # lons.append(lon)
-    # lats.append(lat)
-    # xlist.append(ix)
-    # ylist.append(iy)
-    # lelev.append(elev)
-    # egm08.append(EGM08)
-    # egm96.append(EGM96)
-    # llsat.append(sat)
-    # ldtom.append(dist)
-    # lflag.append(flag)
-    # kxlst.append(kx)
-    # kylst.append(ky)
+    # calculate mean and standrad deviation
     meanW, stdW = meanHydroWeb(station,egm96=EGM96,egm08=EGM08)
-    # iXX = xlist[point]
-    # iYY = ylist[point]
-    # elev= lelev[point]
-    # sat = llsat[point]
-    # if meanW > elevtn[iYY,iXX] + upthr or meanW < elevtn[iYY,iXX] - dwthr:
+    # check the threshold
     if meanW > elev + upthr or meanW < elev - dwthr:
-        flag=flag+100
-        # print ("%69s%4d%12.3f%12.3f%12.3f%15s%12.3f")%(pname[point],lflag[point],elev,meanW,meanWSE_VICBC[iYY+dYY,iXX+dXX],sat,meanW - elev)
+        flag=flag+900
     print ("%13s%64s%12s%12.2f%12.2f%17s%6d%12.2f%15.2f%10d%8d%8d%8d%14.2f%12.2f%12.2f%10d%8d%12.2f%10.2f")%(num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96)
