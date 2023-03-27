@@ -6,7 +6,7 @@ program SET_MAP
     !==========================================
     implicit none
     ! index CaMa
-    integer                       ::  iXX, iYY !, jXX, jYY, kXX, kYY, uXX, uYY
+    integer                       ::  iXX, iYY, uXX, uYY !, jXX, jYY, kXX, kYY, 
     integer                       ::  nXX, nYY, nFL                   !! x-y matrix GLOBAL
     real                          ::  gsize, csize                    !! grid size [degree]
     real                          ::  west, north, east, south
@@ -54,6 +54,7 @@ program SET_MAP
     real                          ::  dist1, dist2
     real                          ::  down_dist, flow_dist, hubeny_real
     real                          ::  uparea_max
+    real                          ::  delv1, delv0
     ! real                          ::  err1, slope, threshold
     
     ! Station list
@@ -529,7 +530,17 @@ program SET_MAP
         ! print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2,2x,f13.2)',& 
         ! &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
         ! &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky)       ! elevtn(iXX,iYY)-
-    
+        ! detect the closet elevation pixel
+        ! get the upstream pixel ||| update on 2023/03/27
+        call upstream(iXX,iYY,nXX,nYY,nextXX,nextYY,uparea,uXX,uYY)
+        delv0=abs(elevtn(iXX,iYY)-ele1m(kx,ky)) ! elevation comapred to downstream
+        delv1=abs(elevtn(uXX,uYY)-ele1m(kx,ky)) ! elevation compared to upstream
+        ! compare the elevation differnces
+        ! if upstream elevation differnce is smaller the VS is allocated to the upstream grid 
+        if (delv1 < delv0) then
+            iXX=uXX
+            iYY=uYY
+        end if
         print '(a13,4x,a60,2x,a10,2x,2f10.2,2x,a15,2x,i4.0,2x,f10.2,2x,f13.2,2x,4i8.0,2x,3f12.2,2x,2i8.0,2x,2f10.2)',& 
         &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, trim(sat),& 
         &flag, ele1m(kx,ky),diffdist*1e-3, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky),&

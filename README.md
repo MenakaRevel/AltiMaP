@@ -1,12 +1,12 @@
 ### Dataset Varaibles
-# VS metadata
+#### VS metadata
 ID: Identification number of VS
 station         :VS name
 dataname        :dataset name
 lon 	        :longitude [degrees east]
 lat	            :latitude [degrees north]
 satellite	    :name of the satellite
-# MERIT Hydro-related	
+#### MERIT Hydro-related	
 flag	        :allocation flag
 elevation	    :elevation at VS location on MERIT Hydro [m]
 dist_to_mouth	:distance to the unit-catchment mouth [km]
@@ -17,7 +17,7 @@ ky2	            :second-best option of y-coordinate with respect to the 10°×10
 dist1	        :distance from the second-best location to the VS [km]
 dist2	        :distance from the second-best location to the VS [km]
 rivwth	        :River width of the allocated location [m]
-# Coarse-resolution river network-related	
+#### Coarse-resolution river network-related	
 ix	            :x-coordinate with respect to coarse resolution
 iy	            :y-coordinate with respect to coarse resolution
 EGM08	        :EGM 2008 datum elevation[m]
