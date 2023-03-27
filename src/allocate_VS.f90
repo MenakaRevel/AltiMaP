@@ -6,7 +6,7 @@ program SET_MAP
     !==========================================
     implicit none
     ! index CaMa
-    integer                       ::  iXX, iYY !, jXX, jYY, kXX, kYY, uXX, uYY
+    integer                       ::  iXX, iYY, uXX, uYY !, jXX, jYY, kXX, kYY, 
     integer                       ::  nXX, nYY, nFL                   !! x-y matrix GLOBAL
     real                          ::  gsize, csize                    !! grid size [degree]
     real                          ::  west, north, east, south
@@ -54,6 +54,7 @@ program SET_MAP
     real                          ::  dist1, dist2
     real                          ::  down_dist, flow_dist, hubeny_real
     real                          ::  uparea_max
+    real                          ::  delv1, delv0
     ! real                          ::  err1, slope, threshold
     
     ! Station list
@@ -305,9 +306,8 @@ program SET_MAP
     ! 12 = location was on the unit-catchment outlet
     ! 20 = found the nearest river
     ! 21 = found the nearest main river
-    ! 30 = found the nearest parallel main river
+    ! 30 = found the nearest perpendicular main river
     ! 31 = bifurcation location
-    ! 32 = bifurication with parallel river
     ! 40 = correction for ocean grids
     !================================================================
     flag=-9
@@ -475,8 +475,6 @@ program SET_MAP
                 ! print*, "burification location", ibx, iby
                 flag=31
             end if
-        else
-            flag=32
         end if
     end if
     ! print*, flag
@@ -519,11 +517,39 @@ program SET_MAP
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
     !============
+    ! call itime(tarray3) 
+    
+    ! print*, trim(station), visual(kx,ky), visual(ix,iy), diffdist
+    ! print*, "up to find another locations: ",tarray1 - tarray0
+    ! print*, "up to down dist: ",tarray2 - tarray1
+    ! print*, "down dist to now: ", tarray3 - tarray2
+    ! print*, trim(station), lon0, lat0, elevtn(iXX,iYY), ele1m(kx,ky), visual(kx,ky), visual(ix,iy)!, tarray1 - tarray0 !, flag, diffdist*1e-3
+    ! print*, trim(station), lon0, lat0, ix, iy, flag, dist1, dist2
+    ! print*, "================================================"
     if (iXX > 0 .or. iYY > 0) then
-        print '(a30,2x,a65,2x,2f10.2,2x,a15,2x,i4.0,2x,f13.2,2x,f10.2,2x,4i8.0,2f12.2,2x,2i8.0,2x,2f10.2)',& 
-        &trim(adjustl(id)), trim(station), lon0, lat0, trim(sat), flag, diffdist*1e-3, ele1m(kx,ky), &
-        &kx1, ky1, kx2, ky2, dist1, dist2, iXX, iYY, egm08, egm96
+        ! print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2,2x,f13.2)',& 
+        ! &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, iXX, iYY, ele1m(kx,ky),&
+        ! &egm08, egm96, trim(sat), diffdist*1e-3, flag, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky)       ! elevtn(iXX,iYY)-
+        ! detect the closet elevation pixel
+        ! get the upstream pixel ||| update on 2023/03/27
+        call upstream(iXX,iYY,nXX,nYY,nextXX,nextYY,uparea,uXX,uYY)
+        delv0=abs(elevtn(iXX,iYY)-ele1m(kx,ky)) ! elevation comapred to downstream
+        delv1=abs(elevtn(uXX,uYY)-ele1m(kx,ky)) ! elevation compared to upstream
+        ! compare the elevation differnces
+        ! if upstream elevation differnce is smaller the VS is allocated to the upstream grid 
+        if (delv1 < delv0) then
+            iXX=uXX
+            iYY=uYY
+        end if
+        print '(a13,4x,a60,2x,a10,2x,2f10.2,2x,a15,2x,i4.0,2x,f10.2,2x,f13.2,2x,4i8.0,2x,3f12.2,2x,2i8.0,2x,2f10.2)',& 
+        &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, trim(sat),& 
+        &flag, ele1m(kx,ky),diffdist*1e-3, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky),&
+        &iXX, iYY, egm08, egm96
     end if
+        ! write(27,'(a14,2x,a40,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)') trim(adjustl(id)),& 
+        ! &trim(station),trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
+        ! &egm08, egm96, trim(sat)
+
     goto 1000
 1090 continue
     close(11)

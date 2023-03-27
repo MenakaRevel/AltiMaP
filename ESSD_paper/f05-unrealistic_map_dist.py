@@ -50,14 +50,15 @@ def mkdir(path):
         else:
             raise
 #=================================
-def vec_par(LEVEL,ax=None):
+def vec_par(LEVEL):
     # river width
+    ax=None
     sup=2
-    w=0.02
+    w=0.005
     width=0.5
     ax=ax or plt.gca()
-    txt="tmp_%02d.txt"%(LEVEL)
-    os.system("./bin/print_rivvec tmp1.txt 1 "+str(LEVEL)+" > "+txt)
+    txt=prename+"%02d.txt"%(LEVEL)
+    os.system("./bin/print_rivvec "+prename+"00.txt 1 "+str(LEVEL)+" > "+txt)
     width=(float(LEVEL)**sup)*w
     #print width#, lon1,lat1,lon2-lon1,lat2-lat1#x1[0],y1[0],x1[1]-x1[0],y1[1]-y1[0]
     # open tmp2.txt
@@ -91,11 +92,20 @@ def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None):
     return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,transform=ccrs.PlateCarree(),linewidth=width,zorder=105,alpha=alpha)
 #=============================
 def flag_diff(flag):
-    if flag == 10 or flag == 20:
+    # flag identity
+    # 10 = on the river centerline
+    # 11 = on the river channel
+    # 12 = location was on the unit-catchment outlet
+    # 20 = found the nearest river
+    # 21 = found the nearest main river
+    # 30 = found the nearest perpendicular main river
+    # 31 = bifurcation location
+    # 40 = correction for ocean grids
+    if flag == 10 or flag == 11 or flag == 12:
         return 10
-    if flag == 30 or flag == 32:
+    if flag == 20 or flag == 21:
         return 20
-    if flag == 31 or flag == 50:
+    if flag == 30 or flag == 31 or flag == 32:
         return 30
     if flag == 40:
         return 40
@@ -121,9 +131,10 @@ def mk_hist(data,color="red",label="data",ax=None):
     ax=ax or plt.gca()
     sns.distplot(data,ax=ax, hist = True, kde = True,
             kde_kws = {'linewidth': 1,'linestyle':'-'},
-            label = label, color=color,norm_hist=False)
+            label = label, color=color, norm_hist=True)
     # ax.set_ylim(ymin=-0.2,ymax=60.2)
-    ax.set_xlabel(label,fontsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=6)
+    ax.set_xlabel(label,fontsize=8)
     return 0 
 #=============================
 colors=["xkcd:sea blue","xkcd:tangerine","xkcd:dark pink","xkcd:pinkish","xkcd:light urple"]
@@ -136,6 +147,7 @@ TAG="HydroWeb"
 mapname="glb_06min"
 restag="3sec"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+prename=re.split("-",sys.argv[0])[0]
 #=============================
 fname=CaMa_dir+"/map/"+mapname+"/params.txt"
 with open(fname,"r") as f:
@@ -198,14 +210,14 @@ if restag == "3sec":
     ny =12000
     hiresmap=CaMa_dir+"/map/"+mapname+"/"+restag+"/"
 #======================================================================
-# noobs="/cluster/data6/menaka/Altimetry/out/unreal_obs_20210622.txt"
-noobs="/cluster/data6/menaka/Altimetry/out/unreal_obs_20210930.txt"
+noobs="/cluster/data6/menaka/Altimetry/out/unreal_obs_20220729.txt"
 noVS=[]
 with open(noobs,"r") as f:
     lines=f.readlines()
     for line in lines:
         line    = filter(None,re.split(" ",line))
         station = line[0].strip()
+        # print (station)
         noVS.append(station)
 ############################################################
 nums=[]
@@ -224,9 +236,9 @@ lflag=[]
 kxlst=[]
 kylst=[]
 upare=[]
+rivwth=[]
 #===========================
-# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210709.txt"
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
+obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20220730.txt"
 fname=obstxt
 f=open(fname,"r")
 lines=f.readlines()
@@ -250,6 +262,7 @@ for line in lines[1::]:
     flag    = int(line[12])
     kx      = int(line[13])
     ky      = int(line[14])
+    rw      = float(line[19])
     #-----------------------
     if station in noVS:
         nums.append(num)
@@ -269,6 +282,7 @@ for line in lines[1::]:
         kxlst.append(kx)
         kylst.append(ky)
         upare.append(uparea[iy,ix]*1e-6)
+        rivwth.append(rw)
 #-----------------------------
 pnum=len(nums)   
 #=============================
@@ -313,10 +327,17 @@ bounds=np.arange(0.0,4.0,1.0)
 # corlist={10:'green', 20:'blue',30:'purple', 31:'yellow', 32:'xkcd:lavender', 40:'red',50:'xkcd:deep teal'}
 # cmapL = matplotlib.colors.ListedColormap(['green', 'blue', 'purple', 'yellow','xkcd:lavender', 'red', 'xkcd:deep teal'])
 
-marlist={10:'o', 20:'d', 30:'s',40:'^', 50:'P'}
-colors=["#4c72b0","#de8452","#55a868","#c54e51"]
-corlist={10:'#4c72b0', 20:'#de8452', 30:'#55a868', 40:'#c54e51'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
+# marlist={10:'o', 20:'d', 30:'s',40:'^', 50:'P'}
+# colors=["#4c72b0","#de8452","#55a868","#c54e51"]
+# corlist={10:'#4c72b0', 20:'#de8452', 30:'#55a868', 40:'#c54e51'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
+# cmapL = matplotlib.colors.ListedColormap(colors)
+
+marlist={10:'o', 20:'d', 30:'s',40:'^'}
+marsize={10:0.75, 20:0.75, 30:0.9,40:1.0}
+colors=["#e0fbfb","#97c1d9","#3c5a80","#ef6c4d"]
+corlist={10:'#e0fbfb', 20:'#97c1d9', 30:'#3c5a80', 40:'#ef6c4d'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
 cmapL = matplotlib.colors.ListedColormap(colors)
+zorder = {10:110, 20:111, 30:112, 40:115}
 norml=BoundaryNorm(bounds,cmapL.N)
 vmin=1.0
 vmax=8.0
@@ -326,16 +347,17 @@ bounds=np.arange(0.0,8.0,1.0)
 hgt=11.69*(1.0/2.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
-G  = gridspec.GridSpec(3,2)
+G  = gridspec.GridSpec(3,3)
 ax1=fig.add_subplot(G[0:2,:],projection=ccrs.Robinson())
 #-----------------------------  
 ax1.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
 ax1.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
 #--
 box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
-os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
-# map(vec_par,np.arange(2,10+1,1))
-map(vec_par,np.arange(5,10+1,1))
+os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > "+prename+"00.txt") 
+# map(vec_par,np.arange(5,10+1,1))
+map(vec_par,np.arange(2,10+1,1))
+# map(vec_par,np.arange(5,10+1,1))
 #
 pnum=len(nums)
 for point in np.arange(pnum):
@@ -345,10 +367,10 @@ for point in np.arange(pnum):
     lat =lats[point]
     # c=cmapL(norml(flag))
     #print lon,lat,pname[point][0],mean_bias
-    # print (pname[point], flag)
+    print (pname[point], flag)
     c=corlist[flag]
     m=marlist[flag]
-    ax1.scatter(lon,lat,s=5,marker=m,zorder=110,edgecolors="k", facecolors=c, linewidth=0.15,transform=ccrs.PlateCarree())
+    ax1.scatter(lon,lat,s=5,marker=m,zorder=zorder[flag],edgecolors="k", facecolors=c, linewidth=0.15,transform=ccrs.PlateCarree())
 #--
 im=ax1.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml)#
 im.set_visible(False)
@@ -364,22 +386,30 @@ ax1.text(0.00,1.00,"%s)"%(string.ascii_lowercase[0]),ha="left",va="center",trans
 features=[]
 for i,flag in enumerate([10,20,30,40]):
     features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
-                          markersize=2, label='%d'%(flag),linewidth=0.0))
-l,b,w,h=0.5,0.36,0.45,0.01
+                    markeredgecolor="k",markeredgewidth=0.5,markersize=2, label='%d'%(flag),linewidth=0.0))
+l,b,w,h=0.55,0.40,0.45,0.01
+# l,b,w,h=0.4,0.1,0.45,0.01
 legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower center",fontsize=8,
            bbox_transform=fig.transFigure, ncol=4,  borderaxespad=0.0, frameon=False)#
 #====
 ax2=fig.add_subplot(G[2,0])
-mk_hist(np.log10(upare),color="red",label="$log(catchment$ $area)$ $(km^2)$",ax=ax2)
-print np.median(upare)
+mk_hist(np.log10(upare),color="red",label="$catchment$ $area$ $(km^2)$",ax=ax2)
+print (np.median(upare))
 ax2.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[1]),ha="left",va="center",transform=ax2.transAxes,fontsize=10)
+ax2.set_xticks(np.arange(2,7+1,1))
+ax2.set_xticklabels([r"$10^{%d}$"%(i) for i in np.arange(2,7+1,1)])
 #====
 ax3=fig.add_subplot(G[2,1])
 mk_hist(leled,color="green",label="$elevation$ $(m)$",ax=ax3)
-print np.median(leled)
+print (np.median(leled))
 ax3.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[2]),ha="left",va="center",transform=ax3.transAxes,fontsize=10)
+#====
+ax4=fig.add_subplot(G[2,2])
+mk_hist(rivwth,color="xkcd:slate",label="$river$ $width$ $(m)$",ax=ax4)
+print (np.median(rivwth))
+ax4.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[3]),ha="left",va="center",transform=ax4.transAxes,fontsize=10)
 #=====
 plt.savefig("./fig/f05-unrealstic_VS_map_flag.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
 plt.savefig("./fig/f05-unrealstic_VS_map_flag.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
 plt.savefig("./fig/f05-unrealstic_VS_map_flag.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)
-os.system("rm -r tmp*.txt")
+os.system("rm -r "+prename+"*.txt")

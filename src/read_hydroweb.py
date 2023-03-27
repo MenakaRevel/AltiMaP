@@ -157,6 +157,8 @@ def HydroWeb_WSE(station,syear,eyear,smon=1,emon=12,sday=1,eday=31,egm08=0.0,egm
         yyyy = int(date[0])
         mm   = int(date[1])
         dd   = int(date[2])
+        if float(line[2]) >= 9999.0:
+            continue
         wse  = float(line[2])+egm08-egm96
         #print yyyy, mm, dd, wse
         now  = datetime.date(yyyy,mm,dd)
@@ -193,6 +195,8 @@ def HydroWeb_continous_WSE(station,syear=2002,smon=10,sday=1,eyear=2020,emon=12,
         yyyy = int(date[0])
         mm   = int(date[1])
         dd   = int(date[2])
+        if float(line[2]) >= 9999.0:
+            continue
         wse  = float(line[2])
         #print yyyy, mm, dd, wse
         now  = datetime.date(yyyy,mm,dd)

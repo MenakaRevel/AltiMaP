@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q F40
+#PBS -q E40
 #PBS -l select=1:ncpus=40:mem=100gb
 #PBS -l place=scatter
 #PBS -j oe
@@ -17,7 +17,7 @@ export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
 # cd $PBS_O_WORKDIR
-cd "/cluster/data6/menaka/Altimetry"
+cd "/cluster/data6/menaka/AltiMaP"
 
 #CaMA-Flood directory
 # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
@@ -50,11 +50,12 @@ fi
 
 echo "starting calculations........"
 # echo "            ID                                      station            dataname         lon       lat       ix      iy     ele_diff     EGM08     EGM96        satellite" > tmp.txt
-printf '%30s%67s%12s%12s%10s%10s%8s%12s%10s%10s%17s%15s%6s%10s%8s%8s%8s%12s%12s\n' ID station dataname lon lat ix iy elevation EGM08 EGM96 satellite dist_to_mouth flag kx1 ky1 kx2 ky2 dist1 dist2 > tmp.txt
+# printf '%30s%67s%12s%10s%10s%8s%12s%10s%17s%6s%15s%12s%10s%8s%8s%8s%12s%12s%10s%8s%12s%10s\n' ID station dataname lon lat ix iy elevation EGM08 EGM96 flag satellite dist_to_mouth kx1 ky1 kx2 ky2 dist1 dist2 rivwth > tmp.txt
+printf '%13s%64s%12s%12s%10s%17s%6s%12s%15s%10s%8s%8s%8s%14s%12s%12s%10s%8s%12s%10s\n' ID station dataname lon lat satellite flag elevation dist_to_mouth kx1 ky1 kx2 ky2 dist1 dist2 rivwth ix iy EGM08 EGM96 > tmp.txt
 SOUTH=-60
 while [ $SOUTH -lt 90 ];
 do
-  WEST=-180
+  WEST=-80 #-180
   while [ $WEST -lt 180 ];
   do
     CNAME=`./src/set_name $WEST $SOUTH`

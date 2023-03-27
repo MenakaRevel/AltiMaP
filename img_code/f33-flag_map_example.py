@@ -11,8 +11,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import matplotlib.lines as mlines
-import matplotlib.patches as mpatches
 import warnings;warnings.filterwarnings('ignore')
 import xarray as xr
 import math
@@ -145,7 +143,7 @@ def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None):
     return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,zorder=105,alpha=alpha)
 #==================================
 mapname="glb_06min"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 # print sys.argv
 # mapname=sys.argv[1]
 # CaMa_dir=sys.argv[2]
@@ -322,11 +320,11 @@ for line in lines:
     # fpoy.append()
 #=============================
 mkdir("./fig")
-# mkdir("./fig/criteria")
+mkdir("./fig/criteria")
 dataname="HydroWeb"
 odir="/cluster/data6/menaka/Altimetry/results"
 mapname="glb_06min"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 restag="3sec"
 res=1.0/1200.0
 nx =12000
@@ -372,7 +370,7 @@ norm=Normalize(vmin=vmin,vmax=vmax)
 
 # bounds=np.arange(0.0,8.0,1.0)
 # bounds=np.arange(0.0,6.0,1.0)
-bounds=np.arange(0.0,4.0,1.0)
+bounds=np.arange(0.0,5.0,1.0)
 #-----------
 # flag identity
 # 10 = location was directly found
@@ -391,9 +389,8 @@ bounds=np.arange(0.0,4.0,1.0)
 # cmapL = matplotlib.colors.ListedColormap(['green', 'blue', 'purple', 'yellow','xkcd:lavender', 'red', 'xkcd:deep teal'])
 
 marlist={10:'o', 20:'d', 30:'s',40:'^', 50:'P'}
-colors=["#4c72b0","#de8452","#55a868","#c54e51"]
-corlist={10:'#4c72b0', 20:'#de8452', 30:'#55a868', 40:'#c54e51'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
-cmapL = matplotlib.colors.ListedColormap(colors)
+corlist={10:'green', 20:'red', 30:'blue',  40:'yellow'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
+cmapL = matplotlib.colors.ListedColormap(['green','red', 'blue', 'yellow'])
 
 # cmapL.set_under("none") #"#000000",alpha=0)
 # cmapL.set_over("none")
@@ -494,8 +491,7 @@ for point in np.arange(len(fflag)):
     ax0.text(0.5,0.05,flag_ch,va="center",ha="center",transform=ax0.transAxes,fontsize=6,color="w",zorder=113)
     m = Basemap(projection='cyl',llcrnrlat=lllat,urcrnrlat=urlat,llcrnrlon=lllon,urcrnrlon=urlon, lat_ts=0,resolution='c',ax=ax0)
     try:
-        # m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
-        m.arcgisimage(server='http://server.arcgisonline.com/ArcGIS', service='World_Imagery', xpixels=1000, ypixels=None, dpi=1200)
+        m.arcgisimage(service=maps[0], xpixels=1500, verbose=False)
         print ("ArcGIS map")
     except:
         # Draw some map elements on the map
@@ -530,22 +526,13 @@ for point in np.arange(len(fflag)):
         lon2 = west + res/2.0 + kx2*res
         ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",markersize=2,zorder=112)
 # colorbar
-# cax=fig.add_axes([0.4,0.38,0.45,.01])
-# cbar=plt.colorbar(imL,orientation="horizontal",ticks=np.arange(0.5,5.0+1.0,1.0),cax=cax) #[10,20,30,31,40,50],extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
-# cbar.set_ticklabels(['10', '20', '30', '40'])
-# # cbar.set_ticklabels(['10', '20', '30', '31', '32', '40', '50'])
-# # cbar.ax.set_ticklabels(['10', '20', '30', '31', '40', '50'])  # vertically oriented colorbar
-# cbar.ax.tick_params(labelsize=6)
-# cbar.set_label("Allocation Flags",fontsize=8)
-# legend
-features=[]
-for i,flag in enumerate([10,20,30,40]):
-    features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
-                          markersize=5, label='%d'%(flag),linewidth=0.0))
-l,b,w,h=0.4,0.38,0.45,0.01
-legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower right",
-           bbox_transform=fig.transFigure, ncol=1,  borderaxespad=0.0, frameon=False)#
-
-plt.savefig("./fig/f03-allocation_flag_map_example.png",dpi=800)
-plt.savefig("./fig/f03-allocation_flag_map_example.pdf",dpi=800)
-plt.savefig("./fig/f03-allocation_flag_map_example.jpg",dpi=800)
+cax=fig.add_axes([0.4,0.38,0.45,.01])
+cbar=plt.colorbar(imL,orientation="horizontal",ticks=np.arange(0.5,5.0+1.0,1.0),cax=cax) #[10,20,30,31,40,50],extend='both',ticks=np.arange(0.0,1.0+0.001,0.1) extend='both',
+cbar.set_ticklabels(['10', '20', '30', '40'])
+# cbar.set_ticklabels(['10', '20', '30', '31', '32', '40', '50'])
+# cbar.ax.set_ticklabels(['10', '20', '30', '31', '40', '50'])  # vertically oriented colorbar
+cbar.ax.tick_params(labelsize=6)
+cbar.set_label("Allocation Flags",fontsize=8)
+plt.savefig("./fig/criteria/allocation_flag_map_example.png",dpi=500)
+plt.savefig("./fig/criteria/allocation_flag_map_example.pdf",dpi=500)
+plt.savefig("./fig/criteria/allocation_flag_map_example.jpg",dpi=500)

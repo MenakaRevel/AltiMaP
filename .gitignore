@@ -1,8 +1,9 @@
 # bin txt files
 *.bin
-*.txt
 *.kml
 *.kmz
+ESSD_paper/*.txt
+criteria.txt
 
 # figures
 *.png
@@ -11,8 +12,6 @@
 
 #folders
 fig/
-inp/
-out/
 results/
 
 # fortran excutables
@@ -41,6 +40,7 @@ MK_netCDF_elediff.o*
 Alloc_VS.e*
 Alloc_VS.o*
 Unreal_VS.o*
+*/mk_fig.o*
 
 # VScode
 *.vscode

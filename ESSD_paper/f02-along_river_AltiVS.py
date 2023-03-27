@@ -13,6 +13,9 @@ import matplotlib.gridspec as gridspec
 from matplotlib.colors import LogNorm,Normalize,ListedColormap,BoundaryNorm
 from matplotlib import colors
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib import cbook
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,inset_axes,mark_inset
+import matplotlib.patches as patches
 import warnings;warnings.filterwarnings('ignore')
 import xarray as xr
 import math
@@ -98,16 +101,14 @@ def meanHydroWeb(station,egm08=0.0,egm96=0.0):
         yyyy = int(date[0])
         mm   = int(date[1])
         dd   = int(date[2])
-        wse  = float(line[2]) #+egm08-egm96
-        if wse >= 9999.0:
-            continue
+        wse  = float(line[2]) +egm08-egm96
         data.append(wse)
     data=np.array(data)
-    return np.mean(data), np.std(data)
+    return np.mean(data), np.std(data), np.max(data), np.min(data)
 #=============================
 # sfcelv
 syear=2002
-eyear=2020
+eyear=2013
 #=========================================
 #TAG="CGLS"
 TAG="HydroWeb"
@@ -170,8 +171,9 @@ TAG="HydroWeb"
 # # # sfcelv_cmf4=nc3.sfcelv_downstream_cmf.values
 # # # nc3.close()
 # # # ############################################################
-mkdir("./fig/"+TAG)
-mkdir("./fig/"+TAG+"/along_river_VS")
+mkdir("./fig")
+# mkdir("./fig/"+TAG)
+# mkdir("./fig/"+TAG+"/along_river_VS")
 # pnum=10 #len(pname)
 #print np.shape(sfcelv_hydroweb)
 colors=['xkcd:pastel blue','xkcd:teal','xkcd:aqua green','xkcd:dark pink','xkcd:purple','xkcd:magenta']
@@ -183,6 +185,7 @@ tag="3sec"
 res=1.0/1200.0
 upthr=10.0
 dwthr=10.0
+thrs=15.0
 #=============================
 # Read the CMF variables
 if mapname == 'glb_15min':
@@ -243,8 +246,10 @@ cmapL.set_over("none")
 cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
 ############################################################
-rivernames=["AMAZONAS"]#["BALKHASH"]#["CONGO"]#["GARONNE"]#["CONGO"]#["AMAZONAS","CONGO","AMAZONAS","LENA","GANGES-BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
-streams=["ARIPUANA"]#["ILI"]#["SANKURU"]#["GARONNE"]#["MFIMI"]#["XINGU","CONGO","AMAZONAS","LENA","BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
+# rivernames=["AMAZONAS","CONGO","AMAZONAS","LENA","GANGES-BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
+# streams=["XINGU","CONGO","AMAZONAS","LENA","BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
+rivernames=["CONGO"]
+streams=["CONGO"]
 for j in np.arange(len(rivernames)):
     rivername0 = rivernames[j]
     stream0 = streams[j]
@@ -270,12 +275,12 @@ for j in np.arange(len(rivernames)):
     # fname="./out/altimetry_"+mapname+"_20210602.txt"
     # fname="./out/altimetry_"+mapname+"_20210531.txt"
     # fname="./out/altimetry_"+mapname+"_20210617.txt"
-    # fname="./out/altimetry_"+mapname+"_20210920.txt"
-    fname="./out/altimetry_"+mapname+"_20220725.txt"
+    # fname="../out/altimetry_"+mapname+"_20210920.txt"
+    fname="../out/altimetry_"+mapname+"_20220730.txt"
     # fname="./tmp.txt"
     #--
-    with open(fname,"r") as f:
-        lines=f.readlines()
+    f=open(fname,"r")
+    lines=f.readlines()
     for line in lines[1::]:
         line    = filter(None,re.split(" ",line))
         #print line
@@ -342,21 +347,23 @@ for j in np.arange(len(rivernames)):
     mean_elevation=[]
     mean_WSE=[]
     std_WSE=[]
+    range_WSE=[]
     cmf_WSE=[]
     riv_hgt=[]
     dist=0.0
     for point in np.arange(pnum):
         # print (pname00[point], rvlen00[point], meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point]), elevtn[ylist00[point],xlist00[point]], 
         #         rivseq[ylist00[point],xlist00[point]], meanWSE_VICBC[ylist00[point],xlist00[point]])
-        meanW, stdW = meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point])
-        print meanW, stdW
+        meanW, stdW, maxW, minW = meanHydroWeb(pname00[point],egm96=egm9600[point],egm08=egm0800[point])
         mean_WSE.append(meanW)
         std_WSE.append(stdW)
+        range_WSE.append(maxW-minW)
         mean_elevation.append(elevtn[ylist00[point],xlist00[point]])
         cmf_WSE.append(meanWSE_VICBC[ylist00[point],xlist00[point]])
         riv_hgt.append(rivhgt[ylist00[point],xlist00[point]])
     mean_WSE=np.array(mean_WSE)
     std_WSE=np.array(std_WSE)
+    range_WSE=np.array(range_WSE)
     cmf_WSE=np.array(cmf_WSE)
     mean_elevation=np.array(mean_elevation)
     riv_hgt=np.array(riv_hgt)
@@ -367,15 +374,15 @@ for j in np.arange(len(rivernames)):
     #plt.title(pname[point][0],fontsize=12)
     G  = gridspec.GridSpec(1,2)
     ax = fig.add_subplot(G[0,:])
-    ax.set_title(rivername0+"-"+stream0,fontsize=14)
+    # ax.set_title(rivername0+"-"+stream0,fontsize=14)
     # ax.plot(rvlen00,mean_WSE,color="k",label=TAG,linestyle='none',linewidth=0,marker="o",fillstyle="none",markersize=5)
-    ax.errorbar(rvlen00,mean_WSE,yerr=std_WSE,color="k",label=TAG,linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=2,
-                ecolor="k",elinewidth=0.5,capsize=1.0)
-    ax.plot(rvlen00,mean_elevation,color="g",label="CaMa-Flood")
-    ax.plot(rvlen00,mean_elevation + 10.0,color="xkcd:bluish green",label="CaMa-Flood",linestyle='--',linewidth=0.5)
-    ax.plot(rvlen00,mean_elevation - 10.0,color="xkcd:bluish green",label="CaMa-Flood",linestyle='--',linewidth=0.5)
+    ax.errorbar(rvlen00,mean_WSE,yerr=range_WSE,color="k",label=TAG,linestyle='none',linewidth=0.3,marker="o",fillstyle="none",markersize=2,
+                ecolor="r",elinewidth=0.3,capsize=1.0)
+    ax.plot(rvlen00,mean_elevation,color="grey",label="MERIT elevation",linestyle='-',linewidth=0.5)
+    ax.plot(rvlen00,mean_elevation + 10.0,color="grey",label="Upper limit",linestyle='--',linewidth=0.3)
+    ax.plot(rvlen00,mean_elevation - 10.0,color="grey",label="Lower limit",linestyle='--',linewidth=0.3)
     # ax.plot(rvlen00,mean_elevation - riv_hgt,color="purple",label="CaMa-Flood",linestyle='--',linewidth=0.5) #"xkcd:bluish green"
-    ax.plot(rvlen00,cmf_WSE,color="r",label="CaMa-Flood",linestyle='-',linewidth=0.5) #xkcd:bright blue
+    ax.plot(rvlen00,cmf_WSE,color="blue",label="Mean simulated WSE",linestyle='-',linewidth=0.5) #xkcd:bright blue
     # plot the unacceptble VS
     slp_thr=1.0*abs((mean_elevation[0]-mean_elevation[-1])/rvlen00[-1])
     print slp_thr
@@ -432,11 +439,53 @@ for j in np.arange(len(rivernames)):
     slp_len=(slp00 > slp_thr)*rvlen00[1::]
     # slp_len=np.array(slp_len)
     # ax.vlines(x=slp_len,ymin=0.0,ymax=max(mean_elevation + 10.0), colors="yellow")
-    ax.set_ylabel('Mean Elevation $(m)$', color='k',fontsize=10)
+    ax.set_ylabel('Elevation $(m)$', color='k',fontsize=10)
     ax.tick_params('y',labelsize=6, colors='k')
-    ax.set_xlabel('Distance along river to river mouth $(km)$', color='k',fontsize=10)
+    xlist=ax.get_xticks(minor=False)
+    print xlist
+    print rvlen00[-1]
+    print rvlen00[-1]-np.arange(3000.0,0.0-1.0,-500)
+    ax.set_xticks(rvlen00[-1]-np.arange(3000.0,0.0-1.0,-500))
+    ax.set_xticklabels(np.arange(3000.0,0.0-1.0,-500))
+    ax.set_xlabel('Distance from river mouth $(km)$', color='k',fontsize=10)
     ax.tick_params('x',labelsize=6, colors='k')
-    ax.set_xlim(xmin=0.0) #,xmax=1500.0)
+    ax.set_xlim(xmin=0.0,xmax=rvlen00[-1]) #,xmax=1500.0)
     # ax.set_ylim(ymin=250.0)
+    #===========
+    plt.legend(ncol=2,loc="upper right",frameon=False,fancybox=False)
+    # inset axes
+    axins = zoomed_inset_axes(ax, 2, loc='lower left',bbox_to_anchor=(0.05,0.05,1,1), bbox_transform=ax.transAxes)
+    # axins = inset_axes(ax,width="40%",height="20%",
+    #         loc='lower left',bbox_to_anchor=(0.01,0.01,1,1), bbox_transform=ax.transAxes)
+    # axins = ax.inset_axes([0.01, 0.01, 0.47, 0.47],transform=ax.transAxes())
+    axins.errorbar(rvlen00,mean_WSE,yerr=range_WSE,color="k",label=TAG,linestyle='none',linewidth=0.3,marker="o",fillstyle="none",markersize=2,
+                ecolor="r",elinewidth=0.3,capsize=1.0)
+    axins.plot(rvlen00,mean_elevation,color="grey",label="MERIT elevation",linestyle='-',linewidth=0.5)
+    axins.plot(rvlen00,mean_elevation + thrs,color="grey",label="Upper limit",linestyle='--',linewidth=0.3)
+    axins.plot(rvlen00,mean_elevation - thrs,color="grey",label="Lower limit",linestyle='--',linewidth=0.3)
+    # ax.plot(rvlen00,mean_elevation - riv_hgt,color="purple",label="CaMa-Flood",linestyle='--',linewidth=0.5) #"xkcd:bluish green"
+    axins.plot(rvlen00,cmf_WSE,color="blue",label="Mean simulated WSE",linestyle='-',linewidth=0.5) #xkcd:bright blue
+    for point in range(pnum):
+        if mean_elevation[point] + upthr < mean_WSE[point] or mean_elevation[point] - dwthr > mean_WSE[point]:
+            axins.plot(rvlen00[point],mean_WSE[point],color="r",linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=10)
+        
+    # sub region of the original image
+    x_1, x_2 = 2200, 1900 #1750
+    x1, x2, y1, y2 = rvlen00[-1]-x_1, rvlen00[-1]-x_2, 320, 400
+    rect = patches.Rectangle((x1, y1), x2-x1, y2-y1, linewidth=3, edgecolor='r', facecolor='none')
+    axins.set_xlim(x1, x2)
+    axins.set_ylim(y1, y2)
+    # axins.set_xticklabels([])
+    # axins.set_yticklabels([])
+    axins.tick_params('y',labelsize=6, colors='k')
+    axins.tick_params('x',labelsize=6, colors='k')
+    axins.set_xticks(rvlen00[-1]-np.arange(x_1, x_2-1.0,-100))
+    axins.set_xticklabels(np.arange(x_1, x_2-1.0,-100))
+
+    mark_inset(ax, axins, loc1=1, loc2=3, fc="none", ec="k", linewidth=0.5) #, fc="none", ec="1.0")
+    # indicate_inset_zoom(axins, edgecolor="black")
+    #===========
     print (rivername0+"-"+stream0)
-    plt.savefig("./fig/"+TAG+"/along_river_VS/"+rivername0+"-"+stream0+".png",dpi=500) 
+    plt.savefig("./fig/f02-along_river_VS_"+rivername0+"-"+stream0+".png",dpi=800)
+    plt.savefig("./fig/f02-along_river_VS_"+rivername0+"-"+stream0+".pdf",dpi=800)
+    plt.savefig("./fig/f02-along_river_VS_"+rivername0+"-"+stream0+".jpg",dpi=800)

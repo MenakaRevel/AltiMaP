@@ -15,24 +15,16 @@ import warnings;warnings.filterwarnings('ignore')
 import xarray as xr
 import math
 import seaborn as sns
-import pandas as pd
 import matplotlib.patches as mpatches
 import re
 import os
 import sys
 import errno
-from matplotlib.colors import LogNorm,Normalize,ListedColormap,BoundaryNorm
-from matplotlib import colors
-import matplotlib.cm as cm
 from multiprocessing import Pool
 from multiprocessing import Process
 from multiprocessing import sharedctypes
-import cartopy.crs as ccrs
-import cartopy
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-import cartopy.feature as cfeature
 
-sys.path.append("../src")
+sys.path.append("./src")
 # import read_hydroweb as hweb
 import read_cgls as cgls
 import read_hydrosat as hsat
@@ -73,81 +65,24 @@ def flag_diff(flag):
         return 30
     if flag == 40:
         return 40
-#==================================
-def vec_par(LEVEL,ax=None,sup=2,w=0.005,width=0.5):
-    '''
-    Plotting the river network
-    '''
-    ax=ax or plt.gca()
-    txt="tmp_%02d.txt"%(LEVEL)
-    os.system("./bin/print_rivvec tmp1.txt 1 "+str(LEVEL)+" > "+txt)
-    width=(float(LEVEL)**sup)*w
-    #print LEVEL, width#, lon1,lat1,lon2-lon1,lat2-lat1#x1[0],y1[0],x1[1]-x1[0],y1[1]-y1[0]
-    # open tmp2.txt
-    with open(txt,"r") as f:
-        lines = f.readlines()
-
-    #print LEVEL, width, lines, txt
-    #---
-    for line in lines:
-        line    = filter(None, re.split(" ",line))
-        lon1 = float(line[0])
-        lat1 = float(line[1])
-        lon2 = float(line[3])
-        lat2 = float(line[4])
-
-        ix = int((lon1 - west)*(1/gsize))
-        iy = int((-lat1 + north)*(1/gsize))
-
-        if rivermap[iy,ix] == 0:
-            continue
-
-        if lon1-lon2 > 180.0:
-            # print (lon1, lon2)
-            lon2=180.0
-        elif lon2-lon1> 180.0:
-            # print (lon1,lon2)
-            lon2=-180.0
-        #--------
-        colorVal="w" #"grey"#
-        #print (lon1,lon2,lat1,lat2,width)
-        plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax)
-#==================================
-def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None):
-    ax=ax or plt.gca()
-    return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,linewidth=width,zorder=105,alpha=alpha)
-#==================================
+#=============================
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 # print sys.argv
 # mapname=sys.argv[1]
 # CaMa_dir=sys.argv[2]
 # ncpus=int(sys.argv[3])
-#----
-fname=CaMa_dir+"/map/"+mapname+"/params.txt"
-with open(fname,"r") as f:
-    lines=f.readlines()
-#-------
-nx     = int(filter(None, re.split(" ",lines[0]))[0])
-ny     = int(filter(None, re.split(" ",lines[1]))[0])
-gsize  = float(filter(None, re.split(" ",lines[3]))[0])
-lon0   = float(filter(None, re.split(" ",lines[4]))[0])
-lat0   = float(filter(None, re.split(" ",lines[7]))[0])
-west   = float(filter(None, re.split(" ",lines[4]))[0])
-east   = float(filter(None, re.split(" ",lines[5]))[0])
-south  = float(filter(None, re.split(" ",lines[6]))[0])
-north  = float(filter(None, re.split(" ",lines[7]))[0])
 #=============================
-# # Read the CMF variables
-# if mapname == 'glb_15min':
-#     nx      = 1440
-#     ny      = 720
-# elif mapname == 'glb_06min':
-#     nx      = 3600
-#     ny      = 1800
-# elif mapname == 'glb_01min':
-#     nx      = 21600
-#     ny      = 10800
+# Read the CMF variables
+if mapname == 'glb_15min':
+    nx      = 1440
+    ny      = 720
+elif mapname == 'glb_06min':
+    nx      = 3600
+    ny      = 1800
+elif mapname == 'glb_01min':
+    nx      = 21600
+    ny      = 10800
 #=============================
 nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
 rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
@@ -170,7 +105,6 @@ rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
 #---
 nextX=nextxy[0]
 nextY=nextxy[1]
-rivermap=(nextxy[0]>0)*1.0
 #=====================================
 markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
 colors={"HydroWeb":"xkcd:reddy brown","CGLS":"xkcd:dark pink","ICESat":"xkcd:pinkish","HydroSat":"xkcd:light urple","GRRATS":"xkcd:tangerine"} 
@@ -197,18 +131,9 @@ days=(end-start).days + 1
 #=============================
 lnames=[]
 lflags=[]
-# leledf=[]
-l_lons=[]
-l_lats=[]
 #=============================
 # fname="./out/altimetry_"+mapname+"_test.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210618.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210701.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210706.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210909.txt"
 fname="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20210920.txt"
-# fname="/cluster/data6/menaka/Altimetry/out/altimetry_glb_06min_20210920.txt"
-upas={}
 with open(fname, "r") as f:
     lines=f.readlines()
     for line in lines[1::]:
@@ -229,44 +154,43 @@ with open(fname, "r") as f:
         flag = flag_diff(flag)
         ix   = ix0 - 1
         iy   = iy0 - 1
-        #---
-        print (name, flag)
-        if flag not in upas.keys():
-            upas[flag]=[uparea[iy,ix]*1e-6]
-        else:
-            upas[flag].append(uparea[iy,ix]*1e-6)
-#----
-# colors=["xkcd:reddy brown","xkcd:dark pink","xkcd:pinkish","xkcd:light urple","xkcd:tangerine"]
-colors=["#4c72b0","#de8452","#55a868","#c54e51"]
-# plt.clf()  
-# plt.close() 
-# figure in A4 size
-va_margin= 0.0#1.38#inch 
-ho_margin= 0.0#1.18#inch
-hgt=(11.69 - 2*va_margin)*(1.0/3.0)
-wdt=(8.27 - 2*ho_margin)*(1.0/2.0)
-fig=plt.figure(figsize=(wdt,hgt))
-G = gridspec.GridSpec(1,1)
+        #---------------------------
+        lnames.append(name)
+        lflags.append(flag)
+#=============================
+lnames=np.array(lnames)
+lflags=np.array(lflags)
+N=float(len(lnames))
+# flags=[10,20,30,31,32,40,50]
+flags=[10,20,30,40]
+flgamt=[]
+flgch=[]
+for flag in flags:
+    flg_amt=(np.sum((lflags == flag)*1.0)/N)*100.0
+    print (flag, flg_amt)
+    famt_ch="%2d"%(flag)
+    flgamt.append(flg_amt)
+    flgch.append(famt_ch)
+#=============================
+mkdir("./fig")
+mkdir("./fig/criteria")
+#=============================
+hgt=11.69*(1.0/3.0)
+wdt=8.27
+fig=plt.figure(figsize=(wdt, hgt))
+G  = gridspec.GridSpec(1,1)
 ax = fig.add_subplot(G[0,0])
-#=====
-# df=pd.DataFrame(upas.items(), columns=['10','20','30','40'])
-# df=pd.DataFrame.from_dict(upas)
-# print (df.head())
-# print type(upas[10]),type(upas[20]),type(upas[30]),type(upas[40])
-# sns.kdeplot(ax=ax,data=df,cumulative=True, common_norm=False, common_grid=True) ##
-# box=sns.boxplot(ax=ax,data=[upas[10],upas[20],upas[30],upas[40]])
-# ax.set_xticklabels(labels,rotation = 0)
-# ax.set_ylim(ymin=-0.2,ymax=13.2)
-labels=["Flag 10","Flag 20","Flag 30","Flag 40"]
-for i in np.arange(0,4,1):
-    print labels[i], np.median(upas[(i+1)*10])
-    sns.distplot(np.log10(upas[(i+1)*10]),ax=ax, hist = False, kde = True,
-            kde_kws = {'linewidth': 1,'linestyle':'-'},
-            label = labels[i],color=colors[i],norm_hist=True) 
-ax.set_ylabel('density', color='k',fontsize=8)
-ax.set_xlabel('$log(upstream catchment area)$ $(km)$', color='k',fontsize=8)
+#-----------------------------    
+flgamt=np.array(flgamt)
+# ax.plot(flags,flgamt,marker="o",markerfacecolor="red",markeredgecolor="red",linestyle=None,linewidth=0.0,alpha=1)
+ax.bar(np.arange(len(flags)),flgamt,width=1.0,color="xkcd:greenish")# ax.set_xscale('log')
+# scentific notaion
+# ax.ticklabel_format(style="sci",axis="x",scilimits=(0,0))
+# ax.xaxis.major.formatter._useMathText=True 
+ax.set_xticks(np.arange(len(flags)))
+ax.set_xticklabels(flgch,fontsize=8)
+ax.set_ylabel(r'% of data', color='k',fontsize=8)
+ax.set_xlabel('Flags', color='k',fontsize=8)
 ax.tick_params('y',labelsize=6, colors='k')
-ax.tick_params('x',labelsize=6, colors='k')#,labelrotation=45)
-plt.savefig("./fig/f04-uparea_flag.png",dpi=800)
-plt.savefig("./fig/f04-uparea_flag.pdf",dpi=800)
-plt.savefig("./fig/f04-uparea_flag.jpg",dpi=800)
+ax.tick_params('x',labelsize=6, colors='k')
+plt.savefig("./fig/criteria/flags.png",dpi=500)

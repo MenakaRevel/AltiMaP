@@ -44,7 +44,8 @@ CaMa_dir=sys.argv[5]
 curr_pwd=sys.argv[6]
 out_pwd =sys.argv[7]
 obstxt =sys.argv[8]
-ordinary = True
+# ordinary = True
+ordinary = False
 csize = 0.1
 
 # out_pwd = curr_pwd+'/results/'+ TAG +'/'
