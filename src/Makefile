@@ -6,6 +6,8 @@ LIB = -L/opt/intel/lib -L/opt/intel/mkl/lib -L/opt/local/lib
 
 #=========
 TARGETS=\
+intpt_EGM96\
+intpt_EGM08\
 allocate_VS\
 regional_biftag\
 txt_vector\

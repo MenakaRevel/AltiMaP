@@ -1,4 +1,4 @@
-### Dataset Varaibles
+### Dataset Variables
 #### VS metadata
 ID: Identification number of VS
 station         :VS name
@@ -24,29 +24,34 @@ EGM08	        :EGM 2008 datum elevation[m]
 EGM96	        :EGM 1996 datum elevation[m]
 
 
-### Altimetry Virtual Stations on CaMa-Flood River Network
+### Mapping Altimetry Virtual Stations on CaMa-Flood River Network
 
-1. Allocate virtual stations to the CaMa-Flood map
+1. Prepare virtual stations list with geoid conversation
 ```bash
-sh s01-allocate_VS.sh
-```
-2. Check the river network allocation
-```bash
-s02-river_allocate.sh
-```
-3. Compare the common Virtual Station on the same CaMa-Flood grid
-```bash
-s03-commonVS_plot.sh 
-``` 
-4. Compare common Virtual Station in close proximity
-```bash
-s03-along_river_plot.sh
+sh s01-prep_VSlist.sh
 ```
 
-### Figure Codes
-1. 
+2. Allocate virtual stations to the CaMa-Flood map
+```bash
+sh s02-allocate_VS.sh
+```
+4. Identify largely biased virtual stations
+```bash
+sh s03-unreal_obs.sh
+```
 
-### Input file
-name={dataname}Station_list.txt
+### Input data
+1. list of virtual station
+2. MERIT-Hydro river parameters
+3. CaMa-Flood river network map
 
-#### Inputfile
+#### Input data style for s01-prep_VSlist.sh
+filename={datadir}/{dataname}_VS
+identifier,river,basin,country,satellite,track_nb,start_date,end_date,latitude,longitude,status,validation
+
+#### Input data style for s02-allocate_VS.sh
+filename={dataname}_Station_list.txt
+ID | Station | River | Basin | Country | lon | lat | elevation | EGM08 | EGM96 | Satellite | Start Date | End Date | Status
+
+#### Input data style for s03-unreal_obs.sh
+output from s02-allocate_VS.sh

@@ -1,0 +1,21 @@
+# fortran excutables
+allocate_VS
+altimetry_rivermap
+altimetry_rivermap.f90
+set_name
+print_rivvec
+print_rivvec.o
+txt_vector
+txt_vector.o
+regional_biftag
+intpt_EGM08
+intpt_EGM96
+
+# .so .pyc
+*.so
+*.pyc
+
+# geoid converstion files
+Und_min1x1_egm2008_isw=82_WGS84_TideFree_SE
+WW15MGH.DAC
+WW15MGH.dac
