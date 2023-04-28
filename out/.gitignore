@@ -72,3 +72,9 @@ altimetry_conus_06min_20230327.txt
 #
 altimetry*.txt
 biased_removed_altimetry*.txt
+altimetry_glb_06min_20230404.txt
+altimetry_glb_06min_20230406.txt
+altimetry_glb_06min_20230406_CGLS.txt
+biased_removed_altimetry_conus_06min_20230405.txt
+biased_removed_altimetry_glb_06min_20230327.txt
+biased_removed_altimetry_glb_06min_20230405.txt

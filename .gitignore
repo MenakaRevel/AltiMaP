@@ -13,6 +13,7 @@ criteria.txt
 #folders
 fig/
 results/
+etc/
 
 # fortran excutables
 src/allocate_VS
@@ -40,8 +41,8 @@ MK_netCDF_elediff.o*
 Alloc_VS.e*
 Alloc_VS.o*
 Unreal_VS.o*
-*/mk_fig.o*
 Reg_VS.o*
+*/mk_fig.o*
 
 # VScode
 *.vscode

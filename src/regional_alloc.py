@@ -45,7 +45,7 @@ lat_ori  = float(filter(None, re.split(" ",lines[7]))[0])
 ############################################################
 dx=int( (west-lon_ori) /gsize +0.001 ) ##  add 0.001 to avoid rounding error
 dy=int( (lat_ori-north)/gsize +0.001 )
-print ("dx: ",dx,"dy: ",dy)
+# print ("dx: ",dx,"dy: ",dy)
 ############################################################
 #-------------------------------------------
 # fname="./out/altimetry_"+mapname+"_test.txt"

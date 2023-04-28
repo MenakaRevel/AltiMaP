@@ -9,7 +9,14 @@
 #PBS -M menaka@rainbow.iis.u-tokyo.ac.jp
 #PBS -V
 #PBS -N Reg_VS
+#===========================
+# import virtual environment
+source ~/.bashrc
+source ~/.bash_conda
 
+source activate pydef
+
+which python
 #source ~/.bashrc
 
 NCPUS=10
@@ -38,16 +45,18 @@ TAG="3sec"
 outdir="./out"
 
 # 
-dataname="HydroWeb"
+# dataname="HydroWeb"
+dataname="CGLS"
 
 # obstxt
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20210909.txt"
-obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20230327.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20230327.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20230406.txt"
 
 # outtxt
 day=$(date +"%Y%m%d")
 # day='20210920'
-outtxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_"$day".txt"
+outtxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$map"_"$day".txt"
 
 #
 printf '%13s%64s%12s%12s%10s%17s%6s%12s%15s%10s%8s%8s%8s%14s%12s%12s%10s%8s%12s%10s\n' ID station dataname lon lat satellite flag elevation dist_to_mouth kx1 ky1 kx2 ky2 dist1 dist2 rivwth ix iy EGM08 EGM96 > tmp.txt

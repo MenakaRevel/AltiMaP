@@ -39,31 +39,30 @@ map="glb_06min"
 # map="amz_06min"
 
 # date name
-dataname="HydroWeb"
+# dataname="HydroWeb"
+dataname="CGLS"
 
 # observation list
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20221205.txt"
-obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20230327.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20230327.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20230406.txt"
 
 # out dir
 outdir="./out"
 mkdir -p $outdir
 
-outname="biased_removed_altimetry_"$map"_"${day}".txt"
+day=$(date +"%Y%m%d")
+outname="biased_removed_altimetry_"$map"_"$day".txt"
 
 # threshold for finding outliers
 threshold=10.0 #m
 
-# # out put figure directory
-# figdir="./fig"
-
-# mkdir -p $figdir
-day=$(date +"%Y%m%d")
 
 printf '%13s%64s%12s%12s%10s%17s%6s%12s%15s%10s%8s%8s%8s%14s%12s%12s%10s%8s%12s%10s\n' ID station dataname lon lat satellite flag elevation dist_to_mouth kx1 ky1 kx2 ky2 dist1 dist2 rivwth ix iy EGM08 EGM96 > tmp.txt
 python src/unreal_obs.py $dataname $map $CaMa_dir $TAG $obstxt $threshold >> tmp.txt  #& #> /dev/null 2>&1 & 
 
-mv tmp.txt "$outdir/$outname"
+echo "saving output to $outdir/$outname"
+mv "tmp.txt" $outdir/$outname
 
 wait
 
