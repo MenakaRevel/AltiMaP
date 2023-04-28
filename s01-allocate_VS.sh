@@ -55,13 +55,13 @@ printf '%13s%64s%12s%12s%10s%17s%6s%12s%15s%10s%8s%8s%8s%14s%12s%12s%10s%8s%12s%
 SOUTH=-60
 while [ $SOUTH -lt 90 ];
 do
-  WEST=-80 #-180
+  WEST=-180
   while [ $WEST -lt 180 ];
   do
     CNAME=`./src/set_name $WEST $SOUTH`
     # echo $CNAME #${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
     if [ -s ${CaMa_dir}"/map/"${map}/${TAG}/${CNAME}".catmxy.bin" ]; then
-        for data in "HydroWeb"; # "Dahiti"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
+        for data in "HydroWeb"; #"CGLS"; # "Dahiti"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
         do
             flag=`python ./src/avalability_data.py $data $WEST $SOUTH`
             # echo $flag

@@ -24,6 +24,7 @@ import re
 import sys
 from scipy import stats
 from sklearn.metrics import r2_score
+import json
 
 sys.path.append("./src")
 from read_patchMS import upstream
@@ -114,6 +115,18 @@ def meanHydroWeb(station,egm08=0.0,egm96=0.0):
         wse  = float(line[2]) #+egm08-egm96
         if wse >= 9999.0:
             continue
+        data.append(wse)
+    data=np.array(data)
+    return np.mean(data), np.std(data)
+#=============================
+def meanCGLS(station,egm08=0.0,egm96=0.0):
+    fname="/work/a06/menaka/CGLS/data/river/"+station+".json"
+    with open(fname) as f:
+        alldata    = json.load(f)
+        cgls_data  = alldata["data"]
+    data=[]
+    for line in range(len(cgls_data)):
+        wse     = cgls_data[line]["water_surface_height_above_reference_datum"]
         data.append(wse)
     data=np.array(data)
     return np.mean(data), np.std(data)
@@ -276,7 +289,12 @@ for line in lines[1::]:
     EGM08   = float(line[18])
     EGM96   = float(line[19])
     # calculate mean and standrad deviation
-    meanW, stdW = meanHydroWeb(station,egm96=EGM96,egm08=EGM08)
+    if TAG=="HydroWeb":
+        meanW, stdW = meanHydroWeb(station,egm96=EGM96,egm08=EGM08)
+    elif TAG=="CGLS":
+        meanW, stdW = meanCGLS(station,egm96=EGM96,egm08=EGM08)
+    else:
+        meanW, stdW = 0.0, 0.0
     # check the threshold
     if meanW > elev + upthr or meanW < elev - dwthr:
         flag=flag+900
