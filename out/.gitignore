@@ -68,3 +68,7 @@ unreal_obs.txt
 altimetry_glb_06min_20220725.txt
 altimetry_glb_06min_20230327.txt
 altimetry_conus_06min_20230327.txt
+
+#
+altimetry*.txt
+biased_removed_altimetry*.txt

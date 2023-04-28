@@ -41,6 +41,7 @@ Alloc_VS.e*
 Alloc_VS.o*
 Unreal_VS.o*
 */mk_fig.o*
+Reg_VS.o*
 
 # VScode
 *.vscode
