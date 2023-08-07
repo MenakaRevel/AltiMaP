@@ -81,7 +81,7 @@ def plot_ax(lon1,lon2,lat1,lat2,width,colorVal,ax=None):
     ax=ax or plt.gca()
     return ax.plot([lon1,lon2],[lat1,lat2],color=colorVal,transform=ccrs.PlateCarree(),linewidth=width,zorder=105,alpha=alpha)
 #==============================
-def mk_fig(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
+def mk_fig_bin(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
     #=======================================
     # make figure
     #---------------------------------------
@@ -123,7 +123,7 @@ def mk_fig(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
     # cbar.set_label("$RMSE$ $(m)$",fontsize=8)
     return 0
 #==============================
-def mk_fig_div(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
+def mk_fig_div_bin(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
     #=======================================
     # make figure
     #---------------------------------------
@@ -163,6 +163,58 @@ def mk_fig_div(sfcelv_rmse,pnum,lons,lats,cmap,ax=None):
     # cbar.ax.tick_params(labelsize=6)
     # cbar.set_label("$\Delta$$RMSE$ $(m)$",fontsize=8)
     return 0
+#==============================
+def mk_fig_df(df,var,cmap,ax=None):
+    #=======================================
+    # make figure
+    #---------------------------------------
+    print "plot map"
+    ax=ax or plt.gca()
+    # ax=fig.add_subplot(G[0,0],projection=ccrs.Robinson())
+    ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
+    ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '110m', edgecolor='face', facecolor=land),zorder=100)
+    #####
+    #--
+    box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
+    os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
+    # map(vec_par,np.arange(2,10+1,1))
+    # map(vec_par,np.arange(3,10+1,1))
+    map(vec_par,np.arange(5,10+1,1))
+    for index in df.index:
+        lon=df['lons'][index]
+        lat=df['lats'][index]
+        c=cmap(norm(df[var][index]))
+        #print lon,lat,pname[point][0],mean_bias
+        ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=None, facecolors=c,transform=ccrs.PlateCarree())
+    ax.outline_patch.set_linewidth(0.0)
+    return 0
+#==============================
+def mk_fig_div_df(df1,df2,var1,var2,cmap,ax=None):
+    #=======================================
+    # make figure
+    #---------------------------------------
+    print "plot map"
+    ax=ax or plt.gca()
+    # ax=fig.add_subplot(G[0,0],projection=ccrs.Robinson())
+    ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
+    ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '110m', edgecolor='face', facecolor=land),zorder=100)
+    #####
+    #--
+    box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
+    os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > tmp1.txt") 
+    # map(vec_par,np.arange(2,10+1,1))
+    # map(vec_par,np.arange(3,10+1,1))
+    map(vec_par,np.arange(5,10+1,1))
+    for pname in df1["pnames"].values:
+        lon=df1[df1["pnames"]==pname]['lons']
+        lat=df1[df1["pnames"]==pname]['lats']
+        RMSE1 = df1[df1["pnames"]==pname]['RMSE(AltiMaP)'].values
+        RMSE2 = df2[df2["pnames"]==pname]['RMSE(ordinary)'].values
+        c=cmap(norm(RMSE1-RMSE2))
+        #print lon,lat,pname[point][0],mean_bias
+        ax.scatter(lon,lat,s=0.5,marker="o",zorder=110,edgecolors=None, facecolors=c,transform=ccrs.PlateCarree())
+    ax.outline_patch.set_linewidth(0.0)
+    return 0
 #====
 def mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=None):
     ax=ax or plt.gca()
@@ -184,52 +236,57 @@ def mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=None):
     print "2, mean, median", np.mean(sfcelv_rmse2), np.median(sfcelv_rmse2)
     return 0
 #====
-# sfcelv
-# odir = "/cluster/data6/menaka/CaMaVal/results_daily/camavali"
-odir1 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
-fname1 = odir1+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
-nc1 = xr.open_dataset(fname1)
-sfcelv_hydroweb1=nc1.sfcelv_hydroweb.values
-sfcelv_cmf1=nc1.sfcelv_cmf.values
-lons1=nc1.lon.values
-lats1=nc1.lat.values
-pnames1=nc1.name.values
-pnum1=len(pnames1)
-print np.shape(sfcelv_cmf1), pnum1
-#- masked out -9999 values
-sfcelv_cmf1=ma.masked_where(sfcelv_hydroweb1==-9999.0,sfcelv_cmf1).filled(-9999.0)
-#sfcelv_hydroweb=ma.masked_where(sfcelv_hydroweb==-9999.0,sfcelv_hydroweb)
-sfcelv_diff1=ma.masked_where(sfcelv_hydroweb1==-9999.0,(sfcelv_cmf1-sfcelv_hydroweb1)**2).filled(-9999.0)
-sfcelv_rmse1=np.mean(ma.masked_less_equal(sfcelv_diff1,0.0),axis=0)#.compressed()#
-sfcelv_rmse1=sfcelv_rmse1.filled()
-print np.shape(sfcelv_rmse1), type(sfcelv_rmse1)
-print sfcelv_rmse1#[0:10]
-# sfcelv_bias_com=ma.masked_equal(sfcelv_bias,-9999.0).compressed()
+# # sfcelv
+# # odir = "/cluster/data6/menaka/CaMaVal/results_daily/camavali"
+# odir1 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
+# fname1 = odir1+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
+# nc1 = xr.open_dataset(fname1)
+# sfcelv_hydroweb1=nc1.sfcelv_hydroweb.values
+# sfcelv_cmf1=nc1.sfcelv_cmf.values
+# lons1=nc1.lon.values
+# lats1=nc1.lat.values
+# pnames1=nc1.name.values
+# pnum1=len(pnames1)
+# print np.shape(sfcelv_cmf1), pnum1
+# #- masked out -9999 values
+# sfcelv_cmf1=ma.masked_where(sfcelv_hydroweb1==-9999.0,sfcelv_cmf1).filled(-9999.0)
+# #sfcelv_hydroweb=ma.masked_where(sfcelv_hydroweb==-9999.0,sfcelv_hydroweb)
+# sfcelv_diff1=ma.masked_where(sfcelv_hydroweb1==-9999.0,(sfcelv_cmf1-sfcelv_hydroweb1)**2).filled(-9999.0)
+# sfcelv_rmse1=np.mean(ma.masked_less_equal(sfcelv_diff1,0.0),axis=0)#.compressed()#
+# sfcelv_rmse1=sfcelv_rmse1.filled()
+# print np.shape(sfcelv_rmse1), type(sfcelv_rmse1)
+# print sfcelv_rmse1#[0:10]
+# # sfcelv_bias_com=ma.masked_equal(sfcelv_bias,-9999.0).compressed()
 
 
-# ====
-# sfcelv
-# odir = "/cluster/data6/menaka/CaMaVal/results_daily/camavali"
-odir2 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
-fname2 = odir2+"/hydroweb_cmf_daily_wse_VIC_BC_ordinary.nc"
-nc2 = xr.open_dataset(fname2)
-sfcelv_hydroweb2=nc2.sfcelv_hydroweb.values
-sfcelv_cmf2=nc2.sfcelv_cmf.values
-lons2=nc2.lon.values
-lats2=nc2.lat.values
-pnames2=nc2.name.values
-pnum2=len(pnames2)
-print np.shape(sfcelv_cmf2), pnum2
-#- masked out -9999 values
-sfcelv_cmf2=ma.masked_where(sfcelv_hydroweb2==-9999.0,sfcelv_cmf2).filled(-9999.0)
-#sfcelv_hydroweb=ma.masked_where(sfcelv_hydroweb==-9999.0,sfcelv_hydroweb)
-sfcelv_diff2=ma.masked_where(sfcelv_hydroweb2==-9999.0,(sfcelv_cmf2-sfcelv_hydroweb2)**2).filled(-9999.0)
-sfcelv_rmse2=np.mean(ma.masked_equal(sfcelv_diff2,-9999.0),axis=0)#.compressed()#
-sfcelv_rmse2=sfcelv_rmse2.filled()
-print np.shape(sfcelv_rmse2)
-print sfcelv_rmse2[0:10]
-# sfcelv_bias_com=ma.masked_equal(sfcelv_bias1,-9999.0).compressed()
+# # ====
+# # sfcelv
+# # odir = "/cluster/data6/menaka/CaMaVal/results_daily/camavali"
+# odir2 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
+# fname2 = odir2+"/hydroweb_cmf_daily_wse_VIC_BC_ordinary.nc"
+# nc2 = xr.open_dataset(fname2)
+# sfcelv_hydroweb2=nc2.sfcelv_hydroweb.values
+# sfcelv_cmf2=nc2.sfcelv_cmf.values
+# lons2=nc2.lon.values
+# lats2=nc2.lat.values
+# pnames2=nc2.name.values
+# pnum2=len(pnames2)
+# print np.shape(sfcelv_cmf2), pnum2
+# #- masked out -9999 values
+# sfcelv_cmf2=ma.masked_where(sfcelv_hydroweb2==-9999.0,sfcelv_cmf2).filled(-9999.0)
+# #sfcelv_hydroweb=ma.masked_where(sfcelv_hydroweb==-9999.0,sfcelv_hydroweb)
+# sfcelv_diff2=ma.masked_where(sfcelv_hydroweb2==-9999.0,(sfcelv_cmf2-sfcelv_hydroweb2)**2).filled(-9999.0)
+# sfcelv_rmse2=np.mean(ma.masked_equal(sfcelv_diff2,-9999.0),axis=0)#.compressed()#
+# sfcelv_rmse2=sfcelv_rmse2.filled()
+# print np.shape(sfcelv_rmse2)
+# print sfcelv_rmse2[0:10]
+# # sfcelv_bias_com=ma.masked_equal(sfcelv_bias1,-9999.0).compressed()
 
+
+df1=pd.read_csv('./AltiMap_comaprison_VIC_BC.csv',sep=',')
+df2=pd.read_csv('./Ordinary_comaprison_VIC_BC.csv',sep=',')
+
+df2=df2[df2['pnames'].isin(df1['pnames'])]
 
 os.system("mkdir -p ./fig")
 
@@ -239,7 +296,7 @@ w=0.02
 alpha=1
 width=0.5
 
-land="#C0C0C0"
+land="k" #"#C0C0C0"
 water="#FFFFFF"
 
 west=-180.0
@@ -271,27 +328,31 @@ vmax=10.0
 norm=Normalize(vmin=vmin,vmax=vmax)
 #
 
-hgt=11.69#*(4.0/15.0)
+hgt=11.69*(1.0/3.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
-G  = gridspec.GridSpec(2,2)
+G  = gridspec.GridSpec(ncols=4,nrows=2)
 # boxplot
 cmap=cm.viridis_r
 vmin=0.0
 vmax=10.0
 norm=Normalize(vmin=vmin,vmax=vmax)
-ax1 = fig.add_subplot(G[0,0],projection=ccrs.Robinson())
-mk_fig(sfcelv_rmse1,pnum1,lons1,lats1,cmap,ax=ax1)
+# RMSE1
+ax1 = fig.add_subplot(G[0,0:2],projection=ccrs.Robinson())
+# mk_fig(sfcelv_rmse1,pnum1,lons1,lats1,cmap,ax=ax1)
+mk_fig_df(df1,'RMSE(AltiMaP)',cmap,ax=ax1)
 ax1.text(-0.05,0.90,"%s)"%(string.ascii_lowercase[0]),ha="left",va="center",transform=ax1.transAxes,fontsize=10)
-ax2 = fig.add_subplot(G[0,1],projection=ccrs.Robinson())
-mk_fig(sfcelv_rmse2,pnum2,lons2,lats2,cmap,ax=ax2)
+# RMSE2
+ax2 = fig.add_subplot(G[0,2::],projection=ccrs.Robinson())
+# mk_fig(sfcelv_rmse2,pnum2,lons2,lats2,cmap,ax=ax2)
+mk_fig_df(df2,'RMSE(ordinary)',cmap,ax=ax2)
 ax2.text(-0.05,0.90,"%s)"%(string.ascii_lowercase[1]),ha="left",va="center",transform=ax2.transAxes,fontsize=10)
 #===
 # colorbar
 im=plt.scatter([],[],c=[],cmap=cmap,s=0.1,vmin=vmin,vmax=vmax,norm=norm)#
 im.set_visible(False)
 l,b,w,h=ax2.get_position().bounds
-cax=fig.add_axes([l+0.05,b,0.01,h])
+cax=fig.add_axes([l+w,b+h*0.1,0.005,h*0.8])
 # cax=fig.add_axes([0.92,0.37,0.01,0.5])
 cbar=plt.colorbar(im,orientation="vertical",extend='max',ticks=np.arange(vmin,vmax+0.1,2.0),cax=cax) #,extend='both',ticks=np.arange(0.0,1.0+0.001,0.1)
 cbar.ax.tick_params(labelsize=6)
@@ -302,29 +363,31 @@ cmap=mbar.diverging_colormap()
 vmin=-5.0
 vmax=5.0
 norm=Normalize(vmin=vmin,vmax=vmax)
-ax3 = fig.add_subplot(G[1,0],projection=ccrs.Robinson())
-mk_fig_div(sfcelv_rmse1-sfcelv_rmse2,pnum1,lons1,lats1,cmap,ax=ax3)
+ax3 = fig.add_subplot(G[1,1:3],projection=ccrs.Robinson())
+# mk_fig_div(sfcelv_rmse1-sfcelv_rmse2,pnum1,lons1,lats1,cmap,ax=ax3)
+mk_fig_div_df(df1,df2,'RMSE(AltiMaP)', 'RMSE(ordinary)',cmap,ax=ax3)
 ax3.text(-0.05,0.90,"%s)"%(string.ascii_lowercase[2]),ha="left",va="center",transform=ax3.transAxes,fontsize=10)
 # ax4 = fig.add_subplot(G[1,1])
-print np.shape(np.where((sfcelv_rmse1-sfcelv_rmse2)>0.01))
-print np.shape(np.where((sfcelv_rmse1-sfcelv_rmse2)<-0.01))
-print np.shape(np.logical_and((sfcelv_rmse1-sfcelv_rmse2)<=0.01,(sfcelv_rmse1-sfcelv_rmse2)>=-0.01))
+# print np.shape(np.where((sfcelv_rmse1-sfcelv_rmse2)>0.01))
+# print np.shape(np.where((sfcelv_rmse1-sfcelv_rmse2)<-0.01))
+# print np.shape(np.logical_and((sfcelv_rmse1-sfcelv_rmse2)<=0.01,(sfcelv_rmse1-sfcelv_rmse2)>=-0.01))
 #===
 # colorbar
 im=plt.scatter([],[],c=[],cmap=cmap,s=0.1,vmin=vmin,vmax=vmax,norm=norm)#
 im.set_visible(False)
 l,b,w,h=ax3.get_position().bounds
-cax=fig.add_axes([l+0.05,b,0.01,h])
+cax=fig.add_axes([l+w,b+h*0.1,0.005,h*0.8])
 # cax=fig.add_axes([0.92,0.10,0.01,0.25])
 cbar=plt.colorbar(im,orientation="vertical",extend='both',ticks=np.arange(vmin,vmax+0.1,2.0),cax=cax)
 cbar.ax.tick_params(labelsize=6)
 cbar.set_label("$\Delta$$RMSE$ $(m)$",fontsize=8)
 #==============
-# boxplot
-ax4 = fig.add_subplot(G[1,1])
-mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=ax4)
+# # boxplot
+# ax4 = fig.add_subplot(G[1,1])
+# mk_boxplot(sfcelv_rmse1,sfcelv_rmse2,ax=ax4)
+plt.subplots_adjust(wspace=0.01,hspace=0.0)
 #==============
-plt.savefig("./fig/f07-compare_expert_ordinary.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
-plt.savefig("./fig/f07-compare_expert_ordinary.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
-plt.savefig("./fig/f07-compare_expert_ordinary.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f07-map_compare_methods.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f07-map_compare_methods.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
+plt.savefig("./fig/f07-map_compare_methods.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)
 os.system("rm -r tmp*.txt")

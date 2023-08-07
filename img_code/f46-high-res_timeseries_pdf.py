@@ -118,7 +118,7 @@ def covert_lonlat(lon, lat, west=-180.0, north=90.0, gsize=0.1):
     return ix, iy
 #=============================
 mkdir("../fig")
-mkdir("../fig/high_res_map")
+mkdir("../fig/high_res_map_timeseries")
 #============================= 
 # sfcelv
 syear=2000
@@ -182,6 +182,40 @@ odir="/cluster/data6/menaka/AltiMaP/results"
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 restag="3sec"
+#=============================
+# Read the CMF variables
+if mapname == 'glb_15min':
+    nx      = 1440
+    ny      = 720
+    gsize   = 0.25
+elif mapname == 'glb_06min':
+    nx      = 3600
+    ny      = 1800
+    gsize   = 0.1
+elif mapname == 'glb_01min':
+    nx      = 21600
+    ny      = 10800
+    gsize   = 1/60.
+#=============================
+nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
+rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
+rivhgt = CaMa_dir+"/map/"+mapname+"/rivhgt.bin"
+rivlen = CaMa_dir+"/map/"+mapname+"/rivlen.bin"
+elevtn = CaMa_dir+"/map/"+mapname+"/elevtn.bin"
+lonlat = CaMa_dir+"/map/"+mapname+"/lonlat.bin"
+uparea = CaMa_dir+"/map/"+mapname+"/uparea.bin"
+nxtdst = CaMa_dir+"/map/"+mapname+"/nxtdst.bin"
+rivseq = CaMa_dir+"/map/"+mapname+"/rivseq.bin"
+nextxy = np.fromfile(nextxy,np.int32).reshape(2,ny,nx)
+# rivwth = np.fromfile(rivwth,np.float32).reshape(ny,nx)
+# rivhgt = np.fromfile(rivhgt,np.float32).reshape(ny,nx)
+# rivlen = np.fromfile(rivlen,np.float32).reshape(ny,nx)
+elevtn = np.fromfile(elevtn,np.float32).reshape(ny,nx)
+lonlat = np.fromfile(lonlat,np.float32).reshape(2,ny,nx)
+uparea = np.fromfile(uparea,np.float32).reshape(ny,nx)
+nxtdst = np.fromfile(nxtdst,np.float32).reshape(ny,nx)
+rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
+#---
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210709.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210714.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210715.txt"
@@ -347,6 +381,8 @@ pname=df[df["station"]==station0]["station"].values
 lflag=df[df["station"]==station0]["flag"].values
 lons=df[df["station"]==station0]["lon"].values
 lats=df[df["station"]==station0]["lat"].values
+xlist=df[df["station"]==station0]["ix"].values
+ylist=df[df["station"]==station0]["iy"].values
 kx1lt=df[df["station"]==station0]["kx1"].values
 ky1lt=df[df["station"]==station0]["ky1"].values
 kx2lt=df[df["station"]==station0]["kx2"].values
@@ -361,7 +397,7 @@ wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
 #plt.title(pname[point][0],fontsize=12)
 # G = gridspec.GridSpec(3,2)
-G = gridspec.GridSpec(1,1)
+G = gridspec.GridSpec(nrows=1,ncols=3)
 lon = lons[point]
 lat = lats[point]
 west, south = westsouth(lat,lon)
@@ -453,14 +489,14 @@ kx1= kx1lt[point]
 ky1= ky1lt[point]
 lat1 = south + 10.0 - res/2.0 - ky1*res  
 lon1 = west + res/2.0 + kx1*res
-ax0.plot(lon1 ,lat1 ,color="r",marker="o",label="best-loc",markersize=7,linewidth=0,zorder=112) #fillstyle="none",
+ax0.plot(lon1 ,lat1 ,color="r",marker="o",label="AltiMaP(Original)",markersize=7,linewidth=0,zorder=112) #fillstyle="none",
 #================
 kx2= kx2lt[point]
 ky2= ky2lt[point]
 if kx2 != -9999 and ky2 != -9999:
     lat2 = south + 10.0 - res/2.0 - ky2*res  
     lon2 = west + res/2.0 + kx2*res
-    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="secondary",markersize=7,linewidth=0,zorder=112)
+    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="AltiMaP(Secondary)",markersize=7,linewidth=0,zorder=112)
 #================
 # if ordinary allocation used
 gsize=0.1 # glb_06min
@@ -472,51 +508,44 @@ kx3, ky3 = covert_lonlat(lon1, lat1)
 lat3=north0 - ky3*gsize
 lon3=west0 + kx3*gsize
 ax0.plot(lon3 ,lat3 ,color="xkcd:hot pink",marker="D",label="ordinary",markersize=7,linewidth=0,zorder=112)
-# print (kx,ky,lon0,lat0)
-# # #========================================================
-# # ax1 = fig.add_subplot(G[0,1])
-# # length=[1.0]
-# # elevation=[1.0]
-# # # print ("calculate river profile...........",kx,ky,visual[ky-1,kx-1])
-# # try:
-# #     length, elevation = river_along_profile(kx1,ky1,west,south,res,nx,ny,hiresmap)
-# # except:
-# #     length=[0.0]
-# #     elevation=[0.0]
-# # # # print (length, elevation)
-# # if visual[ky1-1,kx1-1]!=10: # or visual[ky-1,kx-1]!=20:
-# #     length=[0.0]
-# #     elevation=[0.0]
-# # ax1.plot(length,elevation,color="grey",linestyle='-',linewidth=3.0)
-# # # print (length, elevation)
-# # elevtn=CaMa_dir+"/map/"+mapname+"/"+restag+"/"+cname0+".elevtn.bin"
-# # # print (elevtn)
-# # elevtn=np.fromfile(elevtn,np.float32).reshape(12000,12000)
-# # disttom=ldtom[point]
-# # # print (length[-1],"-",disttom,elevtn[ky-1,kx-1])
-# # ax1.plot([length[-1]-disttom*1e3],[elevtn[ky1-1,kx1-1]],color="r",marker="o",markersize=7,linestyle='none',linewidth=0.0)
-# # ax1.plot([0,length[-1]],[elevation[0],elevation[-1]],color="g",linestyle='--',linewidth=0.5)
-# # locs,org = get_data(pname[point],TAG,egm08=egm08[point],egm96=egm96[point])
-# # ax1.axhline(y=np.mean(org),xmin=0.0,xmax=length[-1],color=colors[TAG],linestyle='--',linewidth=0.5)
-# # ax1.set_xlim(xmin=0,xmax=length[-1])
-# # ax1.set_xlabel("Distance $(m)$")
-# # ax1.set_ylabel("Elevation $(m EGM96)$")
-# # #========================================================
-# # ax2 = fig.add_subplot(G[1,:])
-# # ax2.plot(locs,org,color=colors[TAG],label=TAG,linestyle='-',linewidth=0.5,marker=markers[TAG],fillstyle="none",markersize=5)
-# # ax2.set_xlim(xmin=0,xmax=days+1)
-# # xxlab=np.arange(syear,eyear+1,5)
-# # dt=int(math.ceil(((eyear-syear)+2)/5.0))
-# # xxlist=np.linspace(0,days,dt,endpoint=True)
-# # ax2.set_xticks(xxlist)
-# # ax2.set_xticklabels(xxlab,fontsize=8)
-# # ax2.set_xlabel("Year")
-# # ax2.set_ylabel("WSE $(m EGM96)$")
+#================
+# read netCDF flies
+# ====
+# sfcelv AltiMaP
+odir1 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
+fname1 = odir1+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
+nc1 = xr.open_dataset(fname1)
+sfcelv_hydroweb1=nc1.sfcelv_hydroweb.values
+sfcelv_cmf1=nc1.sfcelv_cmf.values
+pnames1=nc1.name.values
+nbdays = nc1.dims["nbdays"]
+# ====
+# sfcelv Ordinary
+odir2 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
+fname2 = odir2+"/hydroweb_cmf_daily_wse_VIC_BC_ordinary.nc"
+nc2 = xr.open_dataset(fname2)
+sfcelv_hydroweb2=nc2.sfcelv_hydroweb.values
+sfcelv_cmf2=nc2.sfcelv_cmf.values
+pnames2=nc2.name.values
+#=====
+# find the index pnames1 == station0
+index1=np.where(pnames1 == station0)[0][0]
+index2=np.where(pnames2 == station0)[0][0]
+# times = ma.masked_where(sfcelv_hydroweb1[:,index1] > -100.0 ,range(nbdays))
+times=np.where(sfcelv_hydroweb1[:,index1] > 0.0)[0]
+print (times)
+print (ma.masked_less_equal(sfcelv_hydroweb1[:,index1],-9999.0))
+#================================ 
+ax2 = fig.add_subplot(G[0,1::]) #ma.masked_less_equal(sfcelv_hydroweb1[:,index1],-9000.0)
+ax2.plot(times,ma.masked_less_equal(sfcelv_hydroweb1[:,index1],-9999.0)[times],color="k",label="HydroWeb",linestyle=None,linewidth=0.0,marker="o",zorder=112)
+ax2.plot(range(nbdays),sfcelv_cmf1[:,index1],color="r",label="CMF1",linewidth=1.0,zorder=112)
+ax2.plot(range(nbdays),sfcelv_cmf2[:,index2],color="xkcd:hot pink",label="CMF2",linewidth=1.0,zorder=112)
+ax2.axhline(y=elevtn[ylist[0]-1,xlist[0]-1],color="k",linestyle="--",linewidth=1.0,zorder=112)
 #========================================================
 plt.legend(loc="upper center", bbox_to_anchor=(0.5,0.0), ncol=4)
 #========================================================
 # plt.show()
-plt.savefig("../fig/high_res_map/"+station0+".png",dpi=500)
+plt.savefig("../fig/high_res_map_timeseries/"+station0+".png",dpi=500)
 # pdf.savefig()  # saves the current figure into a pdf page
 # plt.close()
 # # set the file's metadata via the PdfPages object:

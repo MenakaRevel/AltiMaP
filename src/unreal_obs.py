@@ -25,6 +25,8 @@ import sys
 from scipy import stats
 from sklearn.metrics import r2_score
 import json
+import os
+import errno
 
 sys.path.append("./src")
 from read_patchMS import upstream
@@ -97,27 +99,29 @@ def round_half_down(n, decimals=0):
 #=============================
 def meanHydroWeb(station,egm08=0.0,egm96=0.0): 
     fname="/cluster/data6/menaka/HydroWeb/data/hydroprd_"+station+".txt"
-    f=open(fname,"r")
-    lines=f.readlines()
-    f.close()
-    head=33
-    #--
-    data=[] # WSE in [m]
-    for line in lines[head::]:
-        if line[0][0] == "#":
-            continue
-        line = re.split(" ",line)
-        date = line[0]
-        date = re.split("-",date)
-        yyyy = int(date[0])
-        mm   = int(date[1])
-        dd   = int(date[2])
-        wse  = float(line[2]) #+egm08-egm96
-        if wse >= 9999.0:
-            continue
-        data.append(wse)
-    data=np.array(data)
-    return np.mean(data), np.std(data)
+    if not os.path.exists(fname):
+        return 9999.0, 9999.0
+    else:
+        with open(fname,"r") as f:
+            lines=f.readlines()
+        head=33
+        #--
+        data=[] # WSE in [m]
+        for line in lines[head::]:
+            if line[0][0] == "#":
+                continue
+            line = re.split(" ",line)
+            date = line[0]
+            date = re.split("-",date)
+            yyyy = int(date[0])
+            mm   = int(date[1])
+            dd   = int(date[2])
+            wse  = float(line[2]) #+egm08-egm96
+            if wse >= 9999.0:
+                continue
+            data.append(wse)
+        data=np.array(data)
+        return np.mean(data), np.std(data) #, np.max(data)-np.min(data)
 #=============================
 def meanCGLS(station,egm08=0.0,egm96=0.0):
     fname="/work/a06/menaka/CGLS/data/river/"+station+".json"
@@ -129,7 +133,7 @@ def meanCGLS(station,egm08=0.0,egm96=0.0):
         wse     = cgls_data[line]["water_surface_height_above_reference_datum"]
         data.append(wse)
     data=np.array(data)
-    return np.mean(data), np.std(data)
+    return np.mean(data), np.std(data) #, np.max(data)-np.min(data)
 #=====================================
 # sfcelv
 syear=2000
@@ -152,6 +156,7 @@ CaMa_dir=sys.argv[3] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514" #sys.arg
 restag=sys.argv[4] #"3sec" #sys.argv[6] #"3sec"
 obstxt=sys.argv[5] #"./out/altimetry_"+mapname+"_test.txt"#sys.argv[7] #"./out/altimetry_"+mapname+"_test.txt"
 thr=float(sys.argv[6])
+method=sys.argv[7]
 # stream0="AMAZONAS"
 upthr = thr #10.0
 dwthr = thr #10.0
@@ -222,7 +227,7 @@ nextX=nextxy[0]
 nextY=nextxy[1]
 #=============================
 meanWSE_VICBC="/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC001/sfcelv_mean2000-2013.bin"
-meanWSE_VICBC=np.fromfile(meanWSE_VICBC,np.float32).reshape(1500,3600)
+# meanWSE_VICBC=np.fromfile(meanWSE_VICBC,np.float32).reshape(1500,3600)
 ############################################################
 # pnum=10 #len(pname)
 #print np.shape(sfcelv_hydroweb)
@@ -294,8 +299,15 @@ for line in lines[1::]:
     elif TAG=="CGLS":
         meanW, stdW = meanCGLS(station,egm96=EGM96,egm08=EGM08)
     else:
-        meanW, stdW = 0.0, 0.0
+        meanW, stdW = 0.0, 0.0  #, rangW , 0.0
+    # if the file not exist, skip
+    if meanW == 9999.0:
+        continue
     # check the threshold
-    if meanW > elev + upthr or meanW < elev - dwthr:
-        flag=flag+900
+    if method == "static":
+        if meanW > elev + upthr or meanW < elev - dwthr:
+            flag=flag+900
+    elif method == "dynamic":
+        if meanW > elev + 3.0*stdW or meanW < elev - 3.0*stdW:
+            flag=flag+800
     print ("%13s%64s%12s%12.2f%12.2f%17s%6d%12.2f%15.2f%10d%8d%8d%8d%14.2f%12.2f%12.2f%10d%8d%12.2f%10.2f")%(num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96)

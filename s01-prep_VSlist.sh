@@ -21,12 +21,15 @@ cd "/cluster/data6/menaka/AltiMaP"
 # `pwd`
 
 # Data name
-dataname="HydroWeb"
+# dataname="HydroWeb"
+dataname="Schneider2017"
 
 # data directory
-datadir="/cluster/data6/menaka/HydroWeb/data"
+# datadir="/cluster/data6/menaka/HydroWeb/data"
+datafile="./ESSD_paper/CryoSat2_Brahmaputra_list.txt"
+
 
 # output directory
 outdir="./inp"
 
-python "./src/make_VSlist.py" $dataname $datadir $outdir
+python "./src/make_VSlist.py" $dataname $datafile $outdir

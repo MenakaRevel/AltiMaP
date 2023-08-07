@@ -256,22 +256,31 @@ print (df.columns)
 df["uparea"]=[uparea[iy-1,ix-1]*1e-6 for ix, iy in zip(df["ix"],df["iy"])]
 df['river'] = df['station'].apply(lambda x: re.split("_", x)[1])
 df['stream'] = df['station'].apply(lambda x: re.split("_", x)[2])
-df['rivlen'] = df['station'].apply(lambda x: float(re.split("_", x)[-1][2::]))
+# df['rivlen'] = df['station'].apply(lambda x: float(re.split("_", x)[-1][2::]))
+df['rivlen'] = (2731852.97 * 1e-3 + 454.0) - df['station'].apply(lambda x: float(re.split("_", x)[-1][2::]))
 df['xlist'] = df['ix'].apply(lambda x: int(x) - 1)
 df['ylist'] = df['iy'].apply(lambda x: int(x) - 1)
 N=float(len(df))
+#================================================================
+# open CryoSat-2 data
+fname="CryoSat-2_Brahmaputra.csv"
+dfcryo=pd.read_csv(fname, sep=',', header=0) #,encoding=str)
+dfcryo=dfcryo[dfcryo['outlier'] == 0]
+# dfcryo["rivlen"] = dfcryo['chainage [m]'].max() * 1e-3 - dfcryo['chainage [m]'].values * 1e-3
+dfcryo["rivlen"] = dfcryo['chainage [m]'].values * 1e-3
+print (dfcryo.head())
 ############################################################
 # rivernames=["AMAZONAS","CONGO","AMAZONAS","LENA","GANGES-BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
 # streams=["XINGU","CONGO","AMAZONAS","LENA","BRAHMAPUTRA","MEKONG","MISSISSIPPI","IRRAWADDY"] #["CONGO"] #
-rivernames=["CONGO"]
-streams=["CONGO"]
+rivernames=["GANGES-BRAHMAPUTRA"]
+streams=["BRAHMAPUTRA"]
 for j in np.arange(len(rivernames)):
     rivername0 = rivernames[j]
     stream0 = streams[j]
     # get part of pd
     dfnew = df[(df['river'] == rivername0) & (df['stream'] == stream0)]
     # arrange in order of river length
-    order=np.argsort(dfnew['rivlen'].values)[::-1]
+    order=np.argsort(dfnew['rivlen'].values)#[::-1]
     #--
     rvlen00=np.amax(dfnew['rivlen'].values) - dfnew['rivlen'].values[order]
     pname00=dfnew['station'].values[order]
@@ -464,6 +473,7 @@ for j in np.arange(len(rivernames)):
     # ax.set_title(rivername0+"-"+stream0,fontsize=14)
     # ax.plot(rvlen00,mean_WSE,color="k",label=TAG,linestyle='none',linewidth=0,marker="o",fillstyle="none",markersize=5)
     # Mean WSE
+    rvlen00=max(rvlen00) - rvlen00 + 1906.0
     ax.errorbar(rvlen00,mean_WSE,yerr=range_WSE,color="k",label="mean "+TAG,linestyle='none',linewidth=0.3,marker="o",fillstyle="none",markersize=2,
                 ecolor="k",elinewidth=0.3,capsize=1.0)
     # Median WSE
@@ -474,6 +484,41 @@ for j in np.arange(len(rivernames)):
     ax.fill_between(rvlen00,mean_elevation + thrs,mean_elevation - thrs,color="grey",label="range",alpha=0.3)
     # ax.plot(rvlen00,mean_elevation - riv_hgt,color="purple",label="CaMa-Flood",linestyle='--',linewidth=0.5) #"xkcd:bluish green"
     ax.plot(rvlen00,cmf_WSE,color="blue",label="Mean simulated WSE",linestyle='-',linewidth=0.5) #xkcd:bright blue
+    
+    print ("rivlen00",rvlen00)
+    print ('median_WSE',median_WSE)
+
+    #========
+    # plot cyrosat-2 data
+    # # order=np.argsort(dfcryo[dfcryo['rivlen']<=max(rvlen00)]['rivlen'].values)#[::-1]
+    # # # rivlen01=np.amax(dfcryo['rivlen'].values) - dfcryo[dfcryo['rivlen']<=max(rvlen00)]['rivlen'].values[order]
+    # # rivlen01= np.amax(dfcryo[dfcryo['rivlen']<=max(rvlen00)]['rivlen'].values) - dfcryo[dfcryo['rivlen']<=max(rvlen00)]['rivlen'].values[order] #- 1279.0
+    # # cryo_wse=dfcryo[dfcryo['rivlen']<=max(rvlen00)]['observed height [m]'].values[order]
+    
+    order=np.argsort(dfcryo['rivlen'].values)#[::-1]
+    # rivlen01=np.amax(dfcryo['rivlen'].values) - dfcryo['rivlen'].values[order]
+    rivlen01=dfcryo['rivlen'].values[order]
+    cryo_wse=dfcryo['observed height [m]'].values[order]
+    
+    # ax.plot(dfcryo[dfcryo['rivlen']<=max(rvlen00)]['rivlen'].values,dfcryo[dfcryo['rivlen']<=max(rvlen00)]['observed height [m]'].values,color="violet",label="CryoSat-2",linestyle='none',linewidth=0.5,marker="*",markersize=2) #,fillstyle="none"
+    ax.plot(rivlen01,cryo_wse,color="violet",label="CryoSat-2",linestyle='none',linewidth=0.5,marker="*",markersize=2) #,fillstyle="none"
+    print ('rivlen01',rivlen01)
+    print ('CryoSat-2',cryo_wse)
+
+    # find a location of CryoSat-2 corresponds to the altimetry data
+    print ("====================")
+    print (dfnew['rivlen'].min())
+    print (dfnew[dfnew['rivlen']==dfnew['rivlen'].min()]['station'].values[0])
+    station0=dfnew[dfnew['rivlen']==dfnew['rivlen'].min()]['station'].values[0]
+    lon0=dfnew[dfnew['station']==station0]['lon'].values[0]
+    lat0=dfnew[dfnew['station']==station0]['lat'].values[0]
+    print (lon0,lat0)
+
+    # print (dfcryo[dfcryo['lon']==lon0 & dfcryo['lat']==lat0]['chainage [m]'].values[0])
+
+    ax.set_xlim(1900.0,2800.0)
+    ax.set_ylim(0.0,400.0)
+
     # plot the unacceptble VS
     slp_thr=1.0*abs((mean_elevation[0]-mean_elevation[-1])/rvlen00[-1])
     print slp_thr
@@ -536,51 +581,51 @@ for j in np.arange(len(rivernames)):
     print xlist
     print rvlen00[-1]
     print rvlen00[-1]-np.arange(3000.0,0.0-1.0,-500)
-    ax.set_xticks(rvlen00[-1]-np.arange(3000.0,0.0-1.0,-500))
-    ax.set_xticklabels(np.arange(3000.0,0.0-1.0,-500))
+    # ax.set_xticks(rvlen00[-1]-np.arange(3000.0,0.0-1.0,-500))
+    # ax.set_xticklabels(np.arange(3000.0,0.0-1.0,-500))
     ax.set_xlabel('Distance from river mouth $(km)$', color='k',fontsize=10)
     ax.tick_params('x',labelsize=6, colors='k')
-    ax.set_xlim(xmin=0.0,xmax=rvlen00[-1]) #,xmax=1500.0)
+    # ax.set_xlim(xmin=0.0,xmax=rvlen00[-1]) #,xmax=1500.0)
     # ax.set_ylim(ymin=250.0)
-    #===========
-    plt.legend(ncol=2,loc="upper right",frameon=False,fancybox=False)
-    # inset axes
-    axins = zoomed_inset_axes(ax, 2, loc='lower left',bbox_to_anchor=(0.05,0.05,1,1), bbox_transform=ax.transAxes)
-    # axins = inset_axes(ax,width="40%",height="20%",
-    #         loc='lower left',bbox_to_anchor=(0.01,0.01,1,1), bbox_transform=ax.transAxes)
-    # axins = ax.inset_axes([0.01, 0.01, 0.47, 0.47],transform=ax.transAxes())
-    # Mean WSE
-    axins.errorbar(rvlen00,mean_WSE,yerr=range_WSE,color="k",label=TAG,linestyle='none',linewidth=0.3,marker="o",markersize=2, #,fillstyle="none"
-                ecolor="k",elinewidth=0.3,capsize=1.0)
-    # Median WSE
-    axins.plot(rvlen00,median_WSE,color="g",label=TAG,linestyle='none',linewidth=0.5,marker="D",markersize=3,) #,fillstyle="none"
-    axins.plot(rvlen00,mean_elevation,color="k",label="MERIT elevation",linestyle='-',linewidth=0.5)
-    # axins.plot(rvlen00,mean_elevation + thrs,color="grey",label="Upper limit",linestyle='--',linewidth=0.3)
-    # axins.plot(rvlen00,mean_elevation - thrs,color="grey",label="Lower limit",linestyle='--',linewidth=0.3)
-    axins.fill_between(rvlen00,mean_elevation + thrs,mean_elevation - thrs,color="grey",label="range",alpha=0.3)
-    # ax.plot(rvlen00,mean_elevation - riv_hgt,color="purple",label="CaMa-Flood",linestyle='--',linewidth=0.5) #"xkcd:bluish green"
-    axins.plot(rvlen00,cmf_WSE,color="blue",label="Mean simulated WSE",linestyle='-',linewidth=0.5) #xkcd:bright blue
-    for point in range(pnum):
-        if mean_elevation[point] + upthr < mean_WSE[point] or mean_elevation[point] - dwthr > mean_WSE[point]:
-            axins.plot(rvlen00[point],mean_WSE[point],color="r",linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=10)
+    # # #===========
+    # # plt.legend(ncol=2,loc="upper right",frameon=False,fancybox=False)
+    # # # inset axes
+    # # axins = zoomed_inset_axes(ax, 2, loc='lower left',bbox_to_anchor=(0.05,0.05,1,1), bbox_transform=ax.transAxes)
+    # # # axins = inset_axes(ax,width="40%",height="20%",
+    # # #         loc='lower left',bbox_to_anchor=(0.01,0.01,1,1), bbox_transform=ax.transAxes)
+    # # # axins = ax.inset_axes([0.01, 0.01, 0.47, 0.47],transform=ax.transAxes())
+    # # # Mean WSE
+    # # axins.errorbar(rvlen00,mean_WSE,yerr=range_WSE,color="k",label=TAG,linestyle='none',linewidth=0.3,marker="o",markersize=2, #,fillstyle="none"
+    # #             ecolor="k",elinewidth=0.3,capsize=1.0)
+    # # # Median WSE
+    # # axins.plot(rvlen00,median_WSE,color="g",label=TAG,linestyle='none',linewidth=0.5,marker="D",markersize=3,) #,fillstyle="none"
+    # # axins.plot(rvlen00,mean_elevation,color="k",label="MERIT elevation",linestyle='-',linewidth=0.5)
+    # # # axins.plot(rvlen00,mean_elevation + thrs,color="grey",label="Upper limit",linestyle='--',linewidth=0.3)
+    # # # axins.plot(rvlen00,mean_elevation - thrs,color="grey",label="Lower limit",linestyle='--',linewidth=0.3)
+    # # axins.fill_between(rvlen00,mean_elevation + thrs,mean_elevation - thrs,color="grey",label="range",alpha=0.3)
+    # # # ax.plot(rvlen00,mean_elevation - riv_hgt,color="purple",label="CaMa-Flood",linestyle='--',linewidth=0.5) #"xkcd:bluish green"
+    # # axins.plot(rvlen00,cmf_WSE,color="blue",label="Mean simulated WSE",linestyle='-',linewidth=0.5) #xkcd:bright blue
+    # # for point in range(pnum):
+    # #     if mean_elevation[point] + upthr < mean_WSE[point] or mean_elevation[point] - dwthr > mean_WSE[point]:
+    # #         axins.plot(rvlen00[point],mean_WSE[point],color="r",linestyle='none',linewidth=0.5,marker="o",fillstyle="none",markersize=10)
         
-    # sub region of the original image
-    x_1, x_2 = 2200, 1900 #1750
-    x1, x2, y1, y2 = rvlen00[-1]-x_1, rvlen00[-1]-x_2, 320, 400
-    rect = patches.Rectangle((x1, y1), x2-x1, y2-y1, linewidth=3, edgecolor='r', facecolor='none')
-    axins.set_xlim(x1, x2)
-    axins.set_ylim(y1, y2)
-    # axins.set_xticklabels([])
-    # axins.set_yticklabels([])
-    axins.tick_params('y',labelsize=6, colors='k')
-    axins.tick_params('x',labelsize=6, colors='k')
-    axins.set_xticks(rvlen00[-1]-np.arange(x_1, x_2-1.0,-100))
-    axins.set_xticklabels(np.arange(x_1, x_2-1.0,-100))
+    # # # sub region of the original image
+    # # x_1, x_2 = 2200, 1900 #1750
+    # # x1, x2, y1, y2 = rvlen00[-1]-x_1, rvlen00[-1]-x_2, 320, 400
+    # # rect = patches.Rectangle((x1, y1), x2-x1, y2-y1, linewidth=3, edgecolor='r', facecolor='none')
+    # # axins.set_xlim(x1, x2)
+    # # axins.set_ylim(y1, y2)
+    # # # axins.set_xticklabels([])
+    # # # axins.set_yticklabels([])
+    # # axins.tick_params('y',labelsize=6, colors='k')
+    # # axins.tick_params('x',labelsize=6, colors='k')
+    # # axins.set_xticks(rvlen00[-1]-np.arange(x_1, x_2-1.0,-100))
+    # # axins.set_xticklabels(np.arange(x_1, x_2-1.0,-100))
 
-    mark_inset(ax, axins, loc1=1, loc2=3, fc="none", ec="k", linewidth=0.5) #, fc="none", ec="1.0")
+    # # mark_inset(ax, axins, loc1=1, loc2=3, fc="none", ec="k", linewidth=0.5) #, fc="none", ec="1.0")
     # indicate_inset_zoom(axins, edgecolor="black")
     #===========
     print (rivername0+"-"+stream0)
-    plt.savefig("./fig/f02-along_river_VS_"+rivername0+"-"+stream0+".png",dpi=800)
-    plt.savefig("./fig/f02-along_river_VS_"+rivername0+"-"+stream0+".pdf",dpi=800)
-    plt.savefig("./fig/f02-along_river_VS_"+rivername0+"-"+stream0+".jpg",dpi=800)
+    plt.savefig("./fig/fs02-along_river_VS_"+rivername0+"-"+stream0+".png",dpi=800)
+    plt.savefig("./fig/fs02-along_river_VS_"+rivername0+"-"+stream0+".pdf",dpi=800)
+    plt.savefig("./fig/fs02-along_river_VS_"+rivername0+"-"+stream0+".jpg",dpi=800)

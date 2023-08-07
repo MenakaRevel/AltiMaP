@@ -18,23 +18,23 @@ import read_cgls as cgls
 import read_icesat as icesat 
 import read_hydrosat as hsat
 
-curr_pwd = '/cluster/data6/menaka/CaMaVal/'
+# curr_pwd = '/cluster/data6/menaka/CaMaVal/'
 
-CaMa_dir = '/cluster/data6/menaka/CaMa-Flood_v396a_20200514/'
+# CaMa_dir = '/cluster/data6/menaka/CaMa-Flood_v396a_20200514/'
 
-#TAG='camavali'
-TAG='HydroWeb'
-#TAG='CGLS'
-#TAG='HydroSat'
+# #TAG='camavali'
+# TAG='HydroWeb'
+# #TAG='CGLS'
+# #TAG='HydroSat'
 
-#runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_ecmwf/'
-#runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_ecmwf_correct/'
-# runoff_folder = '/cluster/data6/x.zhou/CaMa_v396b/glb_06min/out/e2o_ecmwf_1050/'
-# runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_cnrs/'
-runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC001/'
-# runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC_USED/'
+# #runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_ecmwf/'
+# #runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_ecmwf_correct/'
+# # runoff_folder = '/cluster/data6/x.zhou/CaMa_v396b/glb_06min/out/e2o_ecmwf_1050/'
+# # runoff_folder = '/cluster/data6/x.zhou/CaMa_v396/glb_06min/out/e2o_cnrs/'
+# runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC001/'
+# # runoff_folder = '/cluster/data6/menaka/ensemble_org/CaMa_out/GLBVIC_BC_USED/'
 
-obstxt="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_06min.txt"
+# obstxt="/cluster/data6/menaka/HydroWeb/HydroWeb_alloc_glb_06min.txt"
 
 TAG=sys.argv[1]
 syear=int(sys.argv[2])
@@ -44,8 +44,14 @@ CaMa_dir=sys.argv[5]
 curr_pwd=sys.argv[6]
 out_pwd =sys.argv[7]
 obstxt =sys.argv[8]
+allocation_type=sys.argv[9]
+# allocation type
+if allocation_type == 'ordinary':
+    ordinary = True
+else:    
+    ordinary = False
 # ordinary = True
-ordinary = False
+# ordinary = False
 csize = 0.1
 
 # out_pwd = curr_pwd+'/results/'+ TAG +'/'
@@ -64,6 +70,10 @@ slope_threshold=100000 #m
 
 ssize=12
 #pdf = PdfPages( pwd + 'gauges.pdf')
+
+#======================================================================================================
+# functions to read discharge
+#======================================================================================================
 def read_wse_multi(ix, iy, syear, eyear, number, lat, lon):
     #print ix1,iy1
     wse = np.zeros( (len(ix), nbdays), 'f')
@@ -88,7 +98,9 @@ def read_wse_multi(ix, iy, syear, eyear, number, lat, lon):
         wse_min_loc[:,year-syear] = np.argmin(tmp, axis=1)
 
     return wse , wse_max, wse_min, wse_max_loc, wse_min_loc
-
+#======================================================================================================
+# functions to read wse
+#======================================================================================================
 # read WSE from CMF outputs
 def read_wse(ix, iy, syear, eyear, number, lat, lon):
     wse = np.zeros( nbdays, 'f')
@@ -177,7 +189,7 @@ def read_wse(ix, iy, syear, eyear, number, lat, lon):
 
         #print lon, lat, lon_global[ix1], lat_global[iy1]
     return wse, wse_max, wse_min, wse_max_loc, wse_min_loc
-#-------------------------------------
+#======================================================================================================
 def slope(ix,iy,nextxy,uparea,elevtn,rivlen,rivseq):
     if rivseq[iy,ix]>1:
         nextX=nextxy[0]
@@ -189,7 +201,7 @@ def slope(ix,iy,nextxy,uparea,elevtn,rivlen,rivseq):
     else:
         slp=0
     return slp
-# =============================
+#======================================================================================================
 def covert_lonlat(llon, llat, west=-180.0, north=90.0, gsize=0.1):
     '''
     Convert lat lon to x, y coordinate

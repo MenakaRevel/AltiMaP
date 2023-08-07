@@ -118,7 +118,7 @@ def covert_lonlat(lon, lat, west=-180.0, north=90.0, gsize=0.1):
     return ix, iy
 #=============================
 mkdir("../fig")
-mkdir("../fig/high_res_map")
+mkdir("../fig/high_res_map_timeseries")
 #============================= 
 # sfcelv
 syear=2000
@@ -176,12 +176,47 @@ stream0="CONGO" #
 # station0="R_VOLGA_UFA_KM3232"
 # station0="R_VOLGA_OKA_KM3076"
 # station0="R_AMAZONAS_CONONACO_KM4357"
-station0="R_MURRAY_MURRAY_KM1779"
+# station0="R_MURRAY_MURRAY_KM1779"
+station0="R_RAPEL_RAPEL_KM0033"
 dataname="HydroWeb"
 odir="/cluster/data6/menaka/AltiMaP/results"
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 restag="3sec"
+#=============================
+# Read the CMF variables
+if mapname == 'glb_15min':
+    nx      = 1440
+    ny      = 720
+    gsize   = 0.25
+elif mapname == 'glb_06min':
+    nx      = 3600
+    ny      = 1800
+    gsize   = 0.1
+elif mapname == 'glb_01min':
+    nx      = 21600
+    ny      = 10800
+    gsize   = 1/60.
+#=============================
+nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
+rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
+rivhgt = CaMa_dir+"/map/"+mapname+"/rivhgt.bin"
+rivlen = CaMa_dir+"/map/"+mapname+"/rivlen.bin"
+elevtn = CaMa_dir+"/map/"+mapname+"/elevtn.bin"
+lonlat = CaMa_dir+"/map/"+mapname+"/lonlat.bin"
+uparea = CaMa_dir+"/map/"+mapname+"/uparea.bin"
+nxtdst = CaMa_dir+"/map/"+mapname+"/nxtdst.bin"
+rivseq = CaMa_dir+"/map/"+mapname+"/rivseq.bin"
+nextxy = np.fromfile(nextxy,np.int32).reshape(2,ny,nx)
+# rivwth = np.fromfile(rivwth,np.float32).reshape(ny,nx)
+# rivhgt = np.fromfile(rivhgt,np.float32).reshape(ny,nx)
+# rivlen = np.fromfile(rivlen,np.float32).reshape(ny,nx)
+elevtn = np.fromfile(elevtn,np.float32).reshape(ny,nx)
+lonlat = np.fromfile(lonlat,np.float32).reshape(2,ny,nx)
+uparea = np.fromfile(uparea,np.float32).reshape(ny,nx)
+nxtdst = np.fromfile(nxtdst,np.float32).reshape(ny,nx)
+rivseq = np.fromfile(rivseq,np.int32).reshape(ny,nx)
+#---
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210709.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210714.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210715.txt"
@@ -347,6 +382,8 @@ pname=df[df["station"]==station0]["station"].values
 lflag=df[df["station"]==station0]["flag"].values
 lons=df[df["station"]==station0]["lon"].values
 lats=df[df["station"]==station0]["lat"].values
+xlist=df[df["station"]==station0]["ix"].values
+ylist=df[df["station"]==station0]["iy"].values
 kx1lt=df[df["station"]==station0]["kx1"].values
 ky1lt=df[df["station"]==station0]["ky1"].values
 kx2lt=df[df["station"]==station0]["kx2"].values
@@ -361,7 +398,7 @@ wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
 #plt.title(pname[point][0],fontsize=12)
 # G = gridspec.GridSpec(3,2)
-G = gridspec.GridSpec(1,1)
+G = gridspec.GridSpec(nrows=1,ncols=3)
 lon = lons[point]
 lat = lats[point]
 west, south = westsouth(lat,lon)
@@ -453,14 +490,14 @@ kx1= kx1lt[point]
 ky1= ky1lt[point]
 lat1 = south + 10.0 - res/2.0 - ky1*res  
 lon1 = west + res/2.0 + kx1*res
-ax0.plot(lon1 ,lat1 ,color="r",marker="o",label="best-loc",markersize=7,linewidth=0,zorder=112) #fillstyle="none",
+ax0.plot(lon1 ,lat1 ,color="r",marker="o",label="AltiMaP(Original)",markersize=7,linewidth=0,zorder=112) #fillstyle="none",
 #================
 kx2= kx2lt[point]
 ky2= ky2lt[point]
 if kx2 != -9999 and ky2 != -9999:
     lat2 = south + 10.0 - res/2.0 - ky2*res  
     lon2 = west + res/2.0 + kx2*res
-    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="secondary",markersize=7,linewidth=0,zorder=112)
+    ax0.plot(lon2 ,lat2 ,color="xkcd:orange",marker="*",label="AltiMaP(Secondary)",markersize=7,linewidth=0,zorder=112)
 #================
 # if ordinary allocation used
 gsize=0.1 # glb_06min
@@ -472,6 +509,39 @@ kx3, ky3 = covert_lonlat(lon1, lat1)
 lat3=north0 - ky3*gsize
 lon3=west0 + kx3*gsize
 ax0.plot(lon3 ,lat3 ,color="xkcd:hot pink",marker="D",label="ordinary",markersize=7,linewidth=0,zorder=112)
+#================
+# read netCDF flies
+# ====
+# sfcelv AltiMaP
+odir1 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
+fname1 = odir1+"/hydroweb_cmf_daily_wse_VIC_BC.nc"
+nc1 = xr.open_dataset(fname1)
+sfcelv_hydroweb1=nc1.sfcelv_hydroweb.values
+sfcelv_cmf1=nc1.sfcelv_cmf.values
+pnames1=nc1.name.values
+nbdays = nc1.dims["nbdays"]
+# ====
+# sfcelv Ordinary
+odir2 = '/cluster/data6/menaka/AltiMaP/results/HydroWeb'
+fname2 = odir2+"/hydroweb_cmf_daily_wse_VIC_BC_ordinary.nc"
+nc2 = xr.open_dataset(fname2)
+sfcelv_hydroweb2=nc2.sfcelv_hydroweb.values
+sfcelv_cmf2=nc2.sfcelv_cmf.values
+pnames2=nc2.name.values
+#=====
+# find the index pnames1 == station0
+index1=np.where(pnames1 == station0)[0][0]
+index2=np.where(pnames2 == station0)[0][0]
+# times = ma.masked_where(sfcelv_hydroweb1[:,index1] > -100.0 ,range(nbdays))
+times=np.where(sfcelv_hydroweb1[:,index1] > 0.0)[0]
+print (times)
+print (ma.masked_less_equal(sfcelv_hydroweb1[:,index1],-9999.0))
+#================================ 
+ax2 = fig.add_subplot(G[0,1::]) #ma.masked_less_equal(sfcelv_hydroweb1[:,index1],-9000.0)
+ax2.plot(times,ma.masked_less_equal(sfcelv_hydroweb1[:,index1],-9999.0)[times],color="k",label="HydroWeb",linestyle=None,linewidth=0.0,marker="o",zorder=112)
+ax2.plot(range(nbdays),sfcelv_cmf1[:,index1],color="r",label="CMF1",linewidth=1.0,zorder=112)
+ax2.plot(range(nbdays),sfcelv_cmf2[:,index2],color="xkcd:hot pink",label="CMF2",linewidth=1.0,zorder=112)
+ax2.axhline(y=elevtn[ylist[0]-1,xlist[0]-1],color="k",linestyle="--",linewidth=1.0,zorder=112)
 # print (kx,ky,lon0,lat0)
 # # #========================================================
 # # ax1 = fig.add_subplot(G[0,1])
@@ -516,7 +586,7 @@ ax0.plot(lon3 ,lat3 ,color="xkcd:hot pink",marker="D",label="ordinary",markersiz
 plt.legend(loc="upper center", bbox_to_anchor=(0.5,0.0), ncol=4)
 #========================================================
 # plt.show()
-plt.savefig("../fig/high_res_map/"+station0+".png",dpi=500)
+plt.savefig("../fig/high_res_map_timeseries/"+station0+".png",dpi=500)
 # pdf.savefig()  # saves the current figure into a pdf page
 # plt.close()
 # # set the file's metadata via the PdfPages object:

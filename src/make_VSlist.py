@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Calculate the EGM08 and EGM96 values for each VS
-and write to the VS list
+Calculate the EGM08 and EGM96 values for each VS and write to the VS list
 input: {datadir}/{dataname}_VS
 identifier,river,basin,country,satellite,track_nb,start_date,end_date,latitude,longitude,status,validation
 output: ./inp/{dataname}_Station_list.txt
@@ -14,13 +13,13 @@ import sys
 ##########################
 # get input
 dataname=sys.argv[1]
-datadir=sys.argv[2]
+datafile=sys.argv[2]
 outdir=sys.argv[3]
 ##########################
 
 ##################
 # read VS list
-fname=datadir+"/HydroWeb_VS"
+fname=datafile #+"/HydroWeb_VS"
 with open(fname,"r") as fr:
     lines=fr.readlines()
 #-
@@ -63,11 +62,16 @@ with open("./INPUT.DAT","w") as fw:
         #===========================
         #--get ID & elevation
         #===========================
-        iname=datadir+"/hydroprd_"+station+".txt"
-        with open(iname,"r") as f_hyd:
-            l_hyd=f_hyd.readlines()
-        ID=int(l_hyd[2].split("::")[-1])
-        ele=float(l_hyd[16].split("::")[-1])
+        if dataname == "HydroWeb":
+            iname=datadir+"/hydroprd_"+station+".txt"
+            with open(iname,"r") as f_hyd:
+                l_hyd=f_hyd.readlines()
+            ID=int(l_hyd[2].split("::")[-1])
+            ele=float(l_hyd[16].split("::")[-1])
+        else:
+            print (station)
+            ID=int(station[-4::])
+            ele=-99.0
         #===========================
         # append
         #===========================
@@ -123,7 +127,7 @@ for i,line in enumerate(liner):
 #==========================================
 # write VS list
 #==========================================
-fname=outdir+"/"+dataname+"_Station_list.txt"
+fname=outdir+"/"+dataname+"Station_list.txt"
 with open(fname,"w") as fww:
     header="%15s%62s%32s%32s%32s%10s%10s%10s%10s%10s%17s%17s%17s%13s\n"%("ID","Station","River","Basin","Country","lon","lat","elevation","EGM08","EGM96","Satellite","Start Date","End Date","Status")
     fww.write(header)

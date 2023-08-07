@@ -31,6 +31,7 @@ import cartopy.feature as cfeature
 import errno
 import seaborn as sns
 import string
+import pandas as pd
 
 sys.path.append("../src")
 from read_patchMS import upstream
@@ -146,7 +147,7 @@ odir="/cluster/data6/menaka/Altimetry/fig/river_profile"
 TAG="HydroWeb"
 mapname="glb_06min"
 restag="3sec"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 prename=re.split("-",sys.argv[0])[0]
 #=============================
 fname=CaMa_dir+"/map/"+mapname+"/params.txt"
@@ -209,82 +210,89 @@ if restag == "3sec":
     nx =12000
     ny =12000
     hiresmap=CaMa_dir+"/map/"+mapname+"/"+restag+"/"
+#==============================
+fname="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"+mapname+"_20230407.txt"
+df=pd.read_csv(fname, sep='\s+', header=0) #,encoding=str)
+print (df.head())
+print (df.columns)
+df["uparea"]=[uparea[iy-1,ix-1]*1e-6 for ix, iy in zip(df["ix"],df["iy"])]
+N=float(len(df))
 #======================================================================
-noobs="/cluster/data6/menaka/Altimetry/out/unreal_obs_20220729.txt"
-noVS=[]
-with open(noobs,"r") as f:
-    lines=f.readlines()
-    for line in lines:
-        line    = filter(None,re.split(" ",line))
-        station = line[0].strip()
-        # print (station)
-        noVS.append(station)
-############################################################
-nums=[]
-river=[]
-pname=[]
-lons =[]
-lats =[]
-xlist=[]
-ylist=[]
-leled=[]
-egm08=[]
-egm96=[]
-llsat=[]
-ldtom=[]
-lflag=[]
-kxlst=[]
-kylst=[]
-upare=[]
-rivwth=[]
-#===========================
-obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20220730.txt"
-fname=obstxt
-f=open(fname,"r")
-lines=f.readlines()
-for line in lines[1::]:
-    line    = filter(None,re.split(" ",line))
-    #print line
-    num     = line[0]
-    station = line[1]
-    line2   = re.split("_",station)
-    riv     = line2[1]
-    stream  = line2[2]
-    lon     = float(line[3])
-    lat     = float(line[4])
-    ix      = int(line[5])-1
-    iy      = int(line[6])-1
-    eled    = float(line[7])
-    EGM08   = float(line[8])
-    EGM96   = float(line[9])
-    sat     = line[10].strip()
-    dist    = float(line[11])
-    flag    = int(line[12])
-    kx      = int(line[13])
-    ky      = int(line[14])
-    rw      = float(line[19])
-    #-----------------------
-    if station in noVS:
-        nums.append(num)
-        river.append(riv)
-        pname.append(station)
-        lons.append(lon)
-        lats.append(lat)
-        xlist.append(ix)
-        ylist.append(iy)
-        leled.append(eled)
-        egm08.append(EGM08)
-        egm96.append(EGM96)
-        llsat.append(sat)
-        ldtom.append(dist)
-        flag=flag_diff(flag)
-        lflag.append(flag)
-        kxlst.append(kx)
-        kylst.append(ky)
-        upare.append(uparea[iy,ix]*1e-6)
-        rivwth.append(rw)
+# noobs="/cluster/data6/menaka/Altimetry/out/unreal_obs_20220729.txt"
+# noVS=[]
+# with open(noobs,"r") as f:
+#     lines=f.readlines()
+#     for line in lines:
+#         line    = filter(None,re.split(" ",line))
+#         station = line[0].strip()
+#         # print (station)
+#         noVS.append(station)
+# ############################################################
+# nums=[]
+# river=[]
+# pname=[]
+# lons =[]
+# lats =[]
+# xlist=[]
+# ylist=[]
+# leled=[]
+# egm08=[]
+# egm96=[]
+# llsat=[]
+# ldtom=[]
+# lflag=[]
+# kxlst=[]
+# kylst=[]
+# upare=[]
+# rivwth=[]
+# #===========================
+# obstxt="/cluster/data6/menaka/Altimetry/out/altimetry_"+mapname+"_20220730.txt"
+# fname=obstxt
+# f=open(fname,"r")
+# lines=f.readlines()
+# for line in lines[1::]:
+#     line    = filter(None,re.split(" ",line))
+#     #print line
+#     num     = line[0]
+#     station = line[1]
+#     line2   = re.split("_",station)
+#     riv     = line2[1]
+#     stream  = line2[2]
+#     lon     = float(line[3])
+#     lat     = float(line[4])
+#     ix      = int(line[5])-1
+#     iy      = int(line[6])-1
+#     eled    = float(line[7])
+#     EGM08   = float(line[8])
+#     EGM96   = float(line[9])
+#     sat     = line[10].strip()
+#     dist    = float(line[11])
+#     flag    = int(line[12])
+#     kx      = int(line[13])
+#     ky      = int(line[14])
+#     rw      = float(line[19])
+#     #-----------------------
+#     if station in noVS:
+#         nums.append(num)
+#         river.append(riv)
+#         pname.append(station)
+#         lons.append(lon)
+#         lats.append(lat)
+#         xlist.append(ix)
+#         ylist.append(iy)
+#         leled.append(eled)
+#         egm08.append(EGM08)
+#         egm96.append(EGM96)
+#         llsat.append(sat)
+#         ldtom.append(dist)
+#         flag=flag_diff(flag)
+#         lflag.append(flag)
+#         kxlst.append(kx)
+#         kylst.append(ky)
+#         upare.append(uparea[iy,ix]*1e-6)
+#         rivwth.append(rw)
 #-----------------------------
-pnum=len(nums)   
+pnum=len(df)   
 #=============================
 # river width
 sup=2
@@ -292,7 +300,7 @@ w=0.01
 alpha=1
 width=0.5
 
-land="#C0C0C0"
+land="k" #"#C0C0C0"
 water="#FFFFFF"
 
 west=-180.0
@@ -333,9 +341,22 @@ bounds=np.arange(0.0,4.0,1.0)
 # cmapL = matplotlib.colors.ListedColormap(colors)
 
 marlist={10:'o', 20:'d', 30:'s',40:'^'}
-marsize={10:0.75, 20:0.75, 30:0.9,40:1.0}
+# marsize={10:0.75, 20:0.75, 30:0.9,40:1.0}
+marsize={10:5.0, 20:5.0, 30:5.0,40:5.0}
 colors=["#e0fbfb","#97c1d9","#3c5a80","#ef6c4d"]
 corlist={10:'#e0fbfb', 20:'#97c1d9', 30:'#3c5a80', 40:'#ef6c4d'} #,32:'xkcd:lavender',50:'xkcd:deep teal',30:'purple'}
+
+# New colors based on chat-gpt
+colors = [
+    "#CD5C5C",  # Terracotta
+    "#228B22",  # Forest Green
+    "#FFD700",  # Sunflower Yellow
+    "#4169E1"  # Royal Blue
+]
+corlist={10:'#CD5C5C', 20:'#228B22', 30:'#FFD700', 40:'#4169E1'}
+cmapL = matplotlib.colors.ListedColormap(colors)
+zorder = {10:110, 20:111, 30:112, 40:115}
+
 cmapL = matplotlib.colors.ListedColormap(colors)
 zorder = {10:110, 20:111, 30:112, 40:115}
 norml=BoundaryNorm(bounds,cmapL.N)
@@ -344,6 +365,8 @@ vmax=8.0
 # norm=Normalize(vmin=vmin,vmax=vmax)
 
 bounds=np.arange(0.0,8.0,1.0)
+
+#==================================================================
 hgt=11.69*(1.0/2.0)
 wdt=8.27
 fig=plt.figure(figsize=(wdt, hgt))
@@ -351,29 +374,50 @@ G  = gridspec.GridSpec(3,3)
 ax1=fig.add_subplot(G[0:2,:],projection=ccrs.Robinson())
 #-----------------------------  
 ax1.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
-ax1.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
+ax1.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '110m', edgecolor='face', facecolor=land),zorder=100)
 #--
 box="%f %f %f %f"%(lllon,urlon,urlat,lllat) 
 os.system("./bin/txt_vector "+box+" "+CaMa_dir+" "+mapname+"  > "+prename+"00.txt") 
 # map(vec_par,np.arange(5,10+1,1))
 map(vec_par,np.arange(2,10+1,1))
-# map(vec_par,np.arange(5,10+1,1))
+# map(vec_par,np.arange(8,10+1,1))
 #
-pnum=len(nums)
-for point in np.arange(pnum):
-    flag=lflag[point]
-    eled=leled[point]
-    lon =lons[point]
-    lat =lats[point]
-    # c=cmapL(norml(flag))
-    #print lon,lat,pname[point][0],mean_bias
-    print (pname[point], flag)
-    c=corlist[flag]
-    m=marlist[flag]
-    ax1.scatter(lon,lat,s=5,marker=m,zorder=zorder[flag],edgecolors="k", facecolors=c, linewidth=0.15,transform=ccrs.PlateCarree())
+pnum=len(df)
+
+
+# [corlist[math.floor(((flag-900)/10.0 if flag >= 900 else flag)/10.0)*10.0] for flag in df["flag"]]
+
+# df["corlist"]=[corlist[math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+# df["marlist"]=[marlist[math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+# df["marsize"]=[marsize[math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+# df["zorder"]=[zorder[math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+
+df["corlist"]=[corlist[math.floor((flag-900)/10.0)*10.0 if flag >= 900 else math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+df["marlist"]=[marlist[math.floor((flag-900)/10.0)*10.0 if flag >= 900 else math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+df["marsize"]=[marsize[math.floor((flag-900)/10.0)*10.0 if flag >= 900 else math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+df["zorder"]=[zorder[math.floor((flag-900)/10.0)*10.0 if flag >= 900 else math.floor(flag/10.0)*10.0] for flag in df["flag"]]
+print (df.head())
+
+# for point in np.arange(len(df[df["flag"]>=900])):
+for point in df[df["flag"]>=900].index.tolist():
+    # print (df["lon"][point],df["lat"][point],df["flag"][point]) #df["marsize"][point],df["marlist"][point],df["zorder"][point],df["corlist"][point])
+    ax1.scatter(df["lon"][point],df["lat"][point],s=7.5,marker=df["marlist"][point],zorder=df["zorder"][point],edgecolors="k", facecolors=df["corlist"][point],linewidth=0.05,transform=ccrs.PlateCarree()) #,
+# df["marsize"][point]
+
+# for point in np.arange(pnum):
+#     flag=lflag[point]
+#     eled=leled[point]
+#     lon =lons[point]
+#     lat =lats[point]
+#     # c=cmapL(norml(flag))
+#     #print lon,lat,pname[point][0],mean_bias
+#     print (pname[point], flag)
+#     c=corlist[flag]
+#     m=marlist[flag]
+#     ax1.scatter(lon,lat,s=5,marker=m,zorder=zorder[flag],edgecolors="k", facecolors=c, linewidth=0.15,transform=ccrs.PlateCarree())
 #--
-im=ax1.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml)#
-im.set_visible(False)
+# im=ax1.scatter([],[],c=[],cmap=cmapL,s=0.1,vmin=vmin,vmax=vmax,norm=norml)#
+# im.set_visible(False)
 #cbar=M.colorbar(im,"right",size="2%")
 ax1.outline_patch.set_linewidth(0.0)
 # #colorbar
@@ -383,32 +427,53 @@ ax1.outline_patch.set_linewidth(0.0)
 # cbar.ax.tick_params(labelsize=6)
 # cbar.set_label("Allocation Flag",fontsize=8)
 ax1.text(0.00,1.00,"%s)"%(string.ascii_lowercase[0]),ha="left",va="center",transform=ax1.transAxes,fontsize=10)
+# features=[]
+# for i,flag in enumerate([10,20,30,40]):
+#     features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
+#                     markeredgecolor="k",markeredgewidth=0.5,markersize=2, label='%d'%(flag),linewidth=0.0))
+# l,b,w,h=0.55,0.40,0.45,0.01
+# # l,b,w,h=0.4,0.1,0.45,0.01
+# legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower center",fontsize=8,
+#            bbox_transform=fig.transFigure, ncol=4,  borderaxespad=0.0, frameon=False)#
+
+# legend
 features=[]
 for i,flag in enumerate([10,20,30,40]):
-    features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
-                    markeredgecolor="k",markeredgewidth=0.5,markersize=2, label='%d'%(flag),linewidth=0.0))
-l,b,w,h=0.55,0.40,0.45,0.01
-# l,b,w,h=0.4,0.1,0.45,0.01
-legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower center",fontsize=8,
+    # features.append(mlines.Line2D([], [], color=corlist[flag], marker=marlist[flag],
+    #                 markeredgecolor="k",markeredgewidth=0.5,markersize=4,label='%d'%(flag),linewidth=0.0))
+    features.append(mpatches.Patch(color=corlist[flag],label='%d'%(flag)))
+l,b,w,h=0.4,0.4,0.45,0.01
+legend=plt.legend(handles=features,bbox_to_anchor=(l,b), loc="lower left",
            bbox_transform=fig.transFigure, ncol=4,  borderaxespad=0.0, frameon=False)#
+
+
 #====
 ax2=fig.add_subplot(G[2,0])
-mk_hist(np.log10(upare),color="red",label="$catchment$ $area$ $(km^2)$",ax=ax2)
-print (np.median(upare))
+# mk_hist(np.log10(upare),color="red",label="$catchment$ $area$ $(km^2)$",ax=ax2)
+mk_hist(np.log10(df[df["flag"]>=900]["uparea"]),color="red",label="$catchment$ $area$ $(km^2)$",ax=ax2)
+# print (np.median(upare))
+print ("uparea", df[df["flag"]>=900]["uparea"].median())
 ax2.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[1]),ha="left",va="center",transform=ax2.transAxes,fontsize=10)
+ax2.set_ylabel("Density",fontsize=8)
 ax2.set_xticks(np.arange(2,7+1,1))
 ax2.set_xticklabels([r"$10^{%d}$"%(i) for i in np.arange(2,7+1,1)])
 #====
 ax3=fig.add_subplot(G[2,1])
-mk_hist(leled,color="green",label="$elevation$ $(m)$",ax=ax3)
-print (np.median(leled))
+# mk_hist(leled,color="green",label="$elevation$ $(m)$",ax=ax3)
+mk_hist(df[df["flag"]>=900]["elevation"],color="green",label="$elevation$ $(m)$",ax=ax3)
+# print (np.median(leled))
+print ("elevation", df[df["flag"]>=900]["elevation"].median())
 ax3.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[2]),ha="left",va="center",transform=ax3.transAxes,fontsize=10)
 #====
 ax4=fig.add_subplot(G[2,2])
-mk_hist(rivwth,color="xkcd:slate",label="$river$ $width$ $(m)$",ax=ax4)
-print (np.median(rivwth))
+# mk_hist(rivwth,color="xkcd:slate",label="$river$ $width$ $(m)$",ax=ax4)
+mk_hist(df[df["flag"]>=900]["rivwth"],color="xkcd:slate",label="$river$ $width$ $(m)$",ax=ax4)
+# print (np.median(rivwth))
+print ("rivwth",df[df["flag"]>=900]["rivwth"].median())
 ax4.text(-0.05,1.05,"%s)"%(string.ascii_lowercase[3]),ha="left",va="center",transform=ax4.transAxes,fontsize=10)
 #=====
+plt.tight_layout(h_pad=0.5) #pad=0.5, w_pad=0.5, h_pad=0.5)
+#==
 plt.savefig("./fig/f05-unrealstic_VS_map_flag.png",dpi=800,bbox_inches="tight", pad_inches=0.0)
 plt.savefig("./fig/f05-unrealstic_VS_map_flag.jpg",dpi=800,bbox_inches="tight", pad_inches=0.0)
 plt.savefig("./fig/f05-unrealstic_VS_map_flag.pdf",dpi=800,bbox_inches="tight", pad_inches=0.0)
