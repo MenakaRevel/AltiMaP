@@ -22,14 +22,24 @@ cd "/cluster/data6/menaka/AltiMaP"
 
 # Data name
 # dataname="HydroWeb"
-dataname="Schneider2017"
+# dataname="Schneider2017"
+# dataname="Prakatgauge"
+dataname="SWOTMackenzie"
 
 # data directory
 # datadir="/cluster/data6/menaka/HydroWeb/data"
-datafile="./ESSD_paper/CryoSat2_Brahmaputra_list.txt"
+# datadir="/cluster/data6/menaka/HydroWeb/data_v2023"
+# datadir="/work/a06/menaka/Prakat_Model_Scale/inp"
+datadir="/cluster/data6/menaka/AltiMaP/inp"
+
+# datafile
+# datafile="./ESSD_paper/CryoSat2_Brahmaputra_list.txt"
+# datafile="list_hydroprd_202309151209_rivers.csv"
+# datafile="gauge_Amazon_list.txt"
+datafile="SWOT_Mackenzie_Station_list.txt"
 
 
 # output directory
 outdir="./inp"
 
-python "./src/make_VSlist.py" $dataname $datafile $outdir
+python "./src/make_VSlist.py" $dataname $datafile $datadir $outdir

@@ -28,30 +28,37 @@ cd "/cluster/data6/menaka/AltiMaP"
 
 #CaMA-Flood directory
 # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v410"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v420"
 
 # map name
 # map="glb_06min"
 # map="amz_06min"
 # map="glb_01min"
-map="conus_06min"
+# map="conus_06min"
+# map="yangtze_05min"
+map="Mackenzie_06min"
 
 glb_map="glb_06min"  # need to change according to map
+# glb_map="glb_05min"  # need to change according to map
 
 # Higher resolution data
 TAG="3sec"
+# TAG="1min"
 
 # out put directory
 outdir="./out"
 
 # 
 # dataname="HydroWeb"
-dataname="CGLS"
+# dataname="CGLS"
+dataname="SWOTMacken"
 
 # obstxt
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20210909.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20230327.txt"
-obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20230406.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20230406.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20241128.txt"
 
 # outtxt
 day=$(date +"%Y%m%d")
@@ -63,3 +70,6 @@ printf '%13s%64s%12s%12s%10s%17s%6s%12s%15s%10s%8s%8s%8s%14s%12s%12s%10s%8s%12s%
 python src/regional_alloc.py $dataname $map $glb_map $CaMa_dir $obstxt $outtxt >> tmp.txt 
 mv tmp.txt $outtxt
 echo "$outtxt created." 
+
+wait
+conda deactivate

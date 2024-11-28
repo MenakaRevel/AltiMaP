@@ -27,15 +27,16 @@ from sklearn.metrics import r2_score
 import json
 import os
 import errno
+import geopandas
 
 sys.path.append("./src")
-from read_patchMS import upstream
-from river_function import river_profile
-import read_hydroweb as hweb
-import read_cgls as cgls
-import read_hydrosat as hsat
-import read_icesat as isat
-import read_grrats as grt
+# from read_patchMS import upstream
+# from river_function import river_profile
+# import read_hydroweb as hweb
+# import read_cgls as cgls
+# import read_hydrosat as hsat
+# import read_icesat as isat
+# import read_grrats as grt
 #=========================================
 def mkdir(path):
     try:
@@ -134,6 +135,20 @@ def meanCGLS(station,egm08=0.0,egm96=0.0):
         data.append(wse)
     data=np.array(data)
     return np.mean(data), np.std(data) #, np.max(data)-np.min(data)
+#=============================
+def meanSWOT(station,egm08=0.0,egm96=0.0):
+    '''
+    get the mean observation from shapefile
+    need geopandas 
+    '''
+    fname="/work/a06/menaka/SWOT/Mackenzie_River.shp"
+    swot_data=geopandas.read_file(fname)
+    swot_data=swot_data.loc[(swot_data['time_str'] != 'no_data') & 
+    (swot_data['wse'] > -9999.0) & 
+    (swot_data['node_q'] <= 1), :]
+    swot_wse=swot_data.loc[swot_data['node_id']==str(station),:]
+    swot_wse['wse']=swot_wse['wse']+egm08-egm96
+    return swot_wse['wse'].mean(),swot_wse['wse'].std()
 #=====================================
 # sfcelv
 syear=2000
@@ -172,37 +187,58 @@ if restag == "3sec":
     ny =12000
     hiresmap=CaMa_dir+"/map/"+mapname+"/"+restag+"/"
 #=============================
-# Read the CMF variables
-if mapname == 'glb_15min':
-    nXX     = 1440
-    nYY     = 720
-    nY_     = 640
-    dXX     = 0
-    dYY     = 0
-elif mapname == 'glb_06min':
-    nXX     = 3600
-    nYY     = 1800
-    nY_     = 1500
-    dXX     = 0
-    dYY     = 0
-elif mapname == 'glb_01min':
-    nXX     = 21600
-    nYY     = 10800
-    nY_     = 10800
-    dXX     = 0
-    dYY     = 0
-elif mapname == 'amz_06min':
-    nXX     = 350
-    nYY     = 250
-    nY_     = 250
-    dXX     = 1000
-    dYY     = 85
-elif mapname == 'conus_06min':
-    nXX     = 700
-    nYY     = 350
-    nY_     = 350
-    dXX     = 1000
-    dYY     = 85
+# open map dimensions
+fname=CaMa_dir+"/map/"+mapname+"/params.txt"
+with open(fname,"r") as f:
+    lines=f.readlines()
+#=============================
+nXX    = int(list(filter(None, re.split(" ",lines[0])))[0])
+nYY    = int(list(filter(None, re.split(" ",lines[1])))[0])
+gsize  = float(list(filter(None, re.split(" ",lines[3])))[0])
+lon0   = float(list(filter(None, re.split(" ",lines[4])))[0])
+lat0   = float(list(filter(None, re.split(" ",lines[7])))[0])
+west   = float(list(filter(None, re.split(" ",lines[4])))[0])
+east   = float(list(filter(None, re.split(" ",lines[5])))[0])
+south  = float(list(filter(None, re.split(" ",lines[6])))[0])
+north  = float(list(filter(None, re.split(" ",lines[7])))[0])
+#=============================
+# # Read the CMF variables
+# if mapname == 'glb_15min':
+#     nXX     = 1440
+#     nYY     = 720
+#     nY_     = 640
+#     dXX     = 0
+#     dYY     = 0
+# elif mapname == 'glb_06min':
+#     nXX     = 3600
+#     nYY     = 1800
+#     nY_     = 1500
+#     dXX     = 0
+#     dYY     = 0
+# elif mapname == 'glb_01min':
+#     nXX     = 21600
+#     nYY     = 10800
+#     nY_     = 10800
+#     dXX     = 0
+#     dYY     = 0
+# elif mapname == 'glb_01min':
+#     nXX     = 21600
+#     nYY     = 10800
+#     nY_     = 10800
+#     dXX     = 0
+#     dYY     = 0
+# elif mapname == 'amz_06min':
+#     nXX     = 350
+#     nYY     = 250
+#     nY_     = 250
+#     dXX     = 1000
+#     dYY     = 85
+# elif mapname == 'conus_06min':
+#     nXX     = 700
+#     nYY     = 350
+#     nY_     = 350
+#     dXX     = 1000
+#     dYY     = 85
 #=============================
 nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
 rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
@@ -215,7 +251,7 @@ nxtdst = CaMa_dir+"/map/"+mapname+"/nxtdst.bin"
 rivseq = CaMa_dir+"/map/"+mapname+"/rivseq.bin"
 nextxy = np.fromfile(nextxy,np.int32).reshape(2,nYY,nXX)
 # rivwth = np.fromfile(rivwth,np.float32).reshape(nYY,nXX)
-rivhgt = np.fromfile(rivhgt,np.float32).reshape(nYY,nXX)
+# rivhgt = np.fromfile(rivhgt,np.float32).reshape(nYY,nXX)
 # rivlen = np.fromfile(rivlen,np.float32).reshape(nYY,nXX)
 elevtn = np.fromfile(elevtn,np.float32).reshape(nYY,nXX)
 lonlat = np.fromfile(lonlat,np.float32).reshape(2,nYY,nXX)
@@ -263,16 +299,23 @@ kylst=[]
 #-------------------------------------------
 fname=obstxt
 #--
-f=open(fname,"r")
-lines=f.readlines()
+# print (fname)
+with open(fname,"r") as f:
+    lines=f.readlines()
 for line in lines[1::]:
-    line    = filter(None,re.split(" ",line))
+    line    = list(filter(None,re.split(" ",line)))
     #print line
     num     = line[0]
     station = line[1]
-    line2   = re.split("_",station)
-    riv     = line2[1]
-    stream  = line2[2]
+    if '_' in station:
+        line2   = list(re.split("_",station))
+        riv     = line2[1]
+        stream  = line2[2]
+    else:
+        line2   = ['River', 'River', 'River']
+        riv     = 'River'
+        stream  = 'River'
+    # print (line)
     dataname= line[2]
     lon     = float(line[3])
     lat     = float(line[4])
@@ -298,6 +341,8 @@ for line in lines[1::]:
         meanW, stdW = meanHydroWeb(station,egm96=EGM96,egm08=EGM08)
     elif TAG=="CGLS":
         meanW, stdW = meanCGLS(station,egm96=EGM96,egm08=EGM08)
+    elif TAG=="SWOT":
+        meanW, stdW = meanSWOT(station,egm96=EGM96,egm08=EGM08)
     else:
         meanW, stdW = 0.0, 0.0  #, rangW , 0.0
     # if the file not exist, skip
@@ -310,4 +355,6 @@ for line in lines[1::]:
     elif method == "dynamic":
         if meanW > elev + 3.0*stdW or meanW < elev - 3.0*stdW:
             flag=flag+800
-    print ("%13s%64s%12s%12.2f%12.2f%17s%6d%12.2f%15.2f%10d%8d%8d%8d%14.2f%12.2f%12.2f%10d%8d%12.2f%10.2f")%(num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96)
+    # print (num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96)
+    print (("%13s%64s%12s%12.2f%12.2f%17s%6d%12.2f%15.2f%10d%8d%8d%8d%14.2f%12.2f%12.2f%10d%8d%12.2f%10.2f")
+    %(num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96))

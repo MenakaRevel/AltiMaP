@@ -60,8 +60,8 @@ program SET_MAP
     ! Station list
     ! character*128         ::  id
     !integer              ::  id
-    character*252                 ::  id, station,river,bsn,country
-    character*252                 ::  sat,sday,eday,stime,etime,status
+    character*128                 ::  id, station,river,bsn,country
+    character*128                 ::  sat,sday,eday,stime,etime,status
     real                          ::  lat0, lon0, ele0 !, lat, lon,area
     real                          ::  egm08,egm96, diffdist
     integer                       ::  flag
@@ -112,13 +112,13 @@ program SET_MAP
     cnum=240
     csize=1./dble(cnum)
     mwin=30
-    if (trim(tag)=="1min") then ! updated 2024/03/09
+    if (trim(tag)=="1min") then
         hres=60
         cnum=60
         csize=1./dble(cnum)
         mwin=360
-        nx=int( cnum*gsize*nXX ) ! need to bugfix for regional map
-        ny=int( cnum*gsize*nYY )
+        nx=int( 21600 )
+        ny=int( 10800 )
     elseif( trim(tag)=="15sec" )then
         hres=4*60
         cnum=240
@@ -145,7 +145,7 @@ program SET_MAP
     ! ==========
     regmap=trim(camadir)//"/map/"//trim(map)
     
-    ! print *, regmap, nx, ny
+    ! print *, regmap
     allocate(uparea(nXX,nYY),basin(nXX,nYY),elevtn(nXX,nYY),nxtdst(nXX,nYY))
     allocate(nextXX(nXX,nYY),nextYY(nXX,nYY),biftag(nXX,nYY))
 
@@ -206,12 +206,10 @@ program SET_MAP
     north1=south1+10.0
     east1=west1+10.0
     !====================================
-    if (trim(tag) == "1min") then ! updated 2024/03/09
+    if (trim(tag) == "1min") then
         cname=trim(tag)
-        west1=west
-        south1=south
-        north1=north
-        east1=east
+        north1=south1+180.0
+        east1=west1+360.0
     else 
         call set_name(west1,south1,cname)
         north1=south1+10.0
@@ -340,24 +338,23 @@ program SET_MAP
     kx2=-9999
     ky2=-9999
     kx1=ix
-    ky1=iy
+    ky2=iy
 
     lat1=lat0
     lon1=lon0
     ! call itime(tarray0)
     ! print*, "==========================================================="
     ! print*, trim(station)
-    ! print*, "Initial allocation: ",kx1, ky1, visual(kx1,ky1) !, tarray0
+    ! print*, "Initial allocation: ",kx, ky, visual(kx,ky), tarray0
     ! if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
     if (visual(ix,iy) == 10) then  !! river center line
-        ! print*, "flag: 10  ","river channel"
+        ! print*, "flag: 1  ","river channel"
         kx1=ix
         ky1=iy
         kx2=-9999
         ky2=-9999
         flag=10
     else if (riv1m(ix,iy) == -1) then !! river channel
-        ! print*, "flag: 11  ","river channel"
         ! find the nearest river centerline
         call find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx1,ky1,lag1)
         ! kx1=ix
@@ -366,7 +363,7 @@ program SET_MAP
         ky2=-9999
         flag=11
     else if (visual(ix,iy) == 20) then  !! unit-catchment mouth
-        ! print*, "flag: 12  ","unit-catchment mouth"
+        ! print*, "flag: 2  ","unit-catchment mouth"
         kx1=ix
         ky1=iy
         kx2=-9999
@@ -375,27 +372,19 @@ program SET_MAP
     ! first find the max uparea 
     ! 80% of uparea max with closest
     else if (visual(ix,iy) == 2 .or. visual(ix,iy) == 3 .or. visual(ix,iy) == 5 .or. visual(ix,iy) == 7) then   !! correction for land/grid box, boundry to channel
-        ! print*, "flag: 30  ","correction for land to channel"
+        ! print*, "flag: 3  ","correction for land to channel"
         ! print*, "ix, iy :", ix, iy
         ! print*, "kx3, ky3 :", kx3, ky3
         call find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx2,ky2,lag2)
-        ! print*, "L382"
         ! call find_nearest_main_river(ix,iy,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,kx3,ky3,lag3)
         if ( kx2 == -9999 .or. ky2 == -9999 ) then
             kx2 = ix
             ky2 = iy 
         end if
-        ! ! !!!! added on 2023/09/15
-        ! ! ! if kx2 and ky2 go beyond nx, ny
-        ! ! if ( kx2 < 1 .or. ky2 < 1 .or. kx2 > nx .or. ky2 > ny ) then
-        ! !     kx2 = ix
-        ! !     ky2 = iy 
-        ! ! end if  until_mouth_flag
         call find_nearest_main_river_ppend(kx2,ky2,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,riv1m,kx1,ky1,lag1)
-        ! print*, flwdir(kx2,ky2), kx1, ky1, lag1, kx2, ky2, lag2, kx3, ky3, lag3
+        ! print*, flwdir(kx2,kx1), kx1, ky1, lag1, kx2, ky2, lag2, kx3, ky3, lag3
         if ( kx1 == -9999 .or. ky1 == -9999 ) then
             call find_nearest_main_river(kx2,ky2,nx,ny,visual,catmXX,catmYY,upa1m,flwdir,kx3,ky3,lag3)
-            ! print*, flwdir(kx2,ky2), kx1, ky1, lag1, kx2, ky2, lag2, kx3, ky3, lag3
             if ( kx3 == -9999 .or. ky3 == -9999 ) then
                 kx1=kx2
                 ky1=ky2
@@ -450,7 +439,7 @@ program SET_MAP
             end if
         end if
     else if ( visual(ix,iy)==0 .or. visual(ix,iy)==1 .or. visual(ix,iy)==25 ) then !! correction for ocean grids
-        ! print*, "flag: 40  ","correction for ocean grids"
+        ! print*, "flag: 4  ","correction for ocean grids"
         call find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx1,ky1,lag1)
         if ( kx1 /= ix .or. ky1 /= iy ) then
             kx2=-9999
@@ -484,24 +473,24 @@ program SET_MAP
     ! find maximum uparea perpendicular to river
     ! in case of braided river
     ! considering the bifurcation tag
-    ! if ( biftag(iXX,iYY) == 1 ) then
-    !     ! call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
-    !     ! call loc_pepndD8(kx,ky,nx,ny,flwdir,visual,uparea,riv1m,west1,south1,hiresmap,ibx,iby)
-    !     ! if ( ibx/=-9 .and. iby/=-9 ) then
-    !     ! if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
-    !     !     ! print*, "burification location", ibx, iby
-    !     !     flag=50
-    !         ! kx2=kx1
-    !         ! ky2=ky1
-    !         ! kx1=ibx
-    !         ! ky1=iby
-    !     if ( kx2 /= -9999 .or. ky2 /= -9999 ) then
-    !         if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
-    !             ! print*, "burification location", ibx, iby
-    !             flag=31
-    !         end if
-    !     end if
-    ! end if
+    if ( biftag(iXX,iYY) == 1 ) then
+        ! call loc_pepnd(ix,iy,nXX,nYY,nextXX,nextYY,uparea,iXX,iYY)
+        ! call loc_pepndD8(kx,ky,nx,ny,flwdir,visual,uparea,riv1m,west1,south1,hiresmap,ibx,iby)
+        ! if ( ibx/=-9 .and. iby/=-9 ) then
+        ! if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
+        !     ! print*, "burification location", ibx, iby
+        !     flag=50
+            ! kx2=kx1
+            ! ky2=ky1
+            ! kx1=ibx
+            ! ky1=iby
+        if ( kx2 /= -9999 .or. ky2 /= -9999 ) then
+            if ( kx1 /= kx2 .or. ky1 /= ky2 ) then
+                ! print*, "burification location", ibx, iby
+                flag=31
+            end if
+        end if
+    end if
     ! print*, flag
     ! print*, "After allocation:   ",kx, ky, visual(kx,ky), flag
     kx=kx1
@@ -559,11 +548,7 @@ program SET_MAP
         ! get the upstream pixel ||| update on 2023/03/27
         call upstream(iXX,iYY,nXX,nYY,nextXX,nextYY,uparea,uXX,uYY)
         delv0=abs(elevtn(iXX,iYY)-ele1m(kx,ky)) ! elevation comapred to downstream
-        if (uXX > 0 .or. uYY > 0 ) then
-            delv1=abs(elevtn(uXX,uYY)-ele1m(kx,ky)) ! elevation compared to upstream
-        else
-            delv1=1e20
-        endif
+        delv1=abs(elevtn(uXX,uYY)-ele1m(kx,ky)) ! elevation compared to upstream
         ! compare the elevation differnces
         ! if upstream elevation differnce is smaller the VS is allocated to the upstream grid 
         if (delv1 < delv0) then
@@ -2024,7 +2009,7 @@ program SET_MAP
     integer*1,dimension(nx,ny)   :: flwdir, visual
     real,dimension(nx,ny)        :: riv1m !uparea, 
     ! integer                      :: oxx, oyy
-    integer,dimension(1000)      :: xlist, ylist ! bug fix for 2k+1 for safety 1000
+    integer,dimension(100)       :: xlist, ylist
     ! character*128                :: hiresmap
     ! real                         :: west0, south0
     integer                      :: k
@@ -2138,7 +2123,7 @@ program SET_MAP
     ! integer                       ::  nn
     real                          ::  lag, lag_now!, upa
     real                          ::  uparea_max !, dist
-    integer,dimension(1000)       ::  xlist, ylist ! 2k+1 for safety 1000
+    integer,dimension(100)        ::  xlist, ylist
     integer                       ::  i, k, flag
     ! find the nearst main river perpendicular to the river.
     call perpendicular_grid(ix,iy,nx,ny,flwdir,visual,riv1m,xlist,ylist,k)
@@ -2230,18 +2215,9 @@ program SET_MAP
         end if
         dval=flwdir(iix,iiy)
         call next_D8(dval,dx,dy)
+        print*, 'L2218',iix, iiy, visual(iix,iiy), flwdir(iix,iiy), dx, dy
         iix = iix + dx 
         iiy = iiy + dy 
-        ! if iix or iiy is out of the map ==> *** need attention
-        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
-            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
-            ! west0=west+csize/2.0
-            ! south0=south+csize/2.0
-            ! north0=south+10.0+csize/2.0
-            ! print*, "go to next tile", west0,south0
-            ! flag=-9
-            exit
-        end if
         ! river mouth
         if (flwdir(iix,iiy) == -9 ) then
             ! print*, "River mouth", visual(iix,iiy)
@@ -2265,7 +2241,7 @@ program SET_MAP
             ! print*, "Outlet pixel", visual(iix,iiy)
             exit
         end if
-        ! if iix or iiy is out of the map ==> *** need attention
+
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
             ! iix0 = iix
             ! iiy0 = iiy 
