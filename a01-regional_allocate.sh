@@ -11,10 +11,10 @@
 #PBS -N Reg_VS
 #===========================
 # import virtual environment
-source ~/.bashrc
-source ~/.bash_conda
+# source ~/.bashrc
+# source ~/.bash_conda
 
-source activate pydef
+# source activate pydef
 
 which python
 #source ~/.bashrc
@@ -58,7 +58,7 @@ dataname="SWOTMacken"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20210909.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20230327.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20230406.txt"
-obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20241128.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20241129.txt"
 
 # outtxt
 day=$(date +"%Y%m%d")
@@ -72,4 +72,4 @@ mv tmp.txt $outtxt
 echo "$outtxt created." 
 
 wait
-conda deactivate
+# conda deactivate

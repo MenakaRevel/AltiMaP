@@ -27,12 +27,12 @@ import pandas as pd
 
 sys.path.append("../src")
 # from read_patchMS import upstream
-from river_function import river_profile
-import read_hydroweb as hweb
-import read_cgls as cgls
-import read_hydrosat as hsat
-import read_icesat as isat
-import read_grrats as grt
+# from river_function import river_profile
+# import read_hydroweb as hweb
+# import read_cgls as cgls
+# import read_hydrosat as hsat
+# import read_icesat as isat
+# import read_grrats as grt
 #=========================================
 def get_data(station, tag, syear=2000, eyear=2020,egm08=0.0,egm96=0.0):
     time=-9999.0
@@ -176,8 +176,11 @@ stream0="CONGO" #
 # station0="R_VOLGA_UFA_KM3232"
 # station0="R_VOLGA_OKA_KM3076"
 # station0="R_AMAZONAS_CONONACO_KM4357"
-station0="R_MURRAY_MURRAY_KM1779"
-dataname="HydroWeb"
+# station0="R_MURRAY_MURRAY_KM1779"
+# dataname="HydroWeb"
+
+station0=82251300070011
+dataname="SWOT"
 odir="/cluster/data6/menaka/AltiMaP/results"
 mapname="glb_06min"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
@@ -192,7 +195,8 @@ restag="3sec"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210817.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210909.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20210920.txt"
-obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20230407.txt"
+# obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20230407.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"+mapname+"_20241129.txt"
 df=pd.read_csv(obstxt, sep='\s+', header=0) #,encoding=str)
 print (df.columns)
 df["flag"]=np.array([int(math.floor(flag/10.0)*10.0) for flag in df["flag"]])
@@ -230,88 +234,6 @@ cmapL.colorbar_extend="neither"
 norml=BoundaryNorm(bounds,cmapL.N) #len(bounds)-1)
 cmapR = matplotlib.colors.ListedColormap(['b'])
 ############################################################
-# nums=[]
-# river=[]
-# pname=[]
-# lons =[]
-# lats =[]
-# xlist=[]
-# ylist=[]
-# leled=[]
-# egm08=[]
-# egm96=[]
-# llsat=[]
-# ldtom=[]
-# lflag=[]
-# kx1lt=[]
-# ky1lt=[]
-# kx2lt=[]
-# ky2lt=[]
-# #-------------------------------------------
-# # fname="./out/altimetry_"+mapname+"_test.txt"
-# # fname="./out/altimetry_"+mapname+"_20210518.txt"
-# fname=obstxt
-# #--
-# with open(fname,"r") as f:
-#     lines=f.readlines()
-# for line in lines[1::]:
-#     line    = filter(None,re.split(" ",line))
-#     #print line
-#     num     = line[0]
-#     station = line[1].strip()
-#     line2   = re.split("_",station)
-#     # print num, line2
-#     riv     = line2[1]
-#     stream  = line2[2]
-#     lon     = float(line[3])
-#     lat     = float(line[4])
-#     ix      = int(line[5])-1
-#     iy      = int(line[6])-1
-#     eled    = float(line[7])
-#     EGM08   = float(line[8])
-#     EGM96   = float(line[9])
-#     sat     = line[10].strip()
-#     dist    = float(line[11])
-#     flag    = int(line[12])
-#     kx1     = int(line[13])
-#     ky1     = int(line[14])
-#     kx2     = int(line[15])
-#     ky2     = int(line[16])
-#     #-----------------------
-#     # # # print (riv,station,kx,ky)
-#     # # if riv != rivername0:
-#     # #     continue
-#     # # if riv == "AMAZONAS":
-#     # #     if stream != stream0:
-#     # #         continue
-#     # # elif riv == "CONGO":
-#     # #     if stream != stream0:
-#     # #         continue
-#     # # else:
-#     # #     if stream != stream0:
-#     # #         continue
-#     # print station
-#     if station==station0:
-#         print "station found: ",station0
-#         nums.append(num)
-#         river.append(riv)
-#         pname.append(station)
-#         lons.append(lon)
-#         lats.append(lat)
-#         xlist.append(ix)
-#         ylist.append(iy)
-#         leled.append(eled)
-#         egm08.append(EGM08)
-#         egm96.append(EGM96)
-#         llsat.append(sat)
-#         ldtom.append(dist)
-#         lflag.append(flag)
-#         kx1lt.append(kx1)
-#         ky1lt.append(ky1)
-#         kx2lt.append(kx2)
-#         ky2lt.append(ky2)
-#     # print (riv,station)
-#=============================
 # pnum=len(pname)
 #=====================================
 markers={"HydroWeb":"o","CGLS":"s","ICESat":"^","HydroSat":"X","GRRATS":"D"}
@@ -343,6 +265,8 @@ maps = ['ESRI_Imagery_World_2D',    # 0
 # #============================
 # with PdfPages(pdfname) as pdf:
 # for point in np.arange(0,pnum):
+print (station0)
+print (df["station"].values[0:10])
 pname=df[df["station"]==station0]["station"].values
 lflag=df[df["station"]==station0]["flag"].values
 lons=df[df["station"]==station0]["lon"].values
@@ -351,7 +275,7 @@ kx1lt=df[df["station"]==station0]["kx1"].values
 ky1lt=df[df["station"]==station0]["ky1"].values
 kx2lt=df[df["station"]==station0]["kx2"].values
 ky2lt=df[df["station"]==station0]["ky2"].values
-print pname
+print (pname)
 point=0
 ######################
 print ("=======================================")
@@ -439,8 +363,8 @@ except:
 # ax.set_extent([lllon,urlon,lllat,urlat],crs=ccrs.PlateCarree())
 # ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor=land),zorder=100)
 # #
-m.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=10,linewidth=0,zorder=102)
-m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0,zorder=102)
+m.drawparallels([lllat,urlat], labels = [1,0,0,0], fontsize=10,linewidth=0.1,zorder=102)
+m.drawmeridians([lllon,urlon], labels = [0,0,0,1], fontsize=10,linewidth=0.1,zorder=102)
 data0 = ma.masked_less_equal(visual[npix:spix,wpix:epix],-9999)
 im0=m.imshow(data0,interpolation="nearest",origin="upper",cmap=cmapL,norm=norml,zorder=110) # interpolation="nearest",origin="upper",
 data1 = ma.masked_greater_equal(rivwth[npix:spix,wpix:epix],0.0)
@@ -516,7 +440,9 @@ ax0.plot(lon3 ,lat3 ,color="xkcd:hot pink",marker="D",label="ordinary",markersiz
 plt.legend(loc="upper center", bbox_to_anchor=(0.5,0.0), ncol=4)
 #========================================================
 # plt.show()
-plt.savefig("../fig/high_res_map/"+station0+".png",dpi=500)
+# if not isinstance(station0,str):
+#     station0=str(station0)
+plt.savefig("../fig/high_res_map/"+str(station0)+".png",dpi=500)
 # pdf.savefig()  # saves the current figure into a pdf page
 # plt.close()
 # # set the file's metadata via the PdfPages object:

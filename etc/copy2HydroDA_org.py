@@ -50,9 +50,14 @@ with open(outtxt,"w") as fout:
         # print line
         num     = line[0]
         station = line[1]
-        line2   = re.split("_",station)
-        riv     = line2[1]
-        stream  = line2[2]
+        if '_' in station:
+            line2   = list(re.split("_",station))
+            riv     = line2[1]
+            stream  = line2[2]
+        else:
+            line2   = ['River', 'River', 'River']
+            riv     = 'River'
+            stream  = 'River'
         dataname= line[2]
         lon     = float(line[3])
         lat     = float(line[4])

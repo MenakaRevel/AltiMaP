@@ -43,33 +43,37 @@ def slope(ix,iy,nextxy,uparea,elevtn,nxtdst,rivseq):
 # CaMa_dir=sys.argv[4] #"/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 # obstxt=sys.argv[5] #"./out/altimetry_"+mapname+"_test.txt"
 # outtxt=sys.argv[6]
-mapname="conus_06min"
+# mapname="conus_06min"
+mapname="Mackenzie_06min"
 # TAG="HydroWeb"
-TAG="CGLS"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+# TAG="CGLS"
+TAG="SWOT"
+# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
+CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v420"
 # intxt="../out/altimetry_"+mapname+"_20230327.txt"
-intxt="../out/biased_removed_altimetry_"+mapname+"_20230406.txt"
-outtxt="/cluster/data6/menaka/HydroDA/dat/"+TAG+"_alloc_"+mapname+"_DIR.txt"
+intxt="../out/biased_removed_altimetry_"+mapname+"_20241129.txt"
+outtxt="/cluster/data6/menaka/HydroDA/dat/"+TAG+"_alloc_"+mapname+".txt"
 ############################################################
 area_thr = 1.0e-20 #m2
 slpe_thr = 1.0e20 #m
-elev_thr = 1.0e20 #m
-dist_thr = 1.0    #km
+elev_thr = 1.0e20 #m 
+dist_thr = 0.1    #km
 rmse_thr = 1.0    #m
 bias_thr = 1.0    #m
+rvwh_thr = 0.0    #m
 ############################################################
 # regional map
 fname=CaMa_dir+"/map/"+mapname+"/params.txt"
 with open(fname,"r") as fmap:
     lines=fmap.readlines()
 #-------
-nx     = int(filter(None, re.split(" ",lines[0]))[0])
-ny     = int(filter(None, re.split(" ",lines[1]))[0])
-gsize  = float(filter(None, re.split(" ",lines[3]))[0])
-west   = float(filter(None, re.split(" ",lines[4]))[0])
-east   = float(filter(None, re.split(" ",lines[5]))[0])
-south  = float(filter(None, re.split(" ",lines[6]))[0])
-north  = float(filter(None, re.split(" ",lines[7]))[0])
+nx     = int(list(filter(None, re.split(" ",lines[0])))[0])
+ny     = int(list(filter(None, re.split(" ",lines[1])))[0])
+gsize  = float(list(filter(None, re.split(" ",lines[3])))[0])
+west   = float(list(filter(None, re.split(" ",lines[4])))[0])
+east   = float(list(filter(None, re.split(" ",lines[5])))[0])
+south  = float(list(filter(None, re.split(" ",lines[6])))[0])
+north  = float(list(filter(None, re.split(" ",lines[7])))[0])
 ############################################################
 nextxy = CaMa_dir+"/map/"+mapname+"/nextxy.bin"
 rivwth = CaMa_dir+"/map/"+mapname+"/rivwth.bin"
@@ -112,7 +116,8 @@ for item in rmse[1::]:
 ############################################################
 #===============================================
 # unreal observations
-fname="../out/altimetry_"+mapname+"_20230327.txt"
+# fname="../out/altimetry_"+mapname+"_20230327.txt"
+fname="../out/altimetry_"+"conus_06min"+"_20230327.txt"
 with open(fname,"r") as f_unreal:
 	unreal=f_unreal.readlines()
 #----
@@ -121,8 +126,8 @@ for item in unreal:
     item    = list(filter(None, re.split(" ",item)))
     station = item[0]
     flag    = item[6]
-    if flag >= 900:
-        unreal_stations.append(station)
+    # if flag >= 900:
+    #     unreal_stations.append(station)
 ############################################################
 #===========================================================
 # open altimetry allocation file
@@ -130,15 +135,20 @@ with open(intxt,"r") as f:
 	lines=f.readlines()
 #=====================================
 with open(outtxt,"w") as fout:
-    fout.write("%13s%64s%12s%12s%8s%8s%12s%12s%12s%12s%17s\n"%("ID", "station", "lon", "lat", "ix", "iy", "elevation", "ele_diff", "EGM08", "EGM96", "satellite"))
+    fout.write("%13s%64s%12s%12s%8s%8s%12s%12s%12s%12s%17s%12s\n"%("ID", "station", "lon", "lat", "ix", "iy", "elevation", "ele_diff", "EGM08", "EGM96", "satellite","disttom"))
     for line in lines[1::]:
-        line    = filter(None,re.split(" ",line))
+        line    = list(filter(None,re.split(" ",line)))
         # print (line)
         num     = line[0]
         station = line[1]
-        line2   = re.split("_",station)
-        riv     = line2[1]
-        stream  = line2[2]
+        if '_' in station:
+            line2   = list(re.split("_",station))
+            riv     = line2[1]
+            stream  = line2[2]
+        else:
+            line2   = ['River', 'River', 'River']
+            riv     = 'River'
+            stream  = 'River'
         dataname= line[2]
         lon     = float(line[3])
         lat     = float(line[4])
@@ -165,7 +175,7 @@ with open(outtxt,"w") as fout:
         ################
         eled=elevtn[iy-1,ix-1]-elev
         if abs(eled) > elev_thr:
-            print ("elevation difference is too large: (>"+"%6.2f"%(elev_thr)+"m)", eled, "m")
+            # print ("elevation difference is too large: (>"+"%6.2f"%(elev_thr)+"m)", eled, "m")
             continue
 
         ################
@@ -187,32 +197,41 @@ with open(outtxt,"w") as fout:
         # condition for distance to mouth
         ################
         if dist > dist_thr:
-            print ("large distance to mouth: ",station, dist)
+            # print ("large distance to mouth: ",station, dist)
             continue
-
+        # print (dist, flag, rivwth)
         ################
         # condition for unreal observations
         ################
-        if station in unreal_stations:
-            print ("unreal observations: ", station)
+        # if station in unreal_stations:
+        if flag >= 800:
+            # print ("unreal observations: ", station)
             continue
+        # print (dist, flag, rivwth)
+        ################
+        # condition for river width
+        ################
+        # if station in unreal_stations:
+        if rivwth <= rvwh_thr:
+            # print ("river width <= "+str(rvwh_thr)+": ", station)
+            continue
+        print (dist, flag, rivwth)
+        # ################
+        # # condition for higher rmse observations
+        # ################
+        # if station in rmse_stations:
+        #     print ("higher RMSE virtual station ( >"+"%5.2f"%(rmse_thr)+"m): ", station)
+        #     continue
 
-        ################
-        # condition for higher rmse observations
-        ################
-        if station in rmse_stations:
-            print ("higher RMSE virtual station ( >"+"%5.2f"%(rmse_thr)+"m): ", station)
-            continue
-
-        ################
-        # condition for higher bias observations
-        ################
-        if station in bias_stations:
-            print ("higher bias virtual station ( >"+"%5.2f"%(bias_thr)+"m): ", station)
-            continue
+        # ################
+        # # condition for higher bias observations
+        # ################
+        # if station in bias_stations:
+        #     print ("higher bias virtual station ( >"+"%5.2f"%(bias_thr)+"m): ", station)
+        #     continue
 
         #========================
-        linew="%13s%64s%12.2f%12.2f%8d%8d%12.2f%12.2f%12.2f%12.2f%17s\n"%(num,station,lon,lat,ix,iy,elev,eled,EGM08,EGM96,sat)
+        linew="%13s%64s%12.2f%12.2f%8d%8d%12.2f%12.2f%12.2f%12.2f%17s%12.5f\n"%(num,station,lon,lat,ix,iy,elev,eled,EGM08,EGM96,sat,dist)
         # print (linew)
-        # print (station, lon, lat, west, east, south, north)
+        print (station, lon, lat, dist) #, west, east, south, north)
         fout.write(linew)

@@ -22,13 +22,13 @@ fname=CaMa_dir+"/map/"+mapname+"/params.txt"
 with open(fname,"r") as fmap:
     lines=fmap.readlines()
 #-------
-nx     = int(filter(None, re.split(" ",lines[0]))[0])
-ny     = int(filter(None, re.split(" ",lines[1]))[0])
-gsize  = float(filter(None, re.split(" ",lines[3]))[0])
-west   = float(filter(None, re.split(" ",lines[4]))[0])
-east   = float(filter(None, re.split(" ",lines[5]))[0])
-south  = float(filter(None, re.split(" ",lines[6]))[0])
-north  = float(filter(None, re.split(" ",lines[7]))[0])
+nx     = int(list(filter(None, re.split(" ",lines[0])))[0])
+ny     = int(list(filter(None, re.split(" ",lines[1])))[0])
+gsize  = float(list(filter(None, re.split(" ",lines[3])))[0])
+west   = float(list(filter(None, re.split(" ",lines[4])))[0])
+east   = float(list(filter(None, re.split(" ",lines[5])))[0])
+south  = float(list(filter(None, re.split(" ",lines[6])))[0])
+north  = float(list(filter(None, re.split(" ",lines[7])))[0])
 ############################################################
 # global map
 fname=CaMa_dir+"/map/"+glbname+"/params.txt"
@@ -38,10 +38,10 @@ with open(fname,"r") as fmap:
 # nx     = int(filter(None, re.split(" ",lines[0]))[0])
 # ny     = int(filter(None, re.split(" ",lines[1]))[0])
 # gsize  = float(filter(None, re.split(" ",lines[3]))[0])
-lon_ori  = float(filter(None, re.split(" ",lines[4]))[0])
-lon_end  = float(filter(None, re.split(" ",lines[5]))[0])
-lat_end  = float(filter(None, re.split(" ",lines[6]))[0])
-lat_ori  = float(filter(None, re.split(" ",lines[7]))[0])
+lon_ori  = float(list(filter(None, re.split(" ",lines[4])))[0])
+lon_end  = float(list(filter(None, re.split(" ",lines[5])))[0])
+lat_end  = float(list(filter(None, re.split(" ",lines[6])))[0])
+lat_ori  = float(list(filter(None, re.split(" ",lines[7])))[0])
 ############################################################
 dx=int( (west-lon_ori) /gsize +0.001 ) ##  add 0.001 to avoid rounding error
 dy=int( (lat_ori-north)/gsize +0.001 )
@@ -56,7 +56,7 @@ with open(fname,"r") as f:
     lines=f.readlines()
 #=====================================
 for line in lines[1::]:
-    line    = filter(None,re.split(" ",line))
+    line    = list(filter(None,re.split(" ",line)))
     # print line
     num     = line[0]
     station = line[1]
@@ -121,7 +121,8 @@ for line in lines[1::]:
     if iy > ny:
         continue 
     if lon >= west and lon <= east and lat >= south and lat <= north:
-        print ("%13s%64s%12s%12.2f%12.2f%17s%6d%12.2f%15.2f%10d%8d%8d%8d%14.2f%12.2f%12.2f%10d%8d%12.2f%10.2f")%(num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96)
+        print (("%13s%64s%12s%12.2f%12.2f%17s%6d%12.2f%15.2f%10d%8d%8d%8d%14.2f%12.2f%12.2f%10d%8d%12.2f%10.2f")%
+        (num,station,dataname,lon,lat,sat,flag,elev,dist,kx1,ky1,kx2,ky2,dist1,dist2,rivwth,ix,iy,EGM08,EGM96))
         # linew="%30s%67s%12s%12.2f%12.2f%8d%8d%12.2f%12.2f%12.2f%17s%12.2f%6d%10d%10d%10d%10d%12.2f%12.2f\n"%(num,station,data,lon,lat,ix,iy,eled,EGM08,EGM96,sat,dist,flag,kx1,ky1,kx2,ky2,dist1,dist2)
         # print (linew)
 # # outtxt="./out/altimetry_"+mapname+"_test.txt"

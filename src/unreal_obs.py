@@ -28,6 +28,9 @@ import json
 import os
 import errno
 import geopandas
+import requests
+import pandas as pd
+from io import StringIO
 
 sys.path.append("./src")
 # from read_patchMS import upstream
@@ -137,18 +140,43 @@ def meanCGLS(station,egm08=0.0,egm96=0.0):
     return np.mean(data), np.std(data) #, np.max(data)-np.min(data)
 #=============================
 def meanSWOT(station,egm08=0.0,egm96=0.0):
-    '''
-    get the mean observation from shapefile
-    need geopandas 
-    '''
-    fname="/work/a06/menaka/SWOT/Mackenzie_River.shp"
-    swot_data=geopandas.read_file(fname)
-    swot_data=swot_data.loc[(swot_data['time_str'] != 'no_data') & 
-    (swot_data['wse'] > -9999.0) & 
-    (swot_data['node_q'] <= 1), :]
-    swot_wse=swot_data.loc[swot_data['node_id']==str(station),:]
-    swot_wse['wse']=swot_wse['wse']+egm08-egm96
-    return swot_wse['wse'].mean(),swot_wse['wse'].std()
+    """Query Hydrocron for reach-level time series data.
+    "https://soto.podaac.earthdatacloud.nasa.gov/hydrocron/v1/timeseries"
+
+    Parameters
+    ----------
+    station: str - String SWORD reach identifier
+
+    Returns
+    -------
+    pandas.DataFrame that contains query results
+    """
+    # start_time: str - String time to start query format: "2024-01-01T00:00:00Z"
+    # end_time: str - String time to end query
+    start_time="2024-01-01T00:00:00Z"
+    end_time="2024-11-01T00:00:00Z"
+    query_url= "https://soto.podaac.earthdatacloud.nasa.gov/hydrocron/v1/timeseries"
+    fields = "time_str,wse,wse_u,wse_r_u,node_q,node_q_b"
+    params = {
+        "feature": 'Node',
+        "feature_id": station,
+        "output": "csv",
+        "start_time": start_time,
+        "end_time": end_time,
+        "fields": fields
+    }
+    results = requests.get(query_url, params=params)
+    if "results" in results.json().keys():
+        results_csv = results.json()["results"]["csv"]
+        df = pd.read_csv(StringIO(results_csv))
+        # Remove fill values for missing observations
+        df = df.loc[(df["wse"] != -999999999999.0)].reset_index(drop=True)
+        # Convert time_str to datetime format
+        df.time_str = pd.to_datetime(df.time_str)
+        df = df.loc[(df['node_q']<=1) & (df['wse_r_u']<1.0), :]
+        return df['wse'].mean(), df['wse'].std()
+    else:
+        return -9999.0, -9999.0
 #=====================================
 # sfcelv
 syear=2000
@@ -336,6 +364,9 @@ for line in lines[1::]:
     iy      = int(line[17])
     EGM08   = float(line[18])
     EGM96   = float(line[19])
+    # for quick disttomouth
+    if dist > 1.0:
+        continue
     # calculate mean and standrad deviation
     if TAG=="HydroWeb":
         meanW, stdW = meanHydroWeb(station,egm96=EGM96,egm08=EGM08)

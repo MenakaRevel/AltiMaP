@@ -112,6 +112,6 @@ wait
 
 # day=`printf '%(%Y%m%d)T\n' -1`
 day=$(date +"%Y%m%d")
-mv tmp.txt ${outdir}/altimetry_${data}_${map}_${day}.txt
+mv tmp.txt ${outdir}/altimetry_${map}_${day}.txt
 echo "Saving ..."
-echo ${outdir}/altimetry_${data}_${map}_${day}.txt
+echo ${outdir}/altimetry_${map}_${day}.txt
