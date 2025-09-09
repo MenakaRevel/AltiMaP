@@ -365,7 +365,7 @@ for line in lines[1::]:
     EGM08   = float(line[18])
     EGM96   = float(line[19])
     # for quick disttomouth
-    if dist > 1.0:
+    if dist > 0.1:
         continue
     # calculate mean and standrad deviation
     if TAG=="HydroWeb":

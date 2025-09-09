@@ -51,8 +51,8 @@ TAG="SWOT"
 # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
 CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v420"
 # intxt="../out/altimetry_"+mapname+"_20230327.txt"
-intxt="../out/biased_removed_altimetry_"+mapname+"_20241129.txt"
-outtxt="/cluster/data6/menaka/HydroDA/dat/"+TAG+"_alloc_"+mapname+".txt"
+intxt="../out/biased_removed_altimetry_"+mapname+"_20241209.txt"
+outtxt="/cluster/data6/menaka/HydroDA/dat/"+TAG+"_alloc_"+mapname+"_all.txt"
 ############################################################
 area_thr = 1.0e-20 #m2
 slpe_thr = 1.0e20 #m

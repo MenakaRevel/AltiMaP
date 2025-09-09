@@ -179,7 +179,7 @@ stream0="CONGO" #
 # station0="R_MURRAY_MURRAY_KM1779"
 # dataname="HydroWeb"
 
-station0=82251300070011
+station0=82215000010011 #82251300070011
 dataname="SWOT"
 odir="/cluster/data6/menaka/AltiMaP/results"
 mapname="glb_06min"

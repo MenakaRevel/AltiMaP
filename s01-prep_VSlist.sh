@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ### SET "mool PBS" @ IIS U-Tokyo
-#PBS -q F20
+#PBS -q E20
 #PBS -l select=1:ncpus=20:mem=60gb
 #PBS -l place=scatter
 #PBS -j oe
@@ -30,13 +30,14 @@ dataname="SWOTMackenzie"
 # datadir="/cluster/data6/menaka/HydroWeb/data"
 # datadir="/cluster/data6/menaka/HydroWeb/data_v2023"
 # datadir="/work/a06/menaka/Prakat_Model_Scale/inp"
-datadir="/cluster/data6/menaka/AltiMaP/inp"
+datadir="/work/a06/menaka/SWOT"
 
 # datafile
 # datafile="./ESSD_paper/CryoSat2_Brahmaputra_list.txt"
 # datafile="list_hydroprd_202309151209_rivers.csv"
 # datafile="gauge_Amazon_list.txt"
-datafile="SWOT_Mackenzie_Station_list.txt"
+# datafile="SWOT_Mackenzie_Station_list.txt"
+datafile="SWOT_Mackenzie_Station_list_all.txt"
 
 
 # output directory

@@ -52,7 +52,7 @@ dataname="SWOT"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20230327.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20230406.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20230407.txt"
-obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20241129.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$map"_20241204.txt"
 
 # out dir
 outdir="./out"

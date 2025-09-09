@@ -58,7 +58,7 @@ dataname="SWOTMacken"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20210909.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/altimetry_"$glb_map"_20230327.txt"
 # obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20230406.txt"
-obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20241129.txt"
+obstxt="/cluster/data6/menaka/AltiMaP/out/biased_removed_altimetry_"$glb_map"_20241209.txt"
 
 # outtxt
 day=$(date +"%Y%m%d")
