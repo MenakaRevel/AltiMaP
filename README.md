@@ -59,3 +59,8 @@ output from s02-allocate_VS.sh
 #### Download EGM data following data
 https://download.osgeo.org/proj/vdatum/egm96_15/outdated/
 https://grid-partner-share.s3.amazonaws.com/egm2008/Und_min1x1_egm2008_isw%3D82_WGS84_TideFree.gz
+
+# Vesion History
+Ver 0.0 - Original published in Revel et al 2024
+Ver 0.1 - Update for using 1min map
+Ver 2.0 - Repalce flwdir with downxy

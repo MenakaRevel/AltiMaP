@@ -3,6 +3,7 @@ program SET_MAP
     ! convert HydroWeb, HydroSat, ICESat VS to CaMa-Flood grids
     ! Menaka@IIS
     ! 2021.01.22
+    ! Update on 2026
     !==========================================
     implicit none
     ! index CaMa
@@ -292,7 +293,8 @@ program SET_MAP
     else
         print*, "NO FILE:" , rfile1
         print*, "NEED UPDATE THE CODE TO {TAG}.downxy.bin"
-        stop
+        ! stop
+        print*, "Uses ",trim(cname)//'.downxy.bin'
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.downxy.bin'
@@ -593,18 +595,88 @@ program SET_MAP
     deallocate(upa1m,catmXX,catmYY,catmZZ,dwx1m,dwy1m,flddif,hand,ele1m,riv1m,visual,flwdir)
     !=================
     CONTAINS
-      subroutine nextxy(ix,iy,jx,jy)
-        integer :: ix,iy,jx,jy
+    !*****************************************************************
+    subroutine nextxy(ix,iy,jx,jy)
+    integer :: ix,iy,jx,jy
 
-        jx=ix+dwx1m(ix,iy)
-        jy=iy+dwy1m(ix,iy)
-        if( jx<=0 ) jx=jx+nx
-        if( jx>nx ) jx=jx-nx
+    jx=ix+dwx1m(ix,iy)
+    jy=iy+dwy1m(ix,iy)
+    if( jx<=0 ) jx=jx+nx
+    if( jx>nx ) jx=jx-nx
 
-        return
-      end subroutine nextxy
+    return
+    end subroutine nextxy
+    !*****************************************************************
+    subroutine find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx,ky,lag)
+    implicit none
+    integer                       ::  nx, ny
+    integer*2,dimension(nx,ny)    ::  catmXX, catmYY
+    integer*1,dimension(nx,ny)    ::  visual !catmZZ(:,:), , flwdir(:,:) 
+    ! real,allocatable              ::  upa1m(:,:)!, ele1m(:,:)
+    ! real,allocatable              ::  riv1m(:,:), flddif(:,:), hand(:,:)
+    integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
+    integer                       ::  nn
+    real                          ::  lag, lag_now !, dist!, upa
+    ! real                          ::   !uparea_max, 
+    ! find the nearst river channel.
+    kx=ix 
+    ky=iy
+    nn=60
+    lag=1.0e20
+    lag_now=1.0e20
+    do dy=-nn,nn
+        do dx=-nn,nn
+            jx=ix+dx
+            jy=iy+dy
+            ! print*, jx, jy
+            if ( jx<=0 ) cycle !jx=1
+            if ( jx>nx ) cycle !jx=nx
+            if ( jy<=0 ) cycle !jy=1
+            if ( jy>ny ) cycle !jy=ny
+            ! if ( visual(jx,jy) /= 10 ) cycle
+            ! if ( visual(jx,jy) < 10 ) cycle
+            ! if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
+            if ( kx == jx .and. ky == jy) cycle
+            if ((catmXX(jx,jy) <= 0) .or. (catmYY(jx,jy) <= 0)) cycle
+            lag_now=sqrt((real(dx)**2)+(real(dy)**2))
+            ! print*, "===",kx,ky,jx,jy,"==="
+            ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+            ! lat2=north1 - csize/2.0 - (jy-1)*(1/dble(hres))
+            ! lon2=west1 + csize/2.0 + (jx-1)*(1/dble(hres))
+            ! lag_now=hubeny_real(lat1, lon1, lat2, lon2)
+            ! if ( lag_now == -9999.0 ) cycle
+            ! print*, lag, lag_now
+            if ( lag_now < lag ) then
+                if ( visual(jx,jy) == 10 ) then
+                    ! if ( upa1m(jx,jy) > uparea_max) then
+                    kx=jx
+                    ky=jy
+                    lag=lag_now
+                    ! print*, visual(kx,ky)
+                    ! print*, "Found new location: ",flag, kx,ky,lag, visual(kx,ky)
+                    !     uparea_max=upa1m(jx,jy)
+                    ! end if
+                elseif ( visual(jx,jy) == 20 ) then
+                    kx=jx
+                    ky=jy
+                    lag=lag_now
+                end if
+            end if
+        end do
+    end do
+    return 
+    end subroutine find_nearest_river
+    !***************************************************
+    !!! add find_nearest_main_river_ppend
+    !***************************************************
+    !
+    !***************************************************
+    !
+    !***************************************************
     !=================
     end program SET_MAP
+    !***************************************************
+    !***************************************************
     !***************************************************
     function roundx(ix, nx)
     implicit none
@@ -1980,66 +2052,6 @@ program SET_MAP
     end do
     return
     end subroutine find_nearest_main_river
-    !*****************************************************************
-    subroutine find_nearest_river(ix,iy,nx,ny,visual,catmXX,catmYY,kx,ky,lag)
-    implicit none
-    integer                       ::  nx, ny
-    integer*2,dimension(nx,ny)    ::  catmXX, catmYY
-    integer*1,dimension(nx,ny)    ::  visual !catmZZ(:,:), , flwdir(:,:) 
-    ! real,allocatable              ::  upa1m(:,:)!, ele1m(:,:)
-    ! real,allocatable              ::  riv1m(:,:), flddif(:,:), hand(:,:)
-    integer                       ::  ix, iy, jx, jy, kx, ky, dx, dy
-    integer                       ::  nn
-    real                          ::  lag, lag_now !, dist!, upa
-    ! real                          ::   !uparea_max, 
-    ! find the nearst river channel.
-    kx=ix 
-    ky=iy
-    nn=60
-    lag=1.0e20
-    lag_now=1.0e20
-    do dy=-nn,nn
-        do dx=-nn,nn
-            jx=ix+dx
-            jy=iy+dy
-            ! print*, jx, jy
-            if ( jx<=0 ) cycle !jx=1
-            if ( jx>nx ) cycle !jx=nx
-            if ( jy<=0 ) cycle !jy=1
-            if ( jy>ny ) cycle !jy=ny
-            ! if ( visual(jx,jy) /= 10 ) cycle
-            ! if ( visual(jx,jy) < 10 ) cycle
-            ! if ( visual(jx,jy) /= 10 .or. visual(jx,jy) /= 20 ) cycle
-            if ( kx == jx .and. ky == jy) cycle
-            if ((catmXX(jx,jy) <= 0) .or. (catmYY(jx,jy) <= 0)) cycle
-            lag_now=sqrt((real(dx)**2)+(real(dy)**2))
-            ! print*, "===",kx,ky,jx,jy,"==="
-            ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
-            ! lat2=north1 - csize/2.0 - (jy-1)*(1/dble(hres))
-            ! lon2=west1 + csize/2.0 + (jx-1)*(1/dble(hres))
-            ! lag_now=hubeny_real(lat1, lon1, lat2, lon2)
-            ! if ( lag_now == -9999.0 ) cycle
-            ! print*, lag, lag_now
-            if ( lag_now < lag ) then
-                if ( visual(jx,jy) == 10 ) then
-                    ! if ( upa1m(jx,jy) > uparea_max) then
-                    kx=jx
-                    ky=jy
-                    lag=lag_now
-                    ! print*, visual(kx,ky)
-                    ! print*, "Found new location: ",flag, kx,ky,lag, visual(kx,ky)
-                    !     uparea_max=upa1m(jx,jy)
-                    ! end if
-                elseif ( visual(jx,jy) == 20 ) then
-                    kx=jx
-                    ky=jy
-                    lag=lag_now
-                end if
-            end if
-        end do
-    end do
-    return 
-    end subroutine find_nearest_river
     !*****************************************************************
     subroutine perpendicular_grid(ix,iy,nx,ny,flwdir,visual,riv1m,xlist,ylist,k)
     ! grids perpendicular to the give river section
