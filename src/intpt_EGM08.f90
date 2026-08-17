@@ -64,11 +64,12 @@ program int_main
     !-----------------------------------------------------------------------
           parameter( &
          &   path_gd  = './src',                                           &
-         &   name_gd  = '/Und_min1x1_egm2008_isw=82_WGS84_TideFree_SE',  &
+         &   name_gd  = '/Und_min1x1_egm2008_isw=82_WGS84_TideFree',  &
          &   path_pt  = './',                                           &
          &   name_pt  = 'INPUT.DAT',                                    &
          &   path_out = './',                                           &
          &   name_out = 'OUTPUT_EGM08.DAT')
+         
     !-----------------------------------------------------------------------
           parameter(dlat     = 1.d0/60.d0, &
          &          dlon     = 1.d0/60.d0)
@@ -102,6 +103,7 @@ program int_main
     !
           open(1,file=trim(fnu1),form='unformatted', &
           &     status='old',iostat=ios)
+          print*, ios
     !
           call extract_name_120(path_pt,p_pt,nchr_ppt)
           call extract_name_120(name_pt,n_pt,nchr_npt)
@@ -365,6 +367,7 @@ program int_main
           integer*4 i,n
           character old_name*120,name*120,ch*1
     !
+          name = ' '   ! <--- ADD THIS LINE to clear garbage characters
           n = 0
           do i = 1, 120
             ch = old_name(i:i)

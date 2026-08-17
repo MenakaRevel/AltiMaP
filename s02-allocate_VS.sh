@@ -17,14 +17,15 @@ export OMP_NUM_THREADS=$NCPUS
 
 # got to working dirctory
 # cd $PBS_O_WORKDIR
-cd "/cluster/data6/menaka/AltiMaP"
+# cd "/cluster/data6/menaka/AltiMaP"
 
 #CaMA-Flood directory
 # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v396a_20200514"
 # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v4"
-CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v410"
+# CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v410"
 # CaMa_dir="/cluster/data6/menaka/CaMa-Flood_v420"
 # CaMa_dir="/work/a06/menaka/Prakat_Model_Scale/CaMa-Flood_v4.05"
+CaMa_dir="/home/revelnil/CaMa-Flood_v4"
 
 # map name
 map="glb_06min"
@@ -39,8 +40,8 @@ glb_map="glb_06min"  # need to change according to map
 # glb_map="glb_15min"
 
 # Higher resolution data
-TAG="3sec"
-# TAG="1min"
+# TAG="3sec"
+TAG="1min"
 
 # out put directory
 outdir="./out"
@@ -63,12 +64,12 @@ printf '%13s%64s%12s%12s%10s%17s%6s%12s%15s%10s%8s%8s%8s%14s%12s%12s%10s%8s%12s%
 ## 
 
 if [[ "$TAG" == "1min" ]]; then
-    WEST=-90 #-180
-    SOUTH=-25 #-90
-    data="Prakatgauge" #HydroWeb
+    WEST=-180
+    SOUTH=-90
+    data="HydroWeb" # Prakatgauge
     if [ -s ${CaMa_dir}"/map/"${map}/${TAG}/${TAG}".catmxy.bin" ]; then
-      echo "./src/allocate_VS $WEST $SOUTH $data"
-      ./src/allocate_VS $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir >> tmp.txt
+      echo "./src/allocate_VS_1min $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir"
+      ./src/allocate_VS_1min $WEST $SOUTH $data $CaMa_dir $map $TAG $outdir # >> tmp.txt
     else
       echo "No file :" ${CaMa_dir}"/map/"${map}/${TAG}/${TAG}".catmxy.bin"
     fi
@@ -82,7 +83,7 @@ else
       CNAME=`./src/set_name $WEST $SOUTH`
       # echo $CNAME #${CaMa_dir}/map/${map}/${TAG}/${CNAME}.catmxy.bin
       if [ -s ${CaMa_dir}"/map/"${map}/${TAG}/${CNAME}".catmxy.bin" ]; then
-          for data in "SWOTMackenzie"; # "Schneider2017"; ##"CGLS"; # "Dahiti"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
+          for data in "HydroWeb"; #"SWOTMackenzie"; # "Schneider2017"; ##"CGLS"; # "Dahiti"; #"CGLS" "HydroSat" "GRRATS"; # "ICESat";
           do
               flag=`python ./src/avalability_data.py $data $WEST $SOUTH`
               # echo $flag

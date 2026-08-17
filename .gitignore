@@ -9,14 +9,17 @@ criteria.txt
 *.png
 *.jpg
 *.pdf
+*.txt
 
 #folders
 fig/
 results/
 etc/
+dat/
 
 # fortran excutables
 src/allocate_VS
+src/allocate_VS_1min
 src/altimetry_rivermap
 src/altimetry_rivermap.f90
 src/set_name
@@ -47,3 +50,6 @@ Reg_VS.o*
 # VScode
 *.vscode
 .nfs000000178c31913100002d9a
+
+# log files
+*.log

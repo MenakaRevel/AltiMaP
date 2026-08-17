@@ -37,7 +37,8 @@ outdir=sys.argv[4]
 ##################
 # read VS list
 print ("---> read VS list")
-fname=datadir+"/"+datafile #+"/HydroWeb_VS"
+# fname=datadir+"/"+datafile #+"/HydroWeb_VS"
+fname=datafile
 with open(fname,"r") as fr:
     lines=fr.readlines()
 #-
@@ -58,7 +59,7 @@ lon_list=[]
 #============================
 with open("./INPUT.DAT","w") as fw:
     for line in lines[1::]:
-        #print line
+        # print (line)
         line   = re.split(",",line)
         #line   = filter(None,line)
         station= line[0].strip()
@@ -89,6 +90,10 @@ with open("./INPUT.DAT","w") as fw:
                 if "#ID::" in hyd:
                     # print (hyd)
                     ID=int(hyd.split("::")[-1])
+                if "#BASIN::" in hyd:
+                    basin = str(hyd.split("::")[-1]).rstrip()
+                if "#RIVER::" in hyd:
+                    river = str(hyd.split("::")[-1]).rstrip()
                 if "#MEAN ALTITUDE(M.mm)::" in hyd:
                     # print (hyd)
                     ele=float(hyd.split("::")[-1])
@@ -137,7 +142,7 @@ for i,line in enumerate(liner):
     line  = list(filter(None,line))
     EGM08 = float(line[2])
     EGM08_list.append(EGM08)
-    print (EGM08)
+    # print (EGM08)
 ########################
 #   get EGM96 values
 ########################
@@ -155,7 +160,7 @@ for i,line in enumerate(liner):
     line  = list(filter(None,line))
     EGM96 = float(line[2])
     EGM96_list.append(EGM96)
-    print (EGM96)
+    # print (EGM96)
 #==========================================
 # write VS list
 #==========================================
@@ -164,7 +169,7 @@ with open(fname,"w") as fww:
     header="%15s%100s%50s%50s%32s%10s%10s%10s%10s%10s%32s%17s%17s%13s\n"%("ID","Station","River","Basin","Country","lon","lat","elevation","EGM08","EGM96","Satellite","Start Date","End Date","Status")
     fww.write(header)
     pnum=len(ID_list)
-    print (pnum)
+    # print (pnum)
     for i in range(pnum):
         #print i, ID_list[i],station_list[i],river_list[i],basin_list[i],country_list[i],lon_list[i],lat_list[i],ele_list[i],sat_list[i],start_list[i],end_list[i],status_list[i]
         country='-'.join(country_list[i].split())

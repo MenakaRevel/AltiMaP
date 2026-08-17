@@ -1,5 +1,6 @@
 # fortran excutables
 allocate_VS
+allocate_VS_1min
 altimetry_rivermap
 altimetry_rivermap.f90
 set_name
@@ -17,5 +18,6 @@ intpt_EGM96
 
 # geoid converstion files
 Und_min1x1_egm2008_isw=82_WGS84_TideFree_SE
+Und_min1x1_egm2008_isw=82_WGS84_TideFree
 WW15MGH.DAC
 WW15MGH.dac

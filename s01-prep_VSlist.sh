@@ -16,28 +16,30 @@ export OMP_NUM_THREADS=20
 
 # got to working dirctory
 # cd $PBS_O_WORKDIR
-cd "/cluster/data6/menaka/AltiMaP"
+# cd "/cluster/data6/menaka/AltiMaP"
 
 # `pwd`
 
 # Data name
-# dataname="HydroWeb"
+dataname="HydroWeb"
 # dataname="Schneider2017"
 # dataname="Prakatgauge"
-dataname="SWOTMackenzie"
+# dataname="SWOTMackenzie"
 
 # data directory
 # datadir="/cluster/data6/menaka/HydroWeb/data"
 # datadir="/cluster/data6/menaka/HydroWeb/data_v2023"
 # datadir="/work/a06/menaka/Prakat_Model_Scale/inp"
-datadir="/work/a06/menaka/SWOT"
+# datadir="/work/a06/menaka/SWOT"
+datadir="/home/revelnil/DATA/waterlevel/Hydroweb/river"
 
 # datafile
 # datafile="./ESSD_paper/CryoSat2_Brahmaputra_list.txt"
 # datafile="list_hydroprd_202309151209_rivers.csv"
 # datafile="gauge_Amazon_list.txt"
 # datafile="SWOT_Mackenzie_Station_list.txt"
-datafile="SWOT_Mackenzie_Station_list_all.txt"
+# datafile="SWOT_Mackenzie_Station_list_all.txt"
+datafile="/home/revelnil/DATA/waterlevel/Hydroweb/hydroweb_AltiMaP.txt"
 
 
 # output directory

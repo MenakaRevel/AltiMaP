@@ -1,14 +1,34 @@
+# ##################################################
+## ifort
+# ##################################################
+# FC = ifort #gfortran
+# FFLAGS=-O3 -assume byterecl -heap-arrays -nogen-interfaces -mkl=parallel -mcmodel=large -fPIC -shared-intel -g -traceback -lpthread -parallel
+# INC = -I/opt/intel/include -I/opt/local/include
+# LIB = -L/opt/intel/lib -L/opt/intel/mkl/lib -L/opt/local/lib
+
 ##################################################
-FC = ifort #gfortran
-FFLAGS=-O3 -assume byterecl -heap-arrays -nogen-interfaces -mkl=parallel -mcmodel=large -fPIC -shared-intel -g -traceback -lpthread -parallel
-INC = -I/opt/intel/include -I/opt/local/include
-LIB = -L/opt/intel/lib -L/opt/intel/mkl/lib -L/opt/local/lib
+## gfortran
+##################################################
+FC = gfortran
+FFLAGS = -O3 -mcmodel=large -march=native -mtune=native -funroll-loops -ffast-math -fallow-argument-mismatch #-fconvert=big-endian
+INC = -I/opt/intel/include -I/opt/local/include -I/usr/local/include
+LIB = -L/opt/intel/lib -L/opt/intel/mkl/lib -L/usr/local/lib -lnetcdff -L/usr/local/lib -lnetcdf -lnetcdf -lm
+
+
+# ##################################################
+# ## gfortran -- debuggig
+# ##################################################
+# FC = gfortran
+# FFLAGS = -O3 -mcmodel=large -fPIC -g -fallow-argument-mismatch -fcheck=all -fbacktrace -fconvert=big-endian
+# INC = -I/opt/intel/include -I/opt/local/include -I/usr/local/include
+# LIB = -L/opt/intel/lib -L/opt/intel/mkl/lib -L/usr/local/lib -lnetcdff -L/usr/local/lib -lnetcdf -lnetcdf -lm
 
 #=========
 TARGETS=\
 intpt_EGM96\
 intpt_EGM08\
 allocate_VS\
+allocate_VS_1min\
 regional_biftag\
 txt_vector\
 print_rivvec

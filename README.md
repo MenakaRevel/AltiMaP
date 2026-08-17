@@ -55,3 +55,7 @@ ID | Station | River | Basin | Country | lon | lat | elevation | EGM08 | EGM96 |
 
 #### Input data style for s03-unreal_obs.sh
 output from s02-allocate_VS.sh
+
+#### Download EGM data following data
+https://download.osgeo.org/proj/vdatum/egm96_15/outdated/
+https://grid-partner-share.s3.amazonaws.com/egm2008/Und_min1x1_egm2008_isw%3D82_WGS84_TideFree.gz

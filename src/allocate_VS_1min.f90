@@ -1,6 +1,6 @@
 program SET_MAP
     !==========================================
-    ! convert HydroWeb, HydroSat, IICESat VS to CaMa-Flood grids
+    ! convert HydroWeb, HydroSat, ICESat VS to CaMa-Flood grids
     ! Menaka@IIS
     ! 2021.01.22
     !==========================================
@@ -238,57 +238,69 @@ program SET_MAP
     rfile1=trim(hiresmap)//trim(cname)//'.catmzz.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) catmZZ
-    close(21)
+        read(21,rec=1) catmZZ
+        close(21)
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.flddif.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=4*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) flddif
-    close(21)
+        read(21,rec=1) flddif
+        close(21)
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.hand.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=4*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) hand
-    close(21)
+        read(21,rec=1) hand
+        close(21)
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.elevtn.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=4*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) ele1m
-    close(21)
+        read(21,rec=1) ele1m
+        close(21)
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.uparea.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=4*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) upa1m
-    close(21)
+        read(21,rec=1) upa1m
+        close(21)
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.rivwth.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=4*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) riv1m 
-    close(21)
+        read(21,rec=1) riv1m 
+        close(21)
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.visual.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) visual
-    close(21)
+        read(21,rec=1) visual
+        close(21)
     endif
 
     rfile1=trim(hiresmap)//trim(cname)//'.flwdir.bin'
     open(21,file=rfile1,form='unformatted',access='direct' , action='READ',recl=1*nx*ny,status='old',iostat=ios)
     if( ios==0 )then
-    read(21,rec=1) flwdir
-    close(21)
+        read(21,rec=1) flwdir
+        close(21)
+    else
+        print*, "NO FILE:" , rfile1
+        print*, "NEED UPDATE THE CODE TO {TAG}.downxy.bin"
+        stop
+    endif
+
+    rfile1=trim(hiresmap)//trim(cname)//'.downxy.bin'
+    open(21, file=rfile1, form='unformatted', access='direct', action='READ', recl=2*nx*ny,status='old',iostat=ios)
+    if( ios==0 )then
+        read(21,rec=1) dwx1m
+        read(21,rec=2) dwy1m
+        close(21)
     endif
     ! ===============================================
     ! read data 
@@ -343,9 +355,11 @@ program SET_MAP
     lat1=lat0
     lon1=lon0
     ! call itime(tarray0)
-    ! print*, "==========================================================="
-    ! print*, trim(station)
-    ! print*, "Initial allocation: ",kx, ky, visual(kx,ky), tarray0
+    ! debug
+    print*, "==========================================================="
+    print*, trim(station)
+    print*, "Initial allocation: ",ix, iy, visual(ix,iy) !, tarray0
+    print*, river, bsn, country, lon0, lat0
     ! if( riv1m(ix,iy)/=-9999 .and. riv1m(ix,iy)/=0 )then
     if (visual(ix,iy) == 10) then  !! river center line
         ! print*, "flag: 1  ","river channel"
@@ -455,7 +469,7 @@ program SET_MAP
     !
     kx=kx1
     ky=ky1
-    ! print*, kx, ky
+    ! print*, 'L459:',kx, ky, nx ,ny, nXX, nYY
     !---
     if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
         goto 1000
@@ -464,10 +478,12 @@ program SET_MAP
     !===========
     iXX=catmXX(kx,ky)
     iyy=catmYY(kx,ky)
+    ! print*, 'L468:',iXX, iYY
     !!============
     if ( iXX < 1 .or. iYY < 1 .or. iXX > nXX .or. iYY > nYY ) then 
         goto 1000
     end if
+    ! print*, 'L473:',iXX, iYY
     !============
     ! call itime(tarray1)
     ! find maximum uparea perpendicular to river
@@ -491,10 +507,10 @@ program SET_MAP
             end if
         end if
     end if
-    ! print*, flag
-    ! print*, "After allocation:   ",kx, ky, visual(kx,ky), flag
-    kx=kx1
-    ky=ky1
+    print*, flag
+    print*, "After allocation:   ",kx, ky, visual(kx,ky), flag
+    ! kx=kx1
+    ! ky=ky1
     !---
     ! print*, kx, ky
     if ( kx < 1 .or. ky < 1 .or. kx > nx .or. ky > ny ) then 
@@ -502,9 +518,10 @@ program SET_MAP
     end if
     !--
     ! ! call itime(tarray2)
-    ! ! print*, "calculate downstream distance"
+    print*, "calculate downstream distance"
     if (visual(kx,ky)==10) then
-        diffdist=down_dist(kx,ky,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
+        diffdist=down_dist(kx,ky,west1,south1,csize,flwdir,visual,dwx1m,dwy1m,nx,ny,hiresmap)
+        print*, 'down_dist:', diffdist
     else
         diffdist=0.0
     end if
@@ -513,7 +530,7 @@ program SET_MAP
         goto 1000
     end if
     !===========
-    ! print*, "initial allocsation finshed"
+    print*, "initial allocsation finshed"
     ! lag_now=flow_dist(kx,ky,jx,jy,west1,south1,csize,flwdir,visual,nx,ny,hiresmap)
     dist1=-9999.0
     dist2=-9999.0
@@ -532,13 +549,13 @@ program SET_MAP
     iyy=catmYY(kx,ky)
     !============
     ! call itime(tarray3) 
-    
+    print*, "L539:", iXX, iYY
     ! print*, trim(station), visual(kx,ky), visual(ix,iy), diffdist
     ! print*, "up to find another locations: ",tarray1 - tarray0
     ! print*, "up to down dist: ",tarray2 - tarray1
     ! print*, "down dist to now: ", tarray3 - tarray2
-    ! print*, trim(station), lon0, lat0, elevtn(iXX,iYY), ele1m(kx,ky), visual(kx,ky), visual(ix,iy)!, tarray1 - tarray0 !, flag, diffdist*1e-3
-    ! print*, trim(station), lon0, lat0, ix, iy, flag, dist1, dist2
+    print*, trim(station), lon0, lat0, elevtn(iXX,iYY), ele1m(kx,ky), visual(kx,ky), visual(ix,iy)!, tarray1 - tarray0 !, flag, diffdist*1e-3
+    print*, trim(station), lon0, lat0, ix, iy, flag, dist1, dist2
     ! print*, "================================================"
     if (iXX > 0 .or. iYY > 0) then
         ! print '(a30,2x,a65,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15,2x,f13.2,2x,i4.0,2x,4i8.0,2f12.2,2x,f13.2)',& 
@@ -560,7 +577,10 @@ program SET_MAP
         &trim(adjustl(id)), trim(station), trim(dataname), lon0, lat0, trim(sat),& 
         &flag, ele1m(kx,ky),diffdist*1e-3, kx1, ky1, kx2, ky2, dist1, dist2, riv1m(kx,ky),&
         &iXX, iYY, egm08, egm96
+        ! write(*,*)trim(adjustl(id)), trim(station), iXX, iYY
     end if
+        ! debug
+        ! print*, 'Cannot be allocated!   ... ', trim(station)
         ! write(27,'(a14,2x,a40,2x,a10,2x,2f10.2,2x,2i8.0,2x,3f10.2,2x,a15)') trim(adjustl(id)),& 
         ! &trim(station),trim(dataname), lon0, lat0,iXX, iYY,elevtn(iXX,iYY)-ele1m(kx,ky),&
         ! &egm08, egm96, trim(sat)
@@ -571,6 +591,18 @@ program SET_MAP
     !---
     deallocate(uparea,basin,elevtn,nxtdst,nextXX,nextYY)
     deallocate(upa1m,catmXX,catmYY,catmZZ,dwx1m,dwy1m,flddif,hand,ele1m,riv1m,visual,flwdir)
+    !=================
+    CONTAINS
+      subroutine nextxy(ix,iy,jx,jy)
+        integer :: ix,iy,jx,jy
+
+        jx=ix+dwx1m(ix,iy)
+        jy=iy+dwy1m(ix,iy)
+        if( jx<=0 ) jx=jx+nx
+        if( jx>nx ) jx=jx-nx
+
+        return
+      end subroutine nextxy
     !=================
     end program SET_MAP
     !***************************************************
@@ -706,138 +738,138 @@ program SET_MAP
     return
     end subroutine westsouth
     !*****************************************************************
-    subroutine loc_pepnd(ix,iy,nx,ny,nextX,nextY,uparea,oxx,oyy)
-    ! river location perpendicular to the flowing direction
-    implicit none
-    integer                      :: ix, iy, nx, ny
-    integer,dimension(nx,ny)     :: nextX, nextY
-    real,dimension(nx,ny)        :: uparea
-    integer                      :: oxx, oyy
-    integer,dimension(2)         :: xlist, ylist
-    integer                      :: k
+    ! ! ! subroutine loc_pepnd(ix,iy,nx,ny,nextX,nextY,uparea,oxx,oyy)
+    ! ! ! ! river location perpendicular to the flowing direction
+    ! ! ! implicit none
+    ! ! ! integer                      :: ix, iy, nx, ny
+    ! ! ! integer,dimension(nx,ny)     :: nextX, nextY
+    ! ! ! real,dimension(nx,ny)        :: uparea
+    ! ! ! integer                      :: oxx, oyy
+    ! ! ! integer,dimension(2)         :: xlist, ylist
+    ! ! ! integer                      :: k
 
-    integer                      :: iix, iiy, dx, dy, jx, jy, i, j
-    real                         :: tval 
-    integer                      :: dval, D8 ! d8 numbering
-    real                         :: upa, upn
-    !==============================================
-    jx=nextX(ix,iy)
-    jy=nextY(ix,iy)
-    !--------------
-    dx=jx-ix 
-    dy=jy-iy
-    dval=D8(dx,dy)
-    k=5
-    if (dval==1 .or. dval==5) then
-        j=1
-        do i=-k,k
-            iix=ix 
-            iiy=iy+i
-            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-            xlist(j)=iix 
-            ylist(j)=iiy
-            j=j+1
-        end do
-        ! k=2
-        ! !-------------------------
-        ! iix=ix
-        ! iiy=iy-1
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(1)=iix 
-        ! ylist(1)=iiy
-        ! !-------------------------
-        ! iix=ix
-        ! iiy=iy+1
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(2)=iix 
-        ! ylist(2)=iiy
-    elseif (dval==3 .or. dval==7) then
-        j=1
-        do i=-k,k
-            iix=ix+i 
-            iiy=iy
-            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-            xlist(j)=iix 
-            ylist(j)=iiy
-            j=j+1
-        end do
-        ! k=2
-        ! !-------------------------
-        ! iix=ix-1
-        ! iiy=iy
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(1)=iix 
-        ! ylist(1)=iiy
-        ! !-------------------------
-        ! iix=ix+1
-        ! iiy=iy
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(2)=iix 
-        ! ylist(2)=iiy
-    elseif (dval==4 .or. dval==8) then
-        j=1
-        do i=-k,k
-            iix=ix+i 
-            iiy=iy-i
-            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-            xlist(j)=iix 
-            ylist(j)=iiy
-            j=j+1
-        end do
-        ! k=2
-        ! !-------------------------
-        ! iix=ix+1
-        ! iiy=iy-1
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(1)=iix 
-        ! ylist(1)=iiy
-        ! !-------------------------
-        ! iix=ix-1
-        ! iiy=iy+1
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(2)=iix 
-        ! ylist(2)=iiy
-    elseif (dval==2 .or. dval==6) then
-        j=1
-        do i=-k,k
-            iix=ix+i 
-            iiy=iy+i
-            call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-            xlist(j)=iix 
-            ylist(j)=iiy
-            j=j+1
-        end do
-        ! k=2
-        ! !-------------------------
-        ! iix=ix-1
-        ! iiy=iy-1
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(1)=iix 
-        ! ylist(1)=iiy
-        ! !-------------------------
-        ! iix=ix+1
-        ! iiy=iy+1
-        ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
-        ! xlist(2)=iix 
-        ! ylist(2)=iiy
-    end if
-    !-----------------------------
-    upa=uparea(ix,iy)
-    upn=uparea(ix,iy)
-    oxx=ix
-    oyy=iy
-    do i=1,k 
-        iix=xlist(i)
-        iiy=ylist(i)
-        upn=uparea(iix,iiy)
-        if (upa < upn) then
-            oxx=iix 
-            oyy=iiy 
-            upa=upn 
-        end if
-    end do 
-    return
-    end subroutine loc_pepnd
+    ! ! ! integer                      :: iix, iiy, dx, dy, jx, jy, i, j
+    ! ! ! real                         :: tval 
+    ! ! ! integer                      :: dval, D8 ! d8 numbering
+    ! ! ! real                         :: upa, upn
+    ! ! ! !==============================================
+    ! ! ! jx=nextX(ix,iy)
+    ! ! ! jy=nextY(ix,iy)
+    ! ! ! !--------------
+    ! ! ! dx=jx-ix 
+    ! ! ! dy=jy-iy
+    ! ! ! dval=D8(dx,dy)
+    ! ! ! k=5
+    ! ! ! if (dval==1 .or. dval==5) then
+    ! ! !     j=1
+    ! ! !     do i=-k,k
+    ! ! !         iix=ix 
+    ! ! !         iiy=iy+i
+    ! ! !         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !         xlist(j)=iix 
+    ! ! !         ylist(j)=iiy
+    ! ! !         j=j+1
+    ! ! !     end do
+    ! ! !     ! k=2
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix
+    ! ! !     ! iiy=iy-1
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(1)=iix 
+    ! ! !     ! ylist(1)=iiy
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix
+    ! ! !     ! iiy=iy+1
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(2)=iix 
+    ! ! !     ! ylist(2)=iiy
+    ! ! ! elseif (dval==3 .or. dval==7) then
+    ! ! !     j=1
+    ! ! !     do i=-k,k
+    ! ! !         iix=ix+i 
+    ! ! !         iiy=iy
+    ! ! !         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !         xlist(j)=iix 
+    ! ! !         ylist(j)=iiy
+    ! ! !         j=j+1
+    ! ! !     end do
+    ! ! !     ! k=2
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix-1
+    ! ! !     ! iiy=iy
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(1)=iix 
+    ! ! !     ! ylist(1)=iiy
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix+1
+    ! ! !     ! iiy=iy
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(2)=iix 
+    ! ! !     ! ylist(2)=iiy
+    ! ! ! elseif (dval==4 .or. dval==8) then
+    ! ! !     j=1
+    ! ! !     do i=-k,k
+    ! ! !         iix=ix+i 
+    ! ! !         iiy=iy-i
+    ! ! !         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !         xlist(j)=iix 
+    ! ! !         ylist(j)=iiy
+    ! ! !         j=j+1
+    ! ! !     end do
+    ! ! !     ! k=2
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix+1
+    ! ! !     ! iiy=iy-1
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(1)=iix 
+    ! ! !     ! ylist(1)=iiy
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix-1
+    ! ! !     ! iiy=iy+1
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(2)=iix 
+    ! ! !     ! ylist(2)=iiy
+    ! ! ! elseif (dval==2 .or. dval==6) then
+    ! ! !     j=1
+    ! ! !     do i=-k,k
+    ! ! !         iix=ix+i 
+    ! ! !         iiy=iy+i
+    ! ! !         call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !         xlist(j)=iix 
+    ! ! !         ylist(j)=iiy
+    ! ! !         j=j+1
+    ! ! !     end do
+    ! ! !     ! k=2
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix-1
+    ! ! !     ! iiy=iy-1
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(1)=iix 
+    ! ! !     ! ylist(1)=iiy
+    ! ! !     ! !-------------------------
+    ! ! !     ! iix=ix+1
+    ! ! !     ! iiy=iy+1
+    ! ! !     ! call ixy2iixy(iix,iiy,nx,ny,iix,iiy)
+    ! ! !     ! xlist(2)=iix 
+    ! ! !     ! ylist(2)=iiy
+    ! ! ! end if
+    ! ! ! !-----------------------------
+    ! ! ! upa=uparea(ix,iy)
+    ! ! ! upn=uparea(ix,iy)
+    ! ! ! oxx=ix
+    ! ! ! oyy=iy
+    ! ! ! do i=1,k 
+    ! ! !     iix=xlist(i)
+    ! ! !     iiy=ylist(i)
+    ! ! !     upn=uparea(iix,iiy)
+    ! ! !     if (upa < upn) then
+    ! ! !         oxx=iix 
+    ! ! !         oyy=iiy 
+    ! ! !         upa=upn 
+    ! ! !     end if
+    ! ! ! end do 
+    ! ! ! return
+    ! ! ! end subroutine loc_pepnd
     !*****************************************************************
     function D8(dx,dy)
     implicit none
@@ -904,7 +936,7 @@ program SET_MAP
     real                            :: lon1, lat1, lon2, lat2
     integer*1,dimension(nx,ny)      :: flwdir0, visual0
     real                            :: hubeny_real
-    integer                         :: count
+    integer                         :: count, iter 
     !--------------------
     ! visual
     ! 0  - sea
@@ -916,11 +948,15 @@ program SET_MAP
     ! 20 - outlet pixel
     ! 25 - river mouth
     !--------------------
+    ! number of iteration
+    iter=10000
     flwdir0=flwdir
     visual0=visual
     west0=west+csize/2.0
     south0=south+csize/2.0
-    north0=south+10.0-csize/2.0
+    ! north0=south+10.0-csize/2.0
+    ! this is because 1min map
+    north0=90.0-csize/2.0 !!! -90 to 90
     down_dist = 0.0
     iix = ix 
     iiy = iy
@@ -928,7 +964,7 @@ program SET_MAP
     lat1=north0-real(iy)*csize
     count=0
     do while (visual0(iix,iiy) /= 20)
-        if (count > 1000) then
+        if (count > iter) then
             exit
         end if
         if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
@@ -974,12 +1010,12 @@ program SET_MAP
         lon2=lon1+real(dx)*csize 
         lat2=lat1+real(dy)*csize
         down_dist=down_dist+hubeny_real(lat1, lon1, lat2, lon2)
-        ! print*, iix, iiy, lon1, lat1, down_dist ,visual(iix,iiy), dval
+        print*, iix, iiy, lon1, lat1, down_dist ,visual(iix,iiy), dval
         lon1=lon2
         lat1=lat2
         count=count+1
     end do 
-    if (count > 1000) then 
+    if (count > iter) then 
         down_dist=-9999.0
     end if
     return
@@ -990,6 +1026,9 @@ program SET_MAP
     integer                         :: dval
     integer                         :: dx, dy
     real                            :: tval
+    ! define dx, dy
+    dx = 0
+    dy = 0
     ! -----------|
     !  D 8 graph
     !|-----------|
@@ -2214,10 +2253,23 @@ program SET_MAP
             exit
         end if
         dval=flwdir(iix,iiy)
+        ! No need to examine the values < 0
+        ! ** Can be a local depression
+        if (flwdir(iix,iiy) < 0 ) exit
         call next_D8(dval,dx,dy)
-        print*, 'L2218',iix, iiy, visual(iix,iiy), flwdir(iix,iiy), dx, dy
+        ! print*, 'L2218',iix, iiy, visual(iix,iiy), flwdir(iix,iiy), dval, dx, dy
         iix = iix + dx 
         iiy = iiy + dy 
+        ! if iix or iiy is out of the map ==> *** need attention
+        if ( iix < 1 .or. iiy < 1 .or. iix > nx .or. iiy > ny ) then
+            ! call got_to_next_tile(iix,iiy,nx,ny,west,south,hiresmap,flwdir0,visual0,west0,south0,iix,iiy)
+            ! west0=west+csize/2.0
+            ! south0=south+csize/2.0
+            ! north0=south+10.0+csize/2.0
+            ! print*, "go to next tile", west0,south0
+            ! flag=-9
+            exit
+        end if
         ! river mouth
         if (flwdir(iix,iiy) == -9 ) then
             ! print*, "River mouth", visual(iix,iiy)

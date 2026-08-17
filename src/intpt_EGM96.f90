@@ -90,10 +90,15 @@
       PARAMETER(NLAT=721,NLON=(1441+NBDR),DLAT=0.25D0,DLON=0.25D0)
       integer*2 A1(NLON)
       REAL*4 H (nlat, nlon)
-      CHARACTER NAM*41
+      CHARACTER*41 NAM(30)
       REAL*8 XMIN,XMAX,RDX
-      DATA XMIN, XMAX, RDX, NAM/-50.,50., 2.,&
-      &     'GEOID HTS'/
+      ! DATA XMIN, XMAX, RDX, NAM/-50.,50., 2.,&
+      ! &     'GEOID HTS'/
+
+      XMIN = -50.D0
+      XMAX =  50.D0
+      RDX  =   2.D0
+      NAM  = 'GEOID HTS'
 
       CALL HISTO(6,1,NAM,XMIN,XMAX,RDX,1,0.D0,1)
 
@@ -106,7 +111,7 @@
 
 !c data grid file
      open(1,&
-     &     file='./src/WW15MGH.dac',  &
+     &     file='./src/WW15MGH.DAC',  &
      &     form='unformatted',  &
      &     access='direct',     &
      &     recl=(NLON-NBDR-1)*2,&

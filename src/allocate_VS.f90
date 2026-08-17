@@ -2229,6 +2229,9 @@ program SET_MAP
             exit
         end if
         dval=flwdir(iix,iiy)
+        ! No need to examine the values < 0
+        ! ** Can be a local depression
+        if (flwdir(iix,iiy) < 0 ) exit
         call next_D8(dval,dx,dy)
         iix = iix + dx 
         iiy = iiy + dy 
